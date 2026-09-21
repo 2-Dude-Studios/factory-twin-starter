@@ -1,0 +1,49 @@
+# Unity
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+*.apk
+*.aab
+*.unitypackage
+*.app
+crashlytics-build.properties
+/Assets/StreamingAssets/aa.meta
+/Assets/StreamingAssets/aa/*
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+
+# Asset Store imports are re-imported, not versioned (see docs/LICENSES.md)
+/Assets/ThirdParty/FactoryTraining/
+/Assets/ThirdParty/FactoryTraining.meta
+/Assets/ThirdParty/realvirtual/
+/Assets/ThirdParty/realvirtual.meta
+/Assets/ThirdParty/FastIK/
+/Assets/ThirdParty/FastIK.meta
+/Assets/ThirdParty/ParticlePack/
+/Assets/ThirdParty/ParticlePack.meta
+
+# Tooling output
+tools/test-results.xml
+tools/test.log
+__pycache__/
+
+# Claude Code local overrides
+.claude/settings.local.json

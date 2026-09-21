@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit(Assets/_Project/**)",
+      "Write(Assets/_Project/**)",
+      "Edit(docs/**)",
+      "Write(docs/**)",
+      "Edit(tools/**)",
+      "Write(tools/**)",
+      "Edit(Packages/manifest.json)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(python tools/replay/*)",
+      "Bash(mosquitto_sub*)",
+      "Bash(mosquitto_pub*)",
+      "Bash(docker compose*)",
+      "Bash(unity *)"
+    ],
+    "deny": [
+      "Edit(Assets/ThirdParty/**)",
+      "Write(Assets/ThirdParty/**)",
+      "Edit(Library/**)",
+      "Write(Library/**)",
+      "Edit(ProjectSettings/ProjectVersion.txt)",
+      "Bash(git push --force*)",
+      "Bash(rm -rf*)"
+    ]
+  }
+}
