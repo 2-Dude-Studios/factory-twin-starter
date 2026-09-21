@@ -12,12 +12,12 @@
 - Broker verified: `docker compose up -d`, pub/sub round-trip on `cell/#` (using `docker exec factory-twin-broker mosquitto_sub/pub` — no host Mosquitto install needed).
 - Replayer verified against the broker with a synthetic 3-row CSV (33 messages, correct topics/payloads, paho-mqtt 2.1.0). Real dataset downloaded from UCI (10,000 rows; 339 failures: TWF 46, HDF 115, PWF 95, OSF 98, RNF 19) and verified through both `replay.py` and the C# `Ai4iCsv` parser. CC BY 4.0 — credit line still owed in the Credits panel (M4) and on the web page.
 - Ahead of M3 (realvirtual-independent, so buildable now): `TopicPath`, `TopicFilter`, `SignalPayload`, `SignalBus`, `Ai4iCsv`, `DatasetReplayer`, `TwinConfig` (+ `Assets/_Project/Data/TwinConfig.asset`), `FrameRateLock`, in assembly `TwoDude.FactoryTwin.Twin`. 84 EditMode tests; compiles clean in the Editor; tests pass under `dotnet test` (NUnit 3). In-Editor run pending the allowlist step below.
+- realvirtual Starter 6.0.11 (build 8592) imported at its default paths `Assets/realvirtual/` + `Assets/Gizmos/realvirtual/`; compiles with 0 errors under URP 17.3. Both paths are git-ignored; the project settings its importer changed (layers, physics matrix, `REALVIRTUAL` define) are committed.
 
 ## Pending (M0 exit: realvirtual demo conveyor moves inside our project)
 - [ ] Import Factory Training | Industry Sample from Asset Store → move into `Assets/ThirdParty/FactoryTraining/`
-- [ ] Import realvirtual.io Digital Twin Starter 6 → `Assets/ThirdParty/realvirtual/`
 - [ ] Import M2MqttUnity → `Assets/ThirdParty/M2MqttUnity/`
-- [ ] Open realvirtual demo scene, press Play, conveyor moves
+- [ ] Open `Assets/realvirtual/Scenes/DemoRealvirtual.unity`, press Play, conveyor moves (M0 exit)
 
 ## Manual steps pending
 - UnitySkills panel (Window > UnitySkills → Settings → Allowlist): add `scene_create`, `scene_save`, `scene_load`, `test_run`, `test_run_by_name`. The plugin blocks these in Auto mode by design; until then Claude cannot create `Cell.unity` or run tests in the Editor.
@@ -27,5 +27,8 @@
 ## Blockers
 (none)
 
-## Open design note
-- `TwoDude.FactoryTwin.Twin` is an asmdef (tests require one). If realvirtual Starter ships without asmdefs, the `TwinSignals` facade cannot live in this assembly and will need its own home in Assembly-CSharp. Decide when realvirtual is imported.
+## Decisions and risks
+- **realvirtual location.** It imported to `Assets/realvirtual/`, not `Assets/ThirdParty/realvirtual/`. Recommendation: leave it there (Unity only reads gizmo icons from `Assets/Gizmos/`, and realvirtual's updater expects its default path) and extend the "never edit" rule in CLAUDE.md and `.claude/settings.json` to `Assets/realvirtual/**`. Awaiting confirmation.
+- **Compatibility.** realvirtual 6.0.11 warned that Unity 6000.3.19f1 is outside its tested range; import was continued anyway. No compile errors, but watch for runtime oddities in its demo scene.
+- **Assemblies (resolved).** realvirtual ships `realvirtual.base.asmdef`, so `TwoDude.FactoryTwin.Twin` can reference it and the `TwinSignals` facade can live in the Twin assembly as planned.
+- realvirtual's asmdef references Cinemachine 2.x's assembly name (`Cinemachine`); we have 3.x (`Unity.Cinemachine`). Its optional Cinemachine helpers are therefore inactive — fine for us, our camera work uses 3.x directly.

@@ -12,7 +12,7 @@ Full tracker with 62 candidates and verdicts: https://claude.ai/artifact/AGRYueG
 | Item | Version | Source | Licence | Verdict | Where in repo | Credit required |
 |---|---|---|---|---|---|---|
 | Factory Training \| Industry Sample | 1.0 (9 Feb 2026) | Unity Asset Store | Standard Asset Store EULA (Extension Asset) | OK | Assets/ThirdParty/FactoryTraining (not in git) | no |
-| realvirtual.io Digital Twin Starter 6 | 6.0.11 | Unity Asset Store + realvirtual EULA | Compiled-only distribution, single-user commercial | Conditional | Assets/ThirdParty/realvirtual (not in git) | no |
+| realvirtual.io Digital Twin Starter 6 | 6.0.11 | Unity Asset Store + realvirtual EULA | Compiled-only distribution, single-user commercial | Conditional | Assets/realvirtual + Assets/Gizmos/realvirtual — importer's default paths (not in git, see .gitignore) | no |
 | Unity Splines | 2.9.0 (minimum bundled with 6000.3.19f1) | Unity registry | Unity Companion License | OK | Packages/manifest.json | no |
 | Universal RP | 17.3.0 | Unity registry (built-in) | Unity Companion License | OK | Packages/manifest.json; stock pipeline assets from Unity's URP template in Assets/_Project/Settings | no |
 | Cinemachine | 3.1.7 | Unity registry | Unity Companion License | OK | Packages/manifest.json | no |
