@@ -56,7 +56,7 @@ def main():
     period = 1.0 / a.rate
 
     while True:
-        with a.csv.open(newline="") as f:
+        with a.csv.open(newline="", encoding="utf-8-sig") as f:
             for row in csv.DictReader(f):
                 if a.fault and row.get(a.fault) != "1":
                     continue

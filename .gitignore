@@ -40,6 +40,12 @@ crashlytics-build.properties
 /Assets/ThirdParty/ParticlePack/
 /Assets/ThirdParty/ParticlePack.meta
 
+# realvirtual's default import locations (source must never be shared — licence rule 2)
+/Assets/realvirtual/
+/Assets/realvirtual.meta
+/Assets/Gizmos/realvirtual/
+/Assets/Gizmos/realvirtual.meta
+
 # Tooling output
 tools/test-results.xml
 tools/test.log

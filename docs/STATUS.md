@@ -10,14 +10,13 @@
 - Packages added: Splines 2.9.0, Cinemachine 3.1.7, Input System 1.19.0 (Active Input Handling = Both, so legacy-Input code in third-party assets keeps working), Test Framework 1.6.0, URDF-Importer v0.5.2 (compiles on 6000.3 with no fixes).
 - UnitySkills v2.8.4 installed; REST server on localhost:8090 (mode: auto). Lets Claude Code drive the Editor.
 - Broker verified: `docker compose up -d`, pub/sub round-trip on `cell/#` (using `docker exec factory-twin-broker mosquitto_sub/pub` — no host Mosquitto install needed).
-- Replayer verified against the broker with a synthetic 3-row CSV (33 messages, correct topics/payloads, paho-mqtt 2.1.0). Real dataset still to download.
+- Replayer verified against the broker with a synthetic 3-row CSV (33 messages, correct topics/payloads, paho-mqtt 2.1.0). Real dataset downloaded from UCI (10,000 rows; 339 failures: TWF 46, HDF 115, PWF 95, OSF 98, RNF 19) and verified through both `replay.py` and the C# `Ai4iCsv` parser. CC BY 4.0 — credit line still owed in the Credits panel (M4) and on the web page.
 - Ahead of M3 (realvirtual-independent, so buildable now): `TopicPath`, `TopicFilter`, `SignalPayload`, `SignalBus`, `Ai4iCsv`, `DatasetReplayer`, `TwinConfig` (+ `Assets/_Project/Data/TwinConfig.asset`), `FrameRateLock`, in assembly `TwoDude.FactoryTwin.Twin`. 84 EditMode tests; compiles clean in the Editor; tests pass under `dotnet test` (NUnit 3). In-Editor run pending the allowlist step below.
 
 ## Pending (M0 exit: realvirtual demo conveyor moves inside our project)
 - [ ] Import Factory Training | Industry Sample from Asset Store → move into `Assets/ThirdParty/FactoryTraining/`
 - [ ] Import realvirtual.io Digital Twin Starter 6 → `Assets/ThirdParty/realvirtual/`
 - [ ] Import M2MqttUnity → `Assets/ThirdParty/M2MqttUnity/`
-- [ ] Download `ai4i2020.csv` (UCI, doi:10.24432/C5HS5C) → `Assets/_Project/Data/`, then `python tools/replay/replay.py --rate 5`
 - [ ] Open realvirtual demo scene, press Play, conveyor moves
 
 ## Manual steps pending
