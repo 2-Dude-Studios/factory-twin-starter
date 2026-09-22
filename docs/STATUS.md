@@ -11,17 +11,17 @@
 - UnitySkills v2.8.4 installed; REST server on localhost:8090 (mode: auto). Lets Claude Code drive the Editor.
 - Broker verified: `docker compose up -d`, pub/sub round-trip on `cell/#` (using `docker exec factory-twin-broker mosquitto_sub/pub` — no host Mosquitto install needed).
 - Replayer verified against the broker with a synthetic 3-row CSV (33 messages, correct topics/payloads, paho-mqtt 2.1.0). Real dataset downloaded from UCI (10,000 rows; 339 failures: TWF 46, HDF 115, PWF 95, OSF 98, RNF 19) and verified through both `replay.py` and the C# `Ai4iCsv` parser. CC BY 4.0 — credit line still owed in the Credits panel (M4) and on the web page.
-- Ahead of M3 (realvirtual-independent, so buildable now): `TopicPath`, `TopicFilter`, `SignalPayload`, `SignalBus`, `Ai4iCsv`, `DatasetReplayer`, `TwinConfig` (+ `Assets/_Project/Data/TwinConfig.asset`), `FrameRateLock`, in assembly `TwoDude.FactoryTwin.Twin`. 84 EditMode tests; compiles clean in the Editor; tests pass under `dotnet test` (NUnit 3). In-Editor run pending the allowlist step below.
+- Ahead of M3 (realvirtual-independent, so buildable now): `TopicPath`, `TopicFilter`, `SignalPayload`, `SignalBus`, `Ai4iCsv`, `DatasetReplayer`, `TwinConfig` (+ `Assets/_Project/Data/TwinConfig.asset`), `FrameRateLock`, in assembly `TwoDude.FactoryTwin.Twin`. 84 EditMode tests — pass in the Editor (Unity Test Runner, 11 s) and under `dotnet test` (NUnit 3).
 - realvirtual Starter 6.0.11 (build 8592) imported at its default paths `Assets/realvirtual/` + `Assets/Gizmos/realvirtual/`; compiles with 0 errors under URP 17.3. Both paths are git-ignored; the project settings its importer changed (layers, physics matrix, `REALVIRTUAL` define) are committed.
 - Factory Training sample, Fast IK 1.2 and Particle Pack 3.1 imported. The sample imports flat into `Assets/` as a whole project (it also rewrote every ProjectSettings file and added ~24 packages); everything was moved via AssetDatabase (GUIDs kept) to `Assets/ThirdParty/FactoryTraining|FastIK|ParticlePack/`. Restored Active Input Handling = Both and the `REALVIRTUAL` define afterwards. 0 compile errors.
 - Render pipeline is now the sample's `ThirdParty/FactoryTraining/Settings/assets/PC_RPAsset_DC` (Deferred+, Decals, SSAO) — the hall's look depends on it, so it stays active. Our `_Project/Settings/PC_RPAsset` is kept as a fallback but unused.
 
 ## Pending (M0 exit: realvirtual demo conveyor moves inside our project)
 - [ ] Import M2MqttUnity → `Assets/ThirdParty/M2MqttUnity/`
-- [ ] Open `Assets/realvirtual/Scenes/DemoRealvirtual.unity`, press Play, conveyor moves (M0 exit)
+- [ ] `Assets/realvirtual/Scenes/DemoRealvirtual.unity` is loaded (8 Drives found: ConveyorEntry1/2, ConveyorExit1/2, CNC axes). Press Play, confirm conveyors move (M0 exit)
 
 ## Manual steps pending
-- UnitySkills panel (Window > UnitySkills → Settings → Allowlist): add `scene_create`, `scene_save`, `scene_load`, `test_run`, `test_run_by_name`. The plugin blocks these in Auto mode by design; until then Claude cannot create `Cell.unity` or run tests in the Editor.
+- UnitySkills allowlist: `editor_play` and `editor_stop` still missing (scene/test skills are in). Needed for the M0 play test and later for any automated run check.
 - Restart the Editor once so the Linear colour space and Input System backend switch fully apply (Unity may prompt for this itself).
 - Cinemachine is 3.x (namespace `Unity.Cinemachine`, `CinemachineCamera`, spline dolly on Unity Splines) — not the 2.x API most tutorials show.
 
