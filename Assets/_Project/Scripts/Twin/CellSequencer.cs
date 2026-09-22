@@ -13,6 +13,14 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField, Min(0.1f)] private float ackTimeoutSeconds = 2f;
         [SerializeField, Min(1f)] private float transferTimeoutSeconds = 15f;
 
+        [Header("Status (play mode, read-only)")]
+        [SerializeField] private CellState state;
+        [SerializeField] private int partsOut;
+        [SerializeField] private float lastCycleSeconds;
+        [SerializeField] private int pickRetries;
+        [SerializeField] private int stalls;
+        [SerializeField] private float runSeconds;
+
         private CellSequence _sequence;
         private SignalBus _bus;
 
@@ -43,6 +51,17 @@ namespace TwoDude.FactoryTwin.Twin
 
             _sequence.Tick(inputs, Time.fixedDeltaTime);
             PublishChanges();
+            MirrorStatus();
+        }
+
+        private void MirrorStatus()
+        {
+            state = _sequence.State;
+            partsOut = _sequence.PartsOut;
+            lastCycleSeconds = double.IsNaN(_sequence.LastCycleSeconds) ? 0f : (float)_sequence.LastCycleSeconds;
+            pickRetries = _sequence.PickRetries;
+            stalls = _sequence.Stalls;
+            runSeconds = (float)_sequence.ElapsedSeconds;
         }
 
         private bool ReadBool(TopicPath topic)
