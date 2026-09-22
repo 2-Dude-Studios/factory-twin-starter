@@ -27,7 +27,11 @@
       "Write(Library/**)",
       "Edit(ProjectSettings/ProjectVersion.txt)",
       "Bash(git push --force*)",
-      "Bash(rm -rf*)"
+      "Bash(rm -rf*)",
+      "Edit(Assets/realvirtual/**)",
+      "Write(Assets/realvirtual/**)",
+      "Edit(Assets/Gizmos/realvirtual/**)",
+      "Write(Assets/Gizmos/realvirtual/**)"
     ]
   }
 }

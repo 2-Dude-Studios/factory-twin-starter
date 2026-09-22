@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M0 — Setup
+**Current milestone:** M1 — Cell loop (M0 closed 2026-09-22)
 **Last updated:** 2026-09-22
 
 ## Done
@@ -16,12 +16,20 @@
 - Factory Training sample, Fast IK 1.2 and Particle Pack 3.1 imported. The sample imports flat into `Assets/` as a whole project (it also rewrote every ProjectSettings file and added ~24 packages); everything was moved via AssetDatabase (GUIDs kept) to `Assets/ThirdParty/FactoryTraining|FastIK|ParticlePack/`. Restored Active Input Handling = Both and the `REALVIRTUAL` define afterwards. 0 compile errors.
 - Render pipeline is now the sample's `ThirdParty/FactoryTraining/Settings/assets/PC_RPAsset_DC` (Deferred+, Decals, SSAO) — the hall's look depends on it, so it stays active. Our `_Project/Settings/PC_RPAsset` is kept as a fallback but unused.
 
-## Pending (M0 exit: realvirtual demo conveyor moves inside our project)
+- **M0 exit met.** `DemoRealvirtual.unity` in Play: ConveyorEntry1 `IsRunning`, 200 mm/s; MU `Turbine-1` moved 0.38 m in 4 s; 0 console errors. Verified through UnitySkills (`editor_play` / `gameobject_get_info`).
+- Found and fixed on the way: the Factory Training import had wiped realvirtual's 10 `rv*` layers, 3 tags and its physics collision matrix (TransportSurface threw at Start). TagManager merged (sample layers 6–9, realvirtual 13–22), DynamicsManager restored from the realvirtual import commit.
+
+## Pending (M0 leftovers, non-blocking)
+- [ ] Import M2MqttUnity → `Assets/ThirdParty/M2MqttUnity/` (needed at M3)
+
+## M1 — Cell loop (exit: infeed → gate → pick station → outfeed runs 10 min without stalling)
+- [ ] `Assets/_Project/Scenes/Cell.unity` from the Factory Training hall (one bay), realvirtual Drives/TransportSurfaces/Sensors on Unity Splines
+- [ ] `TwinSignals` facade over realvirtual `Signal` components (the only 3D↔data bridge)
+- [ ] Part source/sink, gate sensor, placeholder pick (MU teleport or simple Drive) until M2
+- [ ] Replace Build Settings scene with Cell.unity
 - [ ] Import M2MqttUnity → `Assets/ThirdParty/M2MqttUnity/`
-- [ ] `Assets/realvirtual/Scenes/DemoRealvirtual.unity` is loaded (8 Drives found: ConveyorEntry1/2, ConveyorExit1/2, CNC axes). Press Play, confirm conveyors move (M0 exit)
 
 ## Manual steps pending
-- UnitySkills allowlist: `editor_play` and `editor_stop` still missing (scene/test skills are in). Needed for the M0 play test and later for any automated run check.
 - Restart the Editor once so the Linear colour space and Input System backend switch fully apply (Unity may prompt for this itself).
 - Cinemachine is 3.x (namespace `Unity.Cinemachine`, `CinemachineCamera`, spline dolly on Unity Splines) — not the 2.x API most tutorials show.
 
@@ -29,10 +37,11 @@
 (none)
 
 ## Decisions and risks
+- **Project-style imports overwrite ProjectSettings.** Factory Training did this once (see M0 exit note). If any Asset Store item is re-imported, diff `ProjectSettings/` against git before committing.
 - **Packages added by the Factory Training import** (not chosen by us): Timeline, uGUI, Post Processing v2 (unused under URP), ProGrids preview (embedded), AI Navigation, Burst/Collections/Mathematics, Asset Manager, Visual Scripting-free. Left in place because the sample scene may reference them; prune after M1 once the cell is carved out and we know what the scene actually needs.
 - QualitySettings "Mobile" level references the URP template's Mobile RP asset, which is not in the project. Harmless on Windows (PC level is active); tidy when pruning.
 - Build Settings now list `ThirdParty/FactoryTraining/Scenes/urp_scene_with_training.unity`; replace with `Cell.unity` at M1.
-- **realvirtual location.** It imported to `Assets/realvirtual/`, not `Assets/ThirdParty/realvirtual/`. Recommendation: leave it there (Unity only reads gizmo icons from `Assets/Gizmos/`, and realvirtual's updater expects its default path) and extend the "never edit" rule in CLAUDE.md and `.claude/settings.json` to `Assets/realvirtual/**`. Awaiting confirmation.
+- **realvirtual location (decided).** Stays at `Assets/realvirtual/` + `Assets/Gizmos/realvirtual/` (its default; Unity only reads gizmo icons from `Assets/Gizmos/`). CLAUDE.md and `.claude/settings.json` treat both as ThirdParty.
 - **Compatibility.** realvirtual 6.0.11 warned that Unity 6000.3.19f1 is outside its tested range; import was continued anyway. No compile errors, but watch for runtime oddities in its demo scene.
 - **Assemblies (resolved).** realvirtual ships `realvirtual.base.asmdef`, so `TwoDude.FactoryTwin.Twin` can reference it and the `TwinSignals` facade can live in the Twin assembly as planned.
 - realvirtual's asmdef references Cinemachine 2.x's assembly name (`Cinemachine`); we have 3.x (`Unity.Cinemachine`). Its optional Cinemachine helpers are therefore inactive — fine for us, our camera work uses 3.x directly.

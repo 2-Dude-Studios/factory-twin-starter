@@ -7,7 +7,7 @@ Full plan: `docs/build-plan.md`. Demo beats: `docs/demo-script.md`. Third-party 
 One production cell: infeed conveyor → sensor gate → six-axis arm pick-and-place → outfeed conveyor. Every drive, sensor and joint publishes state over MQTT to a UI Toolkit dashboard. A fault-injection button makes the 3D cell and the dashboard react together. That beat is the whole pitch.
 
 ## Hard rules
-- Write new code only under `Assets/_Project/`. Never edit anything under `Assets/ThirdParty/` (realvirtual, Factory Training sample, Fast IK, M2MqttUnity live there and are updated by re-import).
+- Write new code only under `Assets/_Project/`. Never edit anything under `Assets/ThirdParty/` (Factory Training sample, Fast IK, Particle Pack, M2MqttUnity) or under `Assets/realvirtual/` and `Assets/Gizmos/realvirtual/` (realvirtual's fixed import paths). All are updated by re-import and kept out of git.
 - realvirtual `Signal` components are the ONLY bridge between the 3D scene and data. Scripts never read a conveyor's transform to know its state; they read the signal.
 - MQTT topic scheme: `cell/<station>/<signal>` — e.g. `cell/infeed/drive_speed`, `cell/gate1/part_present`, `cell/arm/j3_deg`, `cell/press/tool_wear_min`. Payload is plain JSON `{ "v": <value>, "t": <unix_ms> }`.
 - No hard-coded broker addresses or ports. Read from `TwinConfig` (ScriptableObject at `Assets/_Project/Data/TwinConfig.asset`).
