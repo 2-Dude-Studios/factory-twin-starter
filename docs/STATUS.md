@@ -13,9 +13,10 @@
 - Replayer verified against the broker with a synthetic 3-row CSV (33 messages, correct topics/payloads, paho-mqtt 2.1.0). Real dataset downloaded from UCI (10,000 rows; 339 failures: TWF 46, HDF 115, PWF 95, OSF 98, RNF 19) and verified through both `replay.py` and the C# `Ai4iCsv` parser. CC BY 4.0 — credit line still owed in the Credits panel (M4) and on the web page.
 - Ahead of M3 (realvirtual-independent, so buildable now): `TopicPath`, `TopicFilter`, `SignalPayload`, `SignalBus`, `Ai4iCsv`, `DatasetReplayer`, `TwinConfig` (+ `Assets/_Project/Data/TwinConfig.asset`), `FrameRateLock`, in assembly `TwoDude.FactoryTwin.Twin`. 84 EditMode tests; compiles clean in the Editor; tests pass under `dotnet test` (NUnit 3). In-Editor run pending the allowlist step below.
 - realvirtual Starter 6.0.11 (build 8592) imported at its default paths `Assets/realvirtual/` + `Assets/Gizmos/realvirtual/`; compiles with 0 errors under URP 17.3. Both paths are git-ignored; the project settings its importer changed (layers, physics matrix, `REALVIRTUAL` define) are committed.
+- Factory Training sample, Fast IK 1.2 and Particle Pack 3.1 imported. The sample imports flat into `Assets/` as a whole project (it also rewrote every ProjectSettings file and added ~24 packages); everything was moved via AssetDatabase (GUIDs kept) to `Assets/ThirdParty/FactoryTraining|FastIK|ParticlePack/`. Restored Active Input Handling = Both and the `REALVIRTUAL` define afterwards. 0 compile errors.
+- Render pipeline is now the sample's `ThirdParty/FactoryTraining/Settings/assets/PC_RPAsset_DC` (Deferred+, Decals, SSAO) — the hall's look depends on it, so it stays active. Our `_Project/Settings/PC_RPAsset` is kept as a fallback but unused.
 
 ## Pending (M0 exit: realvirtual demo conveyor moves inside our project)
-- [ ] Import Factory Training | Industry Sample from Asset Store → move into `Assets/ThirdParty/FactoryTraining/`
 - [ ] Import M2MqttUnity → `Assets/ThirdParty/M2MqttUnity/`
 - [ ] Open `Assets/realvirtual/Scenes/DemoRealvirtual.unity`, press Play, conveyor moves (M0 exit)
 
@@ -28,6 +29,9 @@
 (none)
 
 ## Decisions and risks
+- **Packages added by the Factory Training import** (not chosen by us): Timeline, uGUI, Post Processing v2 (unused under URP), ProGrids preview (embedded), AI Navigation, Burst/Collections/Mathematics, Asset Manager, Visual Scripting-free. Left in place because the sample scene may reference them; prune after M1 once the cell is carved out and we know what the scene actually needs.
+- QualitySettings "Mobile" level references the URP template's Mobile RP asset, which is not in the project. Harmless on Windows (PC level is active); tidy when pruning.
+- Build Settings now list `ThirdParty/FactoryTraining/Scenes/urp_scene_with_training.unity`; replace with `Cell.unity` at M1.
 - **realvirtual location.** It imported to `Assets/realvirtual/`, not `Assets/ThirdParty/realvirtual/`. Recommendation: leave it there (Unity only reads gizmo icons from `Assets/Gizmos/`, and realvirtual's updater expects its default path) and extend the "never edit" rule in CLAUDE.md and `.claude/settings.json` to `Assets/realvirtual/**`. Awaiting confirmation.
 - **Compatibility.** realvirtual 6.0.11 warned that Unity 6000.3.19f1 is outside its tested range; import was continued anyway. No compile errors, but watch for runtime oddities in its demo scene.
 - **Assemblies (resolved).** realvirtual ships `realvirtual.base.asmdef`, so `TwoDude.FactoryTwin.Twin` can reference it and the `TwinSignals` facade can live in the Twin assembly as planned.
