@@ -1,0 +1,17 @@
+{
+    "name": "TwoDude.FactoryTwin.Twin.Realvirtual",
+    "rootNamespace": "TwoDude.FactoryTwin.Twin",
+    "references": [
+        "TwoDude.FactoryTwin.Twin",
+        "realvirtual.base"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
