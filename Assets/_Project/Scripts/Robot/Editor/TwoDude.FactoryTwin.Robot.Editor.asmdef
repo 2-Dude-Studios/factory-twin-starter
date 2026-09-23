@@ -1,0 +1,19 @@
+{
+    "name": "TwoDude.FactoryTwin.Robot.Editor",
+    "rootNamespace": "TwoDude.FactoryTwin.Robot",
+    "references": [
+        "Unity.Robotics.UrdfImporter",
+        "Unity.Robotics.UrdfImporter.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

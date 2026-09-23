@@ -3,7 +3,8 @@
     "rootNamespace": "TwoDude.FactoryTwin.Twin",
     "references": [
         "TwoDude.FactoryTwin.Twin",
-        "realvirtual.base"
+        "realvirtual.base",
+        "TwoDude.FactoryTwin.Robot"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

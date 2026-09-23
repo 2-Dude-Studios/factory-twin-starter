@@ -3,6 +3,7 @@
     "rootNamespace": "TwoDude.FactoryTwin.Tests",
     "references": [
         "TwoDude.FactoryTwin.Twin",
+        "TwoDude.FactoryTwin.Robot",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

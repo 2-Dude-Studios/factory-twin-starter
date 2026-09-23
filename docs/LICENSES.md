@@ -20,7 +20,8 @@ Full tracker with 62 candidates and verdicts: https://claude.ai/artifact/AGRYueG
 | UnitySkills (Editor automation for Claude Code) | v2.8.4 | github.com/Besty0728/Unity-Skills | MIT | OK | Packages/manifest.json (git URL; dev tooling, not part of the demo) | no |
 | Unity Test Framework | 1.6.0 | Unity registry (built-in) | Unity Companion License | OK | Packages/manifest.json (editor-only, not shipped) | no |
 | URDF-Importer | v0.5.2 | github.com/Unity-Technologies/URDF-Importer | Apache-2.0 | OK | Packages/manifest.json (git URL) | notice in Credits |
-| universal_robot (UR5e/UR10e URDF + meshes) | noetic-devel | github.com/ros-industrial/universal_robot | Apache-2.0 + BSD-3-Clause | OK (not UR15/18/20/30/8LONG) | Assets/_Project/Robots/ur (de-branded) | notice in Credits |
+| universal_robot — UR5e URDF + meshes only | commit 39ad110d (20 Jul 2026) | github.com/ros-industrial/universal_robot | BSD-3-Clause (`ur_description/LICENSE`), repo Apache-2.0 | OK — UR5e only; UR15/18/20/30/8LONG meshes not copied | Assets/_Project/Robots/ur (de-branded: URBlue material renamed and recoloured; see its README.md) | **yes** — notice in Credits |
+| xacro (Python package, build-time only) | 2.x | pypi.org/project/xacro | BSD-3-Clause | OK — used once to expand the UR5e xacro; not in the repo or the build | not shipped | no |
 | Fast IK | 1.2 | Unity Asset Store | Standard Asset Store EULA | OK | Assets/ThirdParty/FastIK (not in git) | no |
 | M2MqttUnity | main | github.com/gpvigano/M2MqttUnity | MIT (bundled M2Mqtt: EPL-1.0) | Conditional (do not modify the EPL lib) | Assets/ThirdParty/M2MqttUnity | notice in Credits |
 | AI4I 2020 Predictive Maintenance Dataset | 2020 | UCI ML Repository, doi:10.24432/C5HS5C | CC BY 4.0 | Conditional | Assets/_Project/Data/ai4i2020.csv, tools/replay | **yes** — Credits + web page |
