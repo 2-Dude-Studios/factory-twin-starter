@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M2 — Arm (M1 closed 2026-09-22)
+**Current milestone:** M3 — Data spine (M2 closed 2026-09-23)
 **Last updated:** 2026-09-22
 
 ## Done
@@ -20,7 +20,6 @@
 - Found and fixed on the way: the Factory Training import had wiped realvirtual's 10 `rv*` layers, 3 tags and its physics collision matrix (TransportSurface threw at Start). TagManager merged (sample layers 6–9, realvirtual 13–22), DynamicsManager restored from the realvirtual import commit.
 
 ## Pending (M0 leftovers, non-blocking)
-- [ ] Import M2MqttUnity → `Assets/ThirdParty/M2MqttUnity/` (needed at M3)
 
 ## M1 — Cell loop (exit: infeed → gate → pick station → outfeed runs 10 min without stalling)
 - [x] `Assets/_Project/Scenes/Cell.unity` — Save As of the Factory Training hall (keeps its baked lighting; the sample file is untouched). Training content deactivated. Cell built on the hatched keep-clear zone at (−5…0.5, −1…3.9): infeed `ConveyorSmall` (flows −x, z 0.65) → `Gate1` light barrier → pick station at (−2.0, 0, 1.2) → outfeed `ConveyorSmall` (flows −x, z 1.2) → `ExitSensor` → `Sink`. Parts from a realvirtual `Source` every 400 mm. L-shaped so the M2 arm does a 90° swing, pick and place both 0.55 m from its base (inside UR5e reach).
@@ -30,6 +29,20 @@
 - [x] `ProjectSettingsGuard` (Editor): re-enables Run In Background on every reload and errors if realvirtual's layers go missing.
 - [x] **M1 exit met.** 10-minute soak in Play (673.7 s simulated): 143 parts out, 12.8–13.8 parts/min every minute (first minute 9.9 while the line fills), steady 4.58 s cycle ≈ 771 parts/h, 0 pick retries, 0 stalls, parts in the cell never above 9, no console errors from our code, no play-mode resets.
 - [x] Build Settings contain only `Cell.unity` (enforced by `ProjectSettingsGuard`).
+
+## M2 — Arm (exit: arm picks every part the gate reports; no misses in a 5-minute run)
+- [x] **De-branded UR5e.** `ur_description` @39ad110 expanded from xacro to `Assets/_Project/Robots/ur/cell_arm.urdf`; UR5e meshes only. The `URBlue` material is renamed `CellAccent` and recoloured to machine grey — the UR5e meshes carry no logos or textures, only that brand colour. Provenance and the exact edits are in that folder's README.md; licence row updated.
+- [x] Imported as 6 ArticulationBody joints via `Tools > Factory Twin > Import Cell Arm (UR5e)` (the importer's own entry point needs a Project-window selection, which cannot be scripted). Mounted on the 0.6 m realvirtual stand at (−2.0, 0.6, 1.2).
+- [x] Waypoints baked from the UR's closed-form kinematics offline (`scratchpad/ur5e_kin.py`) rather than runtime IK, as the build plan recommends: 8 poses, 0.00 mm TCP error, minimum-travel IK branch, shoulder kept in its normal working range.
+- [x] `ArmProgram` (pure, 7 tests) plays the poses at 110 °/s and advances only once the measured joints arrive; `ArmController` drives the ArticulationBodies and applies the drive gains the import leaves at zero.
+- [x] `ArmSignalBridge` + `PartGripper` keep signals the only 3D↔data bridge: `arm/pick_cmd` in; `arm/busy`, `arm/grip_cmd`, `arm/holding` and `arm/j1_deg`…`j6_deg` out. 19 signals bound in TwinSignals. The M1 `PartTransfer` placeholder is disabled.
+- [x] **M2 exit met.** 5.6-minute run: 32 arm cycles, 33 parts out, **0 pick retries, 0 stalls**, 7.0 s cycle (≈516 parts/h), never more than 8 parts in the cell, no console errors from our code, no play-mode resets.
+
+## M3 — Data spine (exit: `mosquitto_sub -t 'cell/#'` shows the whole cell live)
+- [ ] Import M2MqttUnity → `Assets/ThirdParty/M2MqttUnity/`
+- [ ] `SignalPublisher`: bus → MQTT, rate-limited per signal (10 Hz) and deadbanded, broker from `TwinConfig`
+- [ ] Subscribe side: broker → bus, so the Python replayer and the fault injector can drive the cell
+- [ ] Press station telemetry from the AI4I replayer; fault injector flips TWF/HDF/PWF/OSF/RNF
 
 ## Manual steps pending
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Deletes are blocked for Claude; either delete them in the Hierarchy or add `gameobject_delete_batch` to the UnitySkills allowlist.
@@ -42,6 +55,10 @@
 (none)
 
 ## Decisions and risks
+- **Arm poses are baked, not solved at runtime.** Change the layout and they must be re-baked (`scratchpad/ur5e_kin.py`; inputs are the measured part rest pose and the arm base). Runtime IK is deliberately not shipped.
+- **Measured, not assumed, geometry.** A part rests at the gate at x = −1.71 with its centre at 0.575 m (belt top 0.525). The first bake assumed 0.56 m and drove the flange into the part; with stiff drives PhysX launched parts thousands of metres. Re-measure if the conveyors or part size change.
+- **The URDF import leaves the articulation root free-floating and the drives at zero gain**, so the arm fell through the floor on the first run. `ArmImporter` now pins the root and `ArmController` sets the gains, both reproducible on re-import.
+- **Raycast sensors never fill `CollidingMus`.** Anything reading parts off a light barrier must also use `LastTriggeredBy` (`PartGripper` does, distance-checked).
 - **Cell.unity is a copy of the sample scene** (placement data referencing sample assets, committed to git). The sample's own files stay out of git and ship only inside builds, so licence rule 1 holds; revisit if the repo is ever shared outside the studio.
 - **Conveyors are straight realvirtual `ConveyorSmall`s, not spline-built.** Nothing in the M1 layout curves; Splines stay for curved routes, AGV paths and the M5 camera dolly.
 - **`PartTransfer` talks to realvirtual `Sensor`/`MU` directly** (in the bridge assembly), a deliberate exception to the TwinSignals-only rule for an actuator stand-in that is deleted at M2.
