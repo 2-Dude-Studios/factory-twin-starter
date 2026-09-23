@@ -19,8 +19,6 @@
 - **M0 exit met.** `DemoRealvirtual.unity` in Play: ConveyorEntry1 `IsRunning`, 200 mm/s; MU `Turbine-1` moved 0.38 m in 4 s; 0 console errors. Verified through UnitySkills (`editor_play` / `gameobject_get_info`).
 - Found and fixed on the way: the Factory Training import had wiped realvirtual's 10 `rv*` layers, 3 tags and its physics collision matrix (TransportSurface threw at Start). TagManager merged (sample layers 6–9, realvirtual 13–22), DynamicsManager restored from the realvirtual import commit.
 
-## Pending (M0 leftovers, non-blocking)
-
 ## M1 — Cell loop (exit: infeed → gate → pick station → outfeed runs 10 min without stalling)
 - [x] `Assets/_Project/Scenes/Cell.unity` — Save As of the Factory Training hall (keeps its baked lighting; the sample file is untouched). Training content deactivated. Cell built on the hatched keep-clear zone at (−5…0.5, −1…3.9): infeed `ConveyorSmall` (flows −x, z 0.65) → `Gate1` light barrier → pick station at (−2.0, 0, 1.2) → outfeed `ConveyorSmall` (flows −x, z 1.2) → `ExitSensor` → `Sink`. Parts from a realvirtual `Source` every 400 mm. L-shaped so the M2 arm does a 90° swing, pick and place both 0.55 m from its base (inside UR5e reach).
 - [x] `TwinSignals` bridge (assembly `TwoDude.FactoryTwin.Twin.Realvirtual`, the only code referencing realvirtual): 11 realvirtual PLC signals under `Cell/Signals`, mirrored to/from `cell/<station>/<signal>` on the bus. Inputs publish on change; outputs are written when their topic is published.
