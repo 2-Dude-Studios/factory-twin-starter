@@ -102,6 +102,55 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void Hold_StopsBothConveyorsUntilReleased()
+        {
+            var holding = new CellInputs(false, false, false, hold: true);
+            var atGateHolding = new CellInputs(true, false, false, hold: true);
+
+            var sequence = new CellSequence(ackTimeoutSeconds: 1d, transferTimeoutSeconds: 5d);
+            sequence.Tick(Idle, Dt);
+            sequence.Tick(holding, Dt);
+
+            Assert.AreEqual(CellState.Held, sequence.State);
+            Assert.IsFalse(sequence.Outputs.InfeedRun);
+            Assert.IsFalse(sequence.Outputs.OutfeedRun);
+            Assert.IsFalse(sequence.Outputs.PickCommand);
+
+            Run(sequence, atGateHolding, 30d);
+            Assert.AreEqual(CellState.Held, sequence.State, "a part waiting at the gate is not picked while held");
+            Assert.IsFalse(sequence.Outputs.PickCommand);
+            Assert.AreEqual(0, sequence.Stalls, "a hold is not a stall, however long it lasts");
+
+            sequence.Tick(AtGate, Dt);
+            Assert.AreEqual(CellState.Feeding, sequence.State);
+            Assert.IsTrue(sequence.Outputs.OutfeedRun);
+
+            sequence.Tick(AtGate, Dt);
+            Assert.AreEqual(CellState.Transferring, sequence.State);
+            Assert.IsTrue(sequence.Outputs.PickCommand, "the waiting part is picked once the hold lifts");
+        }
+
+        [Test]
+        public void Hold_DuringATransfer_LetsThePickFinishFirst()
+        {
+            var holding = new CellInputs(false, false, false, hold: true);
+            var busyHolding = new CellInputs(false, true, false, hold: true);
+
+            var sequence = new CellSequence();
+            sequence.Tick(AtGate, Dt);
+            sequence.Tick(AtGateBusy, Dt);
+
+            Run(sequence, busyHolding, 2d);
+            Assert.AreEqual(CellState.Transferring, sequence.State);
+            Assert.IsTrue(sequence.Outputs.OutfeedRun, "the outfeed must still take the part the arm is carrying");
+
+            sequence.Tick(holding, Dt);
+            Assert.AreEqual(CellState.Held, sequence.State);
+            Assert.IsFalse(sequence.Outputs.InfeedRun);
+            Assert.IsFalse(sequence.Outputs.OutfeedRun);
+        }
+
+        [Test]
         public void TransferTimeout_StallsUntilGateIsClearedAndStationIdle()
         {
             var sequence = new CellSequence(ackTimeoutSeconds: 1d, transferTimeoutSeconds: 5d);

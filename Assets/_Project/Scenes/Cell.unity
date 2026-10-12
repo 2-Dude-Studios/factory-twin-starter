@@ -56402,6 +56402,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2108969894}
   - component: {fileID: 2108969895}
+  - component: {fileID: 2108969896}
   m_Layer: 0
   m_Name: Press
   m_TagString: Untagged
@@ -56440,10 +56441,26 @@ MonoBehaviour:
   dataset: {fileID: 4900000, guid: 4917a91f440fd8d47810ffc3409ff0cb, type: 3}
   rowsPerSecond: 2
   loop: 1
+  healthyBaseline: 1
   faultFilter: 0
   rowsLoaded: 0
   rowsPublished: 0
   finished: 0
+--- !u!114 &2108969896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2108969893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2eea8e00df848e49adba6e47ba8d607, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.FaultInjector
+  context: {fileID: 1633254721}
+  press: {fileID: 2108969895}
+  fault: 0
 --- !u!1 &2112621187
 GameObject:
   m_ObjectHideFlags: 0

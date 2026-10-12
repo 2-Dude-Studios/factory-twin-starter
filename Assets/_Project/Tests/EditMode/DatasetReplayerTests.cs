@@ -129,6 +129,37 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void SkipFailures_ReplaysOnlyHealthyRows()
+        {
+            var bus = new SignalBus();
+            var toolWear = new List<double>();
+            bus.Subscribe("cell/press/tool_wear_min", m => toolWear.Add(m.Value.Number));
+            var replayer = new DatasetReplayer(Ai4iCsv.Parse(Csv), bus) { RowsPerSecond = 10d, SkipFailures = true };
+
+            for (int i = 0; i < 4; i++)
+                replayer.Tick(0.1, i);
+
+            CollectionAssert.AreEqual(new[] { 0d, 3d, 0d, 3d }, toolWear);
+        }
+
+        [Test]
+        public void FaultFilter_OverridesSkipFailuresAndTheBaselineReturnsWhenCleared()
+        {
+            var bus = new SignalBus();
+            var toolWear = new List<double>();
+            bus.Subscribe("cell/press/tool_wear_min", m => toolWear.Add(m.Value.Number));
+            var replayer = new DatasetReplayer(Ai4iCsv.Parse(Csv), bus) { RowsPerSecond = 10d, SkipFailures = true };
+
+            replayer.Tick(0.1, 0L);
+            replayer.FaultFilter = FaultMode.HeatDissipation;      // inject
+            replayer.Tick(0.1, 1L);
+            replayer.FaultFilter = FaultMode.None;                 // clear
+            replayer.Tick(0.1, 2L);
+
+            CollectionAssert.AreEqual(new[] { 0d, 120d, 0d }, toolWear);
+        }
+
+        [Test]
         public void FaultFilter_ThatMatchesNothingFinishesInsteadOfSpinning()
         {
             var replayer = new DatasetReplayer(Ai4iCsv.Parse(Csv), new SignalBus())

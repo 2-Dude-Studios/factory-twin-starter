@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M3 — Data spine (M2 closed 2026-09-23)
+**Current milestone:** M4 — Dashboard (M3 closed 2026-10-12)
 **Last updated:** 2026-10-12
 
 ## Done
@@ -43,8 +43,9 @@
 - [x] `TwinSignals` now also publishes PLC outputs that a station writes directly, so command signals show up too (`arm/grip_cmd`, `infeed/drive_speed`, `outfeed/drive_speed`).
 - [x] Live check, 45 s in Play with `mosquitto_sub -t 'cell/#'` (via `docker exec factory-twin-broker`): 24 cell topics, about 1,500 messages, 0 console errors. That is the production cell complete; the press station is the remaining part of the exit condition.
 - [x] Press station in Unity: `PressStation` on `Cell/Press` hosts `DatasetReplayer` (2 rows/s, looping, fault filter on the Inspector), so `cell/press/*` flows without the Python script. Verified in Play: 10,000 rows loaded, 11 press topics on the broker with the dataset's first rows (298.1 K, 308.6 K, 1551 rpm, 42.8 Nm) alongside the 24 cell topics, 0 console errors. Disable the component when `tools/replay/replay.py` feeds the broker instead, or both write the same topics.
-- [ ] Fault injector: flips TWF/HDF/PWF/OSF/RNF on demand and the cell reacts.
-- [ ] M3 exit run: cell + press + one injected fault, all visible in `mosquitto_sub -t 'cell/#'`.
+- [x] Fault injector: `FaultInjector` on `Cell/Press`. A `FaultMode` value on `cell/press/inject_fault` (1 TWF, 2 HDF, 4 PWF, 8 OSF, 16 RNF; 0 clears) switches the press to dataset rows carrying that failure. It can come from the broker, from `Inject()`/`Clear()` (the M4 button), or from the component's `Fault` field in Play mode. The press runs a healthy baseline until then (`PressStation.healthyBaseline`).
+- [x] The line holds on a press fault: `CellSequence` has a `Hold` input and a `Held` state (both conveyors off, no pick). `CellSequencer` asserts it while `press/machine_failure` or any `press/fault_*` is true. A pick already under way finishes first. 117 EditMode tests pass.
+- [x] **M3 exit met.** 80 s in Play with `mosquitto_sub -t 'cell/#'`: 36 topics (24 cell, 11 press, the inject command), about 2,500 messages, 0 console errors. Tool wear injected from the broker: 0.5 s later the press reported 208 min with `fault_twf` and `machine_failure` true; the arm finished its pick, then `line/state` went to 3 and both conveyors stopped for the 18 s the fault stayed on. On clear the faults dropped within 0.3 s and parts flowed again (3 parts out before, 6 by the end; 0 pick retries, 0 stalls).
 
 ## Manual steps pending
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Deletes are blocked for Claude; either delete them in the Hierarchy or add `gameobject_delete_batch` to the UnitySkills allowlist.
@@ -68,7 +69,9 @@
 - **Conveyors are straight realvirtual `ConveyorSmall`s, not spline-built.** Nothing in the M1 layout curves; Splines stay for curved routes, AGV paths and the M5 camera dolly.
 - **`PartTransfer` talks to realvirtual `Sensor`/`MU` directly** (in the bridge assembly), a deliberate exception to the TwinSignals-only rule for an actuator stand-in that is deleted at M2.
 - **Camera for now:** realvirtual's `Main Camera` (orbit navigation) is active; the hall's camera is off. realvirtual's runtime toolbar (uGUI) is visible in Play and must be hidden before capture. Both are replaced by the Cinemachine camera at M5.
-- **Line status as numbers.** `cell/line/state` is 0 feeding, 1 transferring, 2 stalled; the payload scheme has no strings.
+- **Line status as numbers.** `cell/line/state` is 0 feeding, 1 transferring, 2 stalled, 3 held (press fault); the payload scheme has no strings.
+- **An injected fault stops the line** (decided 2026-10-12). The demo script used to say the infeed slows to buffer; beat 4 in `docs/demo-script.md` now says the line holds.
+- **The hold follows the press's fault signals, wherever they come from.** With `tools/replay/replay.py` feeding the broker, the dataset's own failure rows (about 1 in 30) will each hold the line for one row; run it with `--fault` on purpose, or add a healthy-only switch to it if that gets in the way.
 - **Project-style imports overwrite ProjectSettings.** Factory Training did this once (see M0 exit note). If any Asset Store item is re-imported, diff `ProjectSettings/` against git before committing.
 - **Packages added by the Factory Training import** (not chosen by us): Timeline, uGUI, Post Processing v2 (unused under URP), ProGrids preview (embedded), AI Navigation, Burst/Collections/Mathematics, Asset Manager, Visual Scripting-free. Left in place because the sample scene may reference them; prune after M1 once the cell is carved out and we know what the scene actually needs.
 - QualitySettings "Mobile" level references the URP template's Mobile RP asset, which is not in the project. Harmless on Windows (PC level is active); tidy when pruning.

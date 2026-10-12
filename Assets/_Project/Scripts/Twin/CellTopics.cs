@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace TwoDude.FactoryTwin.Twin
 {
     /// <summary>Production cell: every topic the cell loop reads or writes, in one place.</summary>
@@ -21,6 +23,20 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath OutfeedDriveSpeed = new TopicPath("outfeed", "drive_speed");
         public static readonly TopicPath OutfeedRunning = new TopicPath("outfeed", "running");
         public static readonly TopicPath OutfeedPartExit = new TopicPath("outfeed", "part_exit");
+
+        // Press station (AI4I telemetry). The line holds while the press reports any of these.
+        public static readonly TopicPath PressMachineFailure = new TopicPath("press", "machine_failure");
+        public static readonly IReadOnlyList<TopicPath> PressFaults = new[]
+        {
+            new TopicPath("press", "fault_twf"),
+            new TopicPath("press", "fault_hdf"),
+            new TopicPath("press", "fault_pwf"),
+            new TopicPath("press", "fault_osf"),
+            new TopicPath("press", "fault_rnf"),
+        };
+
+        // Fault injector command: a FaultMode value (1 TWF, 2 HDF, 4 PWF, 8 OSF, 16 RNF; 0 clears)
+        public static readonly TopicPath PressInjectFault = new TopicPath("press", "inject_fault");
 
         // Broker link, published by the MQTT bridge so the dashboard can show the connection
         public static readonly TopicPath LinkConnected = new TopicPath("link", "connected");

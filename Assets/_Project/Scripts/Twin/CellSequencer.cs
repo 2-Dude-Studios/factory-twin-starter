@@ -5,6 +5,7 @@ namespace TwoDude.FactoryTwin.Twin
     /// <summary>
     /// Production cell: runs <see cref="CellSequence"/> on the fixed timestep. Reads sensor state from the bus and
     /// publishes drive and pick commands back to it; TwinSignals turns those into realvirtual signal writes.
+    /// The line is held for as long as the press station reports a fault.
     /// </summary>
     [DefaultExecutionOrder(100)]
     public sealed class CellSequencer : MonoBehaviour
@@ -47,7 +48,8 @@ namespace TwoDude.FactoryTwin.Twin
             var inputs = new CellInputs(
                 ReadBool(CellTopics.GatePartPresent),
                 ReadBool(CellTopics.ArmBusy),
-                ReadBool(CellTopics.OutfeedPartExit));
+                ReadBool(CellTopics.OutfeedPartExit),
+                PressFaulted());
 
             _sequence.Tick(inputs, Time.fixedDeltaTime);
             PublishChanges();
@@ -62,6 +64,18 @@ namespace TwoDude.FactoryTwin.Twin
             pickRetries = _sequence.PickRetries;
             stalls = _sequence.Stalls;
             runSeconds = (float)_sequence.ElapsedSeconds;
+        }
+
+        private bool PressFaulted()
+        {
+            if (ReadBool(CellTopics.PressMachineFailure))
+                return true;
+            for (int i = 0; i < CellTopics.PressFaults.Count; i++)
+            {
+                if (ReadBool(CellTopics.PressFaults[i]))
+                    return true;
+            }
+            return false;
         }
 
         private bool ReadBool(TopicPath topic)

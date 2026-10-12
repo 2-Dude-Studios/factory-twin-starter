@@ -15,7 +15,9 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField] private TextAsset dataset;
         [SerializeField, Range(0.1f, 20f)] private float rowsPerSecond = 2f;
         [SerializeField] private bool loop = true;
-        [Tooltip("Only replay rows with at least one of these faults. None replays every row.")]
+        [Tooltip("Skip the dataset's own failure rows so the press only reports a fault when one is injected.")]
+        [SerializeField] private bool healthyBaseline = true;
+        [Tooltip("Only replay rows with at least one of these faults. Set by the FaultInjector; None is the baseline.")]
         [SerializeField] private FaultMode faultFilter = FaultMode.None;
 
         [Header("Status (play mode, read-only)")]
@@ -24,6 +26,13 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField] private bool finished;
 
         private DatasetReplayer _replayer;
+
+        /// <summary>The failure modes the press is currently made to report; None returns it to the baseline.</summary>
+        public FaultMode FaultFilter
+        {
+            get => faultFilter;
+            set => faultFilter = value;
+        }
 
         private void Start()
         {
@@ -52,6 +61,7 @@ namespace TwoDude.FactoryTwin.Twin
             // Applied every frame so the Inspector values can be changed while the demo runs.
             _replayer.RowsPerSecond = rowsPerSecond;
             _replayer.Loop = loop;
+            _replayer.SkipFailures = healthyBaseline;
             _replayer.FaultFilter = faultFilter;
 
             _replayer.Tick(Time.deltaTime, CellContext.NowUnixMs);

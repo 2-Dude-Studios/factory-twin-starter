@@ -65,6 +65,12 @@ namespace TwoDude.FactoryTwin.Twin
         /// <summary>When not None, only rows with at least one of these faults are replayed (the fault injector's lever).</summary>
         public FaultMode FaultFilter { get; set; } = FaultMode.None;
 
+        /// <summary>
+        /// With no <see cref="FaultFilter"/> set, skip rows that report a failure, so the baseline is a healthy
+        /// machine and a fault only appears when one is injected. Off replays every row, as replay.py does.
+        /// </summary>
+        public bool SkipFailures { get; set; }
+
         public bool Finished { get; private set; }
         public int RowsPublished { get; private set; }
 
@@ -107,7 +113,7 @@ namespace TwoDude.FactoryTwin.Twin
                 }
 
                 Ai4iRow candidate = _rows[_cursor++];
-                if (FaultFilter == FaultMode.None || (candidate.Faults & FaultFilter) != 0)
+                if (Wanted(candidate))
                 {
                     row = candidate;
                     return true;
@@ -116,6 +122,13 @@ namespace TwoDude.FactoryTwin.Twin
 
             row = default;
             return false;
+        }
+
+        private bool Wanted(Ai4iRow row)
+        {
+            if (FaultFilter != FaultMode.None)
+                return (row.Faults & FaultFilter) != 0;
+            return !SkipFailures || (row.Faults == FaultMode.None && !row.MachineFailure);
         }
 
         private void Publish(Ai4iRow row, long nowUnixMs)

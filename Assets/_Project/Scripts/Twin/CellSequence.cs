@@ -8,6 +8,7 @@ namespace TwoDude.FactoryTwin.Twin
         Feeding = 0,
         Transferring = 1,
         Stalled = 2,
+        Held = 3,
     }
 
     /// <summary>Production cell: sensor and actuator feedback the sequence reacts to.</summary>
@@ -17,11 +18,15 @@ namespace TwoDude.FactoryTwin.Twin
         public bool TransferBusy { get; }
         public bool PartAtExit { get; }
 
-        public CellInputs(bool partAtGate, bool transferBusy, bool partAtExit)
+        /// <summary>An upstream station reports a fault; the line must not move parts while this is set.</summary>
+        public bool Hold { get; }
+
+        public CellInputs(bool partAtGate, bool transferBusy, bool partAtExit, bool hold = false)
         {
             PartAtGate = partAtGate;
             TransferBusy = transferBusy;
             PartAtExit = partAtExit;
+            Hold = hold;
         }
     }
 
@@ -44,7 +49,8 @@ namespace TwoDude.FactoryTwin.Twin
     /// Production cell: the virtual PLC for infeed → gate → pick → outfeed. Pure logic with no Unity dependency,
     /// ticked with the fixed timestep. The infeed runs until a part reaches the gate, then stops while the pick
     /// station moves the part; a pick command that is never acknowledged is re-pulsed, and a transfer that never
-    /// finishes stalls the line until the gate is cleared.
+    /// finishes stalls the line until the gate is cleared. A hold stops both conveyors for as long as it is set;
+    /// a pick already under way is finished first so the arm never freezes with a part in its gripper.
     /// </summary>
     public sealed class CellSequence
     {
@@ -92,23 +98,32 @@ namespace TwoDude.FactoryTwin.Twin
             switch (State)
             {
                 case CellState.Feeding:
-                    if (inputs.PartAtGate)
+                    if (inputs.Hold)
+                        Enter(CellState.Held);
+                    else if (inputs.PartAtGate)
                         BeginTransfer();
                     break;
 
                 case CellState.Transferring:
                     TickTransfer(inputs, deltaSeconds);
+                    if (State == CellState.Feeding && inputs.Hold)
+                        Enter(CellState.Held);
                     break;
 
                 case CellState.Stalled:
                     if (!inputs.PartAtGate && !inputs.TransferBusy)
+                        Enter(inputs.Hold ? CellState.Held : CellState.Feeding);
+                    break;
+
+                case CellState.Held:
+                    if (!inputs.Hold)
                         Enter(CellState.Feeding);
                     break;
             }
 
             Outputs = new CellOutputs(
                 infeedRun: State == CellState.Feeding,
-                outfeedRun: true,
+                outfeedRun: State != CellState.Held,
                 pickCommand: State == CellState.Transferring && !_ackSeen && !_repulse);
             _repulse = false;
         }
