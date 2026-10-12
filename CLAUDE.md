@@ -7,12 +7,12 @@ Full plan: `docs/build-plan.md`. Demo beats: `docs/demo-script.md`. Third-party 
 One production cell: infeed conveyor → sensor gate → six-axis arm pick-and-place → outfeed conveyor. Every drive, sensor and joint publishes state over MQTT to a UI Toolkit dashboard. A fault-injection button makes the 3D cell and the dashboard react together. That beat is the whole pitch.
 
 ## Hard rules
-- Write new code only under `Assets/_Project/`. Never edit anything under `Assets/ThirdParty/` (Factory Training sample, Fast IK, Particle Pack, M2MqttUnity) or under `Assets/realvirtual/` and `Assets/Gizmos/realvirtual/` (realvirtual's fixed import paths). All are updated by re-import and kept out of git.
+- Write new code only under `Assets/_Project/`. Never edit anything under `Assets/ThirdParty/` (Factory Training sample, Fast IK, Particle Pack, MQTTnet) or under `Assets/realvirtual/` and `Assets/Gizmos/realvirtual/` (realvirtual's fixed import paths). All are updated by re-import and kept out of git.
 - realvirtual `Signal` components are the ONLY bridge between the 3D scene and data. Scripts never read a conveyor's transform to know its state; they read the signal.
 - MQTT topic scheme: `cell/<station>/<signal>` — e.g. `cell/infeed/drive_speed`, `cell/gate1/part_present`, `cell/arm/j3_deg`, `cell/press/tool_wear_min`. Payload is plain JSON `{ "v": <value>, "t": <unix_ms> }`.
 - No hard-coded broker addresses or ports. Read from `TwinConfig` (ScriptableObject at `Assets/_Project/Data/TwinConfig.asset`).
 - One MonoBehaviour per responsibility. No God managers.
-- Do not add packages without asking. Current set: com.unity.splines, URDF-Importer (git URL), Input System, Cinemachine, UI Toolkit (built in).
+- Do not add packages without asking. Current set: com.unity.splines, URDF-Importer (git URL), Input System, Cinemachine, UI Toolkit (built in). MQTT client is MQTTnet 4.3.7, vendored as a DLL under `Assets/ThirdParty/MQTTnet/` (not a package).
 - Any third-party file, model, texture, sound or dataset added to the repo gets a line in `docs/LICENSES.md` in the same commit. If the licence is unknown, do not add the file.
 - Keep vendor branding (UR, KUKA, ABB, FANUC) off any model that will be shown publicly.
 - Frame-rate lock 60 in builds (`Application.targetFrameRate = 60`) — the video pipeline needs it.

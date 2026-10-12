@@ -23,7 +23,7 @@ Full tracker with 62 candidates and verdicts: https://claude.ai/artifact/AGRYueG
 | universal_robot — UR5e URDF + meshes only | commit 39ad110d (20 Jul 2026) | github.com/ros-industrial/universal_robot | BSD-3-Clause (`ur_description/LICENSE`), repo Apache-2.0 | OK — UR5e only; UR15/18/20/30/8LONG meshes not copied | Assets/_Project/Robots/ur (de-branded: URBlue material renamed and recoloured; see its README.md) | **yes** — notice in Credits |
 | xacro (Python package, build-time only) | 2.x | pypi.org/project/xacro | BSD-3-Clause | OK — used once to expand the UR5e xacro; not in the repo or the build | not shipped | no |
 | Fast IK | 1.2 | Unity Asset Store | Standard Asset Store EULA | OK | Assets/ThirdParty/FastIK (not in git) | no |
-| M2MqttUnity | main | github.com/gpvigano/M2MqttUnity | MIT (bundled M2Mqtt: EPL-1.0) | Conditional (do not modify the EPL lib) | Assets/ThirdParty/M2MqttUnity | notice in Credits |
+| MQTTnet | 4.3.7.1207 (netstandard2.1 build) | github.com/dotnet/MQTTnet, NuGet | MIT | OK | Assets/ThirdParty/MQTTnet (DLL + LICENSE vendored, in git via LFS) | notice in Credits |
 | AI4I 2020 Predictive Maintenance Dataset | 2020 | UCI ML Repository, doi:10.24432/C5HS5C | CC BY 4.0 | Conditional | Assets/_Project/Data/ai4i2020.csv, tools/replay | **yes** — Credits + web page |
 | Industrial Workshop Foundry HDRI | — | polyhaven.com/a/industrial_workshop_foundry | CC0 | OK | Assets/_Project/Lighting | no (optional) |
 | ambientCG materials | per asset | ambientcg.com | CC0 1.0 | OK | Assets/_Project/Materials | no (optional) |
@@ -32,5 +32,7 @@ Full tracker with 62 candidates and verdicts: https://claude.ai/artifact/AGRYueG
 | ProGrids | 3.0.3-preview.6 | Unity (embedded by the Factory Training sample) | Unity Companion License | OK | Packages/com.unity.progrids (editor-only, not shipped) | no |
 | Sonniss #GameAudioGDC | per year | gdc.sonniss.com | Sonniss GDC bundle licence | OK (no redistribution, no AI training) | Assets/_Project/Audio | no |
 | Pixabay SFX | per clip | pixabay.com | Pixabay Content License | OK | Assets/_Project/Audio | no |
+
+Replaced 2026-10-04: M2MqttUnity (bundled Eclipse Paho M2Mqtt, last released Dec 2015, EPL-1.0, MQTT 3.1.1 only) was dropped for MQTTnet. MQTTnet 5.x targets net8.0+ only, which Unity 6000.3 (.NET Standard 2.1, Mono/IL2CPP) cannot load, so 4.3.7 is the newest usable release.
 
 Add a row in the same commit as the file. Unknown licence = do not add the file.

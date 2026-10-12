@@ -1,7 +1,7 @@
 # Status
 
 **Current milestone:** M3 — Data spine (M2 closed 2026-09-23)
-**Last updated:** 2026-09-22
+**Last updated:** 2026-10-12
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
@@ -37,10 +37,14 @@
 - [x] **M2 exit met.** 5.6-minute run: 32 arm cycles, 33 parts out, **0 pick retries, 0 stalls**, 7.0 s cycle (≈516 parts/h), never more than 8 parts in the cell, no console errors from our code, no play-mode resets.
 
 ## M3 — Data spine (exit: `mosquitto_sub -t 'cell/#'` shows the whole cell live)
-- [ ] Import M2MqttUnity → `Assets/ThirdParty/M2MqttUnity/`
-- [ ] `SignalPublisher`: bus → MQTT, rate-limited per signal (10 Hz) and deadbanded, broker from `TwinConfig`
-- [ ] Subscribe side: broker → bus, so the Python replayer and the fault injector can drive the cell
-- [ ] Press station telemetry from the AI4I replayer; fault injector flips TWF/HDF/PWF/OSF/RNF
+- [x] MQTT client: MQTTnet 4.3.7 vendored as a DLL in `Assets/ThirdParty/MQTTnet/` (replaces the planned M2MqttUnity; reason in `docs/LICENSES.md`).
+- [x] `SignalPublisher` (pure, 13 tests): bus → MQTT, rate-limited per signal (10 Hz) and deadbanded. `MqttBridge` on the `Cell` object owns the client; broker, rate and deadband come from `TwinConfig`. Changes made while the broker is unreachable are held (latest value per topic) and the whole cell is re-sent when the link comes up.
+- [x] Subscribe side: broker → bus on `cell/#` (MQTT 5 no-local). Messages that arrive from the broker are not sent back to it. Verified: a speed setpoint published from the broker (`cell/infeed/drive_speed` 120) changed the belt, and `cell/infeed/speed_mm_s` reported 120.
+- [x] `TwinSignals` now also publishes PLC outputs that a station writes directly, so command signals show up too (`arm/grip_cmd`, `infeed/drive_speed`, `outfeed/drive_speed`).
+- [x] Live check, 45 s in Play with `mosquitto_sub -t 'cell/#'` (via `docker exec factory-twin-broker`): 24 cell topics, about 1,500 messages, 0 console errors. That is the production cell complete; the press station is the remaining part of the exit condition.
+- [ ] Press station in Unity: a component hosting `DatasetReplayer` so `cell/press/*` flows without the Python script (the script already works against the broker).
+- [ ] Fault injector: flips TWF/HDF/PWF/OSF/RNF on demand and the cell reacts.
+- [ ] M3 exit run: cell + press + one injected fault, all visible in `mosquitto_sub -t 'cell/#'`.
 
 ## Manual steps pending
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Deletes are blocked for Claude; either delete them in the Hierarchy or add `gameobject_delete_batch` to the UnitySkills allowlist.
@@ -53,6 +57,9 @@
 (none)
 
 ## Decisions and risks
+- **MQTT messages are not retained.** A subscriber that connects mid-run sees a signal only once it next changes; steady ones (drive speed setpoints, `outfeed/running`) stay silent until then. Start the subscriber before Play, or decide on retained publishes plus a last-will on `cell/link/connected` if a late-joining dashboard ever reads from the broker.
+- **The sequencer owns `infeed/drive_fwd`.** It toggles it every cycle, so an external stop on that topic is overwritten within seconds. A fault that has to hold the line needs its own signal the sequencer respects.
+- **realvirtual dirties `Cell.unity` on load and after Play** (layout-driven RectTransform values on its UI prefab). UnitySkills refuses to run tests on a dirty scene, so the scene gets re-saved with that noise; it shows up in diffs and is harmless.
 - **Arm poses are baked, not solved at runtime.** Change the layout and they must be re-baked (`scratchpad/ur5e_kin.py`; inputs are the measured part rest pose and the arm base). Runtime IK is deliberately not shipped.
 - **Measured, not assumed, geometry.** A part rests at the gate at x = −1.71 with its centre at 0.575 m (belt top 0.525). The first bake assumed 0.56 m and drove the flange into the part; with stiff drives PhysX launched parts thousands of metres. Re-measure if the conveyors or part size change.
 - **The URDF import leaves the articulation root free-floating and the drives at zero gain**, so the arm fell through the floor on the first run. `ArmImporter` now pins the root and `ArmController` sets the gains, both reproducible on re-import.

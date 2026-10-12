@@ -22,6 +22,9 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath OutfeedRunning = new TopicPath("outfeed", "running");
         public static readonly TopicPath OutfeedPartExit = new TopicPath("outfeed", "part_exit");
 
+        // Broker link, published by the MQTT bridge so the dashboard can show the connection
+        public static readonly TopicPath LinkConnected = new TopicPath("link", "connected");
+
         // Line-level status published by the sequencer
         public static readonly TopicPath LineState = new TopicPath("line", "state");
         public static readonly TopicPath LineStalled = new TopicPath("line", "stalled");

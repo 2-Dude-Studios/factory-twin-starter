@@ -8,7 +8,8 @@ namespace TwoDude.FactoryTwin.Twin
     /// <summary>
     /// Data spine: the only bridge between realvirtual signals and the signal bus. PLC inputs (sensor and drive
     /// state coming out of the simulation) are published to cell/&lt;station&gt;/&lt;signal&gt; when they change;
-    /// PLC outputs (commands into the simulation) are written whenever their topic is published on the bus.
+    /// PLC outputs (commands into the simulation) are written whenever their topic is published on the bus, and
+    /// published themselves when a station writes one directly, so every signal in the cell is visible on the bus.
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public sealed class TwinSignals : MonoBehaviour
@@ -28,7 +29,7 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField] private CellContext context;
         [SerializeField] private List<Binding> bindings = new List<Binding>();
 
-        private readonly List<WatchedInput> _inputs = new List<WatchedInput>();
+        private readonly List<Watched> _watched = new List<Watched>();
         private readonly List<IDisposable> _subscriptions = new List<IDisposable>();
         private SignalBus _bus;
         private double _deadband;
@@ -46,16 +47,10 @@ namespace TwoDude.FactoryTwin.Twin
                     continue;
                 }
 
-                var topic = new TopicPath(binding.Station, binding.SignalName);
-                if (binding.Target.IsInput())
-                {
-                    _inputs.Add(new WatchedInput(topic, binding.Target));
-                }
-                else
-                {
-                    Signal target = binding.Target;
-                    _subscriptions.Add(_bus.Subscribe(topic.ToString(), message => Write(target, message.Value)));
-                }
+                var watched = new Watched(new TopicPath(binding.Station, binding.SignalName), binding.Target);
+                _watched.Add(watched);
+                if (!binding.Target.IsInput())
+                    _subscriptions.Add(_bus.Subscribe(watched.Topic.ToString(), message => WriteFromBus(watched, message.Value)));
             }
         }
 
@@ -64,23 +59,23 @@ namespace TwoDude.FactoryTwin.Twin
             foreach (IDisposable subscription in _subscriptions)
                 subscription.Dispose();
             _subscriptions.Clear();
-            _inputs.Clear();
+            _watched.Clear();
         }
 
         private void FixedUpdate()
         {
             long now = CellContext.NowUnixMs;
-            for (int i = 0; i < _inputs.Count; i++)
+            for (int i = 0; i < _watched.Count; i++)
             {
-                WatchedInput input = _inputs[i];
-                if (!TryRead(input.Signal, out SignalValue value))
+                Watched watched = _watched[i];
+                if (!TryRead(watched.Signal, out SignalValue value))
                     continue;
-                if (input.HasValue && !Changed(input.Last, value))
+                if (watched.HasValue && !Changed(watched.Last, value))
                     continue;
 
-                input.Last = value;
-                input.HasValue = true;
-                _bus.Publish(input.Topic, value, now);
+                watched.Last = value;
+                watched.HasValue = true;
+                _bus.Publish(watched.Topic, value, now);
             }
         }
 
@@ -106,9 +101,30 @@ namespace TwoDude.FactoryTwin.Twin
                 case PLCInputInt n:
                     value = SignalValue.FromNumber(n.Value);
                     return true;
+                case PLCOutputBool b:
+                    value = SignalValue.FromBool(b.Value);
+                    return true;
+                case PLCOutputFloat f:
+                    value = SignalValue.FromNumber(f.Value);
+                    return true;
+                case PLCOutputInt n:
+                    value = SignalValue.FromNumber(n.Value);
+                    return true;
                 default:
                     value = default;
                     return false;
+            }
+        }
+
+        private void WriteFromBus(Watched watched, SignalValue value)
+        {
+            Write(watched.Signal, value);
+
+            // This command is already on the bus; remember it so FixedUpdate does not publish it a second time.
+            if (TryRead(watched.Signal, out SignalValue written))
+            {
+                watched.Last = written;
+                watched.HasValue = true;
             }
         }
 
@@ -131,14 +147,14 @@ namespace TwoDude.FactoryTwin.Twin
             }
         }
 
-        private sealed class WatchedInput
+        private sealed class Watched
         {
             public readonly TopicPath Topic;
             public readonly Signal Signal;
             public SignalValue Last;
             public bool HasValue;
 
-            public WatchedInput(TopicPath topic, Signal signal)
+            public Watched(TopicPath topic, Signal signal)
             {
                 Topic = topic;
                 Signal = signal;
