@@ -42,7 +42,7 @@
 - [x] Subscribe side: broker → bus on `cell/#` (MQTT 5 no-local). Messages that arrive from the broker are not sent back to it. Verified: a speed setpoint published from the broker (`cell/infeed/drive_speed` 120) changed the belt, and `cell/infeed/speed_mm_s` reported 120.
 - [x] `TwinSignals` now also publishes PLC outputs that a station writes directly, so command signals show up too (`arm/grip_cmd`, `infeed/drive_speed`, `outfeed/drive_speed`).
 - [x] Live check, 45 s in Play with `mosquitto_sub -t 'cell/#'` (via `docker exec factory-twin-broker`): 24 cell topics, about 1,500 messages, 0 console errors. That is the production cell complete; the press station is the remaining part of the exit condition.
-- [ ] Press station in Unity: a component hosting `DatasetReplayer` so `cell/press/*` flows without the Python script (the script already works against the broker).
+- [x] Press station in Unity: `PressStation` on `Cell/Press` hosts `DatasetReplayer` (2 rows/s, looping, fault filter on the Inspector), so `cell/press/*` flows without the Python script. Verified in Play: 10,000 rows loaded, 11 press topics on the broker with the dataset's first rows (298.1 K, 308.6 K, 1551 rpm, 42.8 Nm) alongside the 24 cell topics, 0 console errors. Disable the component when `tools/replay/replay.py` feeds the broker instead, or both write the same topics.
 - [ ] Fault injector: flips TWF/HDF/PWF/OSF/RNF on demand and the cell reacts.
 - [ ] M3 exit run: cell + press + one injected fault, all visible in `mosquitto_sub -t 'cell/#'`.
 
