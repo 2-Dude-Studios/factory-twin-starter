@@ -24,6 +24,8 @@ Full tracker with 62 candidates and verdicts: https://claude.ai/artifact/AGRYueG
 | xacro (Python package, build-time only) | 2.x | pypi.org/project/xacro | BSD-3-Clause | OK — used once to expand the UR5e xacro; not in the repo or the build | not shipped | no |
 | Fast IK | 1.2 | Unity Asset Store | Standard Asset Store EULA | OK | Assets/ThirdParty/FastIK (not in git) | no |
 | MQTTnet | 4.3.7.1207 (netstandard2.1 build) | github.com/dotnet/MQTTnet, NuGet | MIT | OK | Assets/ThirdParty/MQTTnet (DLL + LICENSE vendored, in git via LFS) | notice in Credits |
+| Large Warehouse/Factory Ambience (fimrod) | Freesound #278987, WAV 48 kHz/24-bit, 22.4 s | freesound.org/people/fimrod/sounds/278987/ | CC0 1.0 | OK | Assets/_Project/Audio/FactoryAmbience_fimrod_278987.wav (Git LFS); hall ambience loop | no (CC0) |
+| Electric Sparks (kev_durr) | Freesound #396470, WAV 44.1 kHz/16-bit, 11.8 s | freesound.org/people/kev_durr/sounds/396470/ | CC0 1.0 | OK | Assets/_Project/Audio/ElectricSparks_kev_durr_396470.wav (Git LFS); spark crackle during a CNC fault | no (CC0) |
 | AI4I 2020 Predictive Maintenance Dataset | 2020 | UCI ML Repository, doi:10.24432/C5HS5C | CC BY 4.0 | Conditional | Assets/_Project/Data/ai4i2020.csv, tools/replay | **yes** — Credits + web page (attribution with changes: `Assets/_Project/Licenses/01-AI4I2020-CC-BY-4.0.txt`) |
 | Industrial Workshop Foundry HDRI | — | polyhaven.com/a/industrial_workshop_foundry | CC0 | OK | Assets/_Project/Lighting | no (optional) |
 | ambientCG materials | per asset | ambientcg.com | CC0 1.0 | OK | Assets/_Project/Materials | no (optional) |

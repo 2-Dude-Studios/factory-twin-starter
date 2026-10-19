@@ -193,7 +193,8 @@ The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.F
 | `Arm` | `ArmSignalBridge` | 50 | Pick command edge → `RequestPick()`; writes busy, grip command and joint angles to signals. |
 | `Arm/…/tool0` | `PartGripper` | 0 | On grip command, fixes the part at the gate to the flange; releases on open. |
 | `Cell/Press/PressMachine` | realvirtual `CNC.prefab` | — | The machine shown for the press station (M4). |
-| `Cell/Press/FaultFx` | `FaultEffects`; children `Sparks`, `Steam` (Particle Pack instances) | 0 | Fault sparks and steam on the CNC (M6). |
+| `Cell/Press/FaultFx` | `FaultEffects`; children `Sparks`, `Steam` (Particle Pack instances), `SparkSound` (AudioSource) | 0 | Fault sparks, steam and spark crackle on the CNC (M6). |
+| `Cell/HallAmbience` | `AudioSource` | — | Factory ambience loop, 2D, volume 0.35 (M6). |
 | `Cell/Press/StackLight` | `StackLight` | 0 | Andon tower on the machine roof plus `Cell/Press/StackLightGlow` (M4). |
 | `CaptureRig` | `ShotDirector`; children `CellFocus`, `LineFocus`, `CncFocus`, `PanelFocus`, `HallPath`, `Shot1_HallDolly` … `Shot5_Panel` | 0 | Capture camera shots (M6). `realvirtual/Main Camera` carries the `CinemachineBrain`, disabled until a shot is live. |
 | `Dashboard` | `TakeControls`, `FpsReadout` | 0, 210 | Capture keys (1, 2, 3, 0, F9, F10) and the FPS readout / `-logfps` log (M6). |
