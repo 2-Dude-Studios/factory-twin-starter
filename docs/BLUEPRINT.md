@@ -194,6 +194,7 @@ The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.F
 | `Arm/…/tool0` | `PartGripper` | 0 | On grip command, fixes the part at the gate to the flange; releases on open. |
 | `Cell/Press/PressMachine` | realvirtual `CNC.prefab` | — | The machine shown for the press station (M4). |
 | `Cell/Press/StackLight` | `StackLight` | 0 | Andon tower on the machine roof plus `Cell/Press/StackLightGlow` (M4). |
+| `CaptureRig` | `ShotDirector`; children `CellFocus`, `LineFocus`, `CncFocus`, `PanelFocus`, `HallPath`, `Shot1_HallDolly` … `Shot5_Panel` | 0 | Capture camera shots (M6). `realvirtual/Main Camera` carries the `CinemachineBrain`, disabled until a shot is live. |
 | `Dashboard` | `TakeControls`, `FpsReadout` | 0, 210 | Capture keys (1, 2, 3, 0, F9, F10) and the FPS readout / `-logfps` log (M6). |
 | `Dashboard` | `UIDocument` + `DashboardController` | 200 | `Dashboard.uxml` on `DashboardPanelSettings`; view model bound to the bus; fault buttons call `FaultInjector`. |
 | `PickStation` (prefab instance) | `PartTransfer` | — | M1 placeholder, **disabled**. Same `pick_cmd`/`busy` contract the arm uses. |
@@ -302,7 +303,7 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `TwoDude.FactoryTwin.Twin` | `Scripts/Twin/` (incl. `Mqtt/`) | MQTTnet DLL (auto) | Data spine, cell logic, press, MQTT bridge |
 | `TwoDude.FactoryTwin.Robot` | `Scripts/Robot/` | — | Arm program and controller |
 | `TwoDude.FactoryTwin.Twin.Realvirtual` | `Scripts/Twin/Realvirtual/` | Twin, Robot, `realvirtual.base` | The bridge layer |
-| `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin, Unity.InputSystem | Dashboard view model, sparkline element, controller (M4); take controls and FPS readout (M6) |
+| `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin, Unity.InputSystem, Unity.Cinemachine, Unity.Splines, Unity.Mathematics | Dashboard view model, sparkline element, controller (M4); take controls and FPS readout (M6) |
 | `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | — (Editor only) | `ProjectSettingsGuard` |
 | `TwoDude.FactoryTwin.Robot.Editor` | `Scripts/Robot/Editor/` | URDF-Importer (Editor only) | `ArmImporter` |
 | `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 183 tests |
@@ -356,6 +357,9 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `UI/FpsMeter.cs` | class | Average fps and worst frame per window (M6) |
 | `UI/FpsReadout.cs` | MonoBehaviour | FPS label (F9) and `-logfps` player-log lines (M6) |
 | `UI/LicenseTextsView.cs` | MonoBehaviour | Fills Credits → Full licence texts from `Licenses/*.txt` (M6) |
+| `UI/ShotDirector.cs` | MonoBehaviour | Capture keys 4–9: Cinemachine shot priorities, brain on/off, operator navigation off/on (M6) |
+| `UI/DollyMove.cs` | MonoBehaviour | Eased 8 s move along a `CinemachineSplineDolly` path (M6) |
+| `UI/SplinePath.cs` | MonoBehaviour | Keeps a `SplineContainer` equal to a few Inspector points, auto-smoothed (M6) |
 | `UI/DashboardController.cs` | MonoBehaviour | Data source, sparkline series, status classes, fault buttons (M4). On the root `Dashboard` object with its `UIDocument`. |
 | `Robot/ArmProgram.cs` | class | Waypoint player; `ArmWaypoint`, `GripAction` |
 | `Robot/ArmController.cs` | MonoBehaviour | ArticulationBody drive targets and gains |
