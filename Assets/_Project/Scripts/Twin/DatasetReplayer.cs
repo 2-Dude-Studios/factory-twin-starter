@@ -15,6 +15,7 @@ namespace TwoDude.FactoryTwin.Twin
         private readonly IReadOnlyList<Ai4iRow> _rows;
         private readonly SignalBus _bus;
 
+        private readonly TopicPath _productQuality;
         private readonly TopicPath _airTemp;
         private readonly TopicPath _processTemp;
         private readonly TopicPath _speed;
@@ -32,6 +33,7 @@ namespace TwoDude.FactoryTwin.Twin
             _rows = rows ?? throw new ArgumentNullException(nameof(rows));
             _bus = bus ?? throw new ArgumentNullException(nameof(bus));
 
+            _productQuality = new TopicPath(station, "product_quality");
             _airTemp = new TopicPath(station, "air_temp_k");
             _processTemp = new TopicPath(station, "process_temp_k");
             _speed = new TopicPath(station, "speed_rpm");
@@ -133,6 +135,8 @@ namespace TwoDude.FactoryTwin.Twin
 
         private void Publish(Ai4iRow row, long nowUnixMs)
         {
+            // First, so anything reacting to this row's telemetry already knows the product it belongs to.
+            _bus.Publish(_productQuality, SignalValue.FromNumber((int)row.Quality), nowUnixMs);
             _bus.Publish(_airTemp, SignalValue.FromNumber(row.AirTempK), nowUnixMs);
             _bus.Publish(_processTemp, SignalValue.FromNumber(row.ProcessTempK), nowUnixMs);
             _bus.Publish(_speed, SignalValue.FromNumber(row.SpeedRpm), nowUnixMs);

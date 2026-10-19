@@ -106,7 +106,7 @@ Three ideas hold the design together:
 - Subscriptions use MQTT wildcards (`+` one level, `#` everything below); `TopicFilter` implements the matching for the in-process bus.
 - QoS 0, not retained. A client that connects mid-run sees a signal only when it next changes.
 
-### Topic catalogue (39 topics)
+### Topic catalogue (43 topics)
 
 Direction is from the simulation's point of view: **out** is state leaving the cell, **in** is a command the cell obeys. Commands are also visible on the broker, because `TwinSignals` publishes outputs that a station writes directly.
 
@@ -133,6 +133,7 @@ Direction is from the simulation's point of view: **out** is state leaving the c
 | `cell/line/parts_per_hour` | number | out | LineMetricsReporter | Exits per hour over a 120 s rolling window, whole parts (M4) |
 | `cell/line/parts_lost` | number | out | LineMetricsReporter | Parts not made while a press fault held the line, at the pre-hold rate, whole parts (M4) |
 | `cell/link/connected` | bool | out | MqttBridge | Broker link is up |
+| `cell/press/product_quality` | number | out | DatasetReplayer | `ProductQuality` of the row: 0 L, 1 M, 2 H (sets the overstrain limit). Published first in each row (M5) |
 | `cell/press/air_temp_k` | number | out | DatasetReplayer | AI4I air temperature, K |
 | `cell/press/process_temp_k` | number | out | DatasetReplayer | AI4I process temperature, K |
 | `cell/press/speed_rpm` | number | out | DatasetReplayer | AI4I rotational speed |
@@ -140,7 +141,10 @@ Direction is from the simulation's point of view: **out** is state leaving the c
 | `cell/press/tool_wear_min` | number | out | DatasetReplayer | AI4I tool wear, minutes |
 | `cell/press/fault_twf` `_hdf` `_pwf` `_osf` `_rnf` | bool | out | DatasetReplayer | Tool wear, heat dissipation, power, overstrain, random failure |
 | `cell/press/machine_failure` | bool | out | DatasetReplayer | The dataset's overall failure flag |
-| `cell/press/health` | number | out | PressHealthReporter | `MachineHealth`: 0 ok, 1 warning (from M5), 2 fault (M4) |
+| `cell/press/health` | number | out | PressHealthReporter | `MachineHealth`: 0 ok, 1 warning (risk ≥ 0.5, clears below 0.4), 2 fault |
+| `cell/press/failure_risk` | number | out | PressRiskReporter | Threshold-margin failure risk, 0–1, three decimals (M5) |
+| `cell/press/tool_rul_min` | number | out | PressRiskReporter | Tool wear left before the 200 min failure window opens (M5) |
+| `cell/press/maint_due` | bool | out | PressRiskReporter | Risk at warning, or ≤ 20 min tool life left (M5) |
 | `cell/press/inject_fault` | number | in | FaultInjector / broker | `FaultMode` bitmask: 1 TWF, 2 HDF, 4 PWF, 8 OSF, 16 RNF; 0 clears |
 
 The 19 infeed, gate1, arm and outfeed topics each have a realvirtual signal component and are bound in the `TwinSignals` Inspector list on the `Cell` object. The line, link and press topics exist only on the bus. `CellTopics` holds the constants the logic uses; the press topic names are built inside `DatasetReplayer` and must stay identical to `tools/replay/replay.py`.
@@ -177,7 +181,8 @@ The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.F
 | `Cell/Signals/*` | realvirtual `PLCInput*` / `PLCOutput*` | — | One GameObject per signal, named `<station>.<signal>`. |
 | `Cell/Press` | `PressStation` | 0 | Parses `ai4i2020.csv`, hosts `DatasetReplayer`, 2 rows/s, healthy baseline. |
 | `Cell/Press` | `FaultInjector` | 0 | Turns `press/inject_fault` into the press's fault filter. |
-| `Cell/Press` | `PressHealthReporter` | 0 (LateUpdate) | Publishes `press/health` on change. |
+| `Cell/Press` | `PressRiskReporter` | 40 (LateUpdate) | Runs `FailureRiskModel` when new telemetry arrives; publishes risk, tool life left and maintenance due (M5). |
+| `Cell/Press` | `PressHealthReporter` | 50 (LateUpdate) | Publishes `press/health` on change: fault flags, or the risk warning band from `PressRiskConfig`. |
 | `Cell` | `LineMetricsReporter` | 110 | Ticks `LineMetrics` after the sequencer; publishes parts/hour and parts lost. |
 | `Arm` | `ArmController` | 0 | Reads joint positions, ticks `ArmProgram`, writes drive targets. |
 | `Arm` | `ArmSignalBridge` | 50 | Pick command edge → `RequestPick()`; writes busy, grip command and joint angles to signals. |
@@ -319,7 +324,9 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `Twin/PressStation.cs` | MonoBehaviour | Hosts `DatasetReplayer`; Inspector controls live in Play mode |
 | `Twin/FaultInjector.cs` | MonoBehaviour | `inject_fault` command → press fault filter; `Inject()` / `Clear()` API |
 | `Twin/PressHealthRule.cs` | enum + static | `MachineHealth`; `IsFaulted(bus)` (shared with `CellSequencer`) and `Evaluate(faulted, warning)` |
-| `Twin/PressHealthReporter.cs` | MonoBehaviour | Publishes `press/health` on change (M4) |
+| `Twin/PressHealthReporter.cs` | MonoBehaviour | Publishes `press/health` on change: faults (M4), risk warning with hysteresis (M5) |
+| `Twin/PressRiskConfig.cs` | ScriptableObject | `FailureRiskSettings` and the warning clear level; instance at `Data/PressRiskConfig.asset` (M5) |
+| `Twin/PressRiskReporter.cs` | MonoBehaviour | Telemetry → `FailureRiskModel` → risk topics (M5) |
 | `Twin/FailureRiskModel.cs` | static + types | `PressReading`, `FailureRiskSettings`, `RiskAssessment`; threshold-margin failure risk, remaining tool life, maintenance due (M5) |
 | `Twin/StackLightPattern.cs` | static | Lamp and glow levels for a health value; red flashes at 1.5 Hz (M4) |
 | `Twin/StackLight.cs` | MonoBehaviour | Health topic → stack-light lamps (MaterialPropertyBlock) and glow light (M4) |
@@ -346,6 +353,7 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 |---|---|
 | `Scenes/Cell.unity` | The only scene (2.6 MB). A Save As of the Factory Training hall with the cell built on its keep-clear zone. |
 | `Data/TwinConfig.asset` | The one config instance |
+| `Data/PressRiskConfig.asset` | Risk margins and warning band (M5) |
 | `Data/ai4i2020.csv` | 10,000 rows; 339 failures (TWF 46, HDF 115, PWF 95, OSF 98, RNF 19) |
 | `Robots/ur/` | `cell_arm.urdf`, UR5e visual (`.dae`) and collision (`.stl`) meshes, materials, BSD-3 licence, provenance README |
 | `Settings/` | Stock URP assets, kept as a fallback. The active pipeline asset is the sample's `PC_RPAsset_DC` under `ThirdParty/FactoryTraining`. |

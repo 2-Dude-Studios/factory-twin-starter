@@ -44,6 +44,20 @@ namespace TwoDude.FactoryTwin.Tests
             Assert.IsFalse(PressHealthRule.IsFaulted(bus));
         }
 
+        [Test]
+        public void UpdateWarning_ComesOnAtTheWarningLevelAndClearsOnlyBelowTheClearLevel()
+        {
+            bool w = false;
+            w = PressHealthRule.UpdateWarning(w, 0.49, 0.5, 0.4);
+            Assert.IsFalse(w, "below the warning level");
+            w = PressHealthRule.UpdateWarning(w, 0.5, 0.5, 0.4);
+            Assert.IsTrue(w, "at the warning level");
+            w = PressHealthRule.UpdateWarning(w, 0.45, 0.5, 0.4);
+            Assert.IsTrue(w, "noise just under the warning level keeps it on");
+            w = PressHealthRule.UpdateWarning(w, 0.39, 0.5, 0.4);
+            Assert.IsFalse(w, "below the clear level");
+        }
+
         [TestCase(false, false, MachineHealth.Ok)]
         [TestCase(false, true, MachineHealth.Warning)]
         [TestCase(true, false, MachineHealth.Fault)]

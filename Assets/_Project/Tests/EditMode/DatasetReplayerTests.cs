@@ -16,7 +16,7 @@ namespace TwoDude.FactoryTwin.Tests
             "4,H29424,H,302.0,310.1,1305,60.2,120,1,0,1,0,1,0\r\n" +
             "\r\n";
 
-        private const int TopicsPerRow = 11;
+        private const int TopicsPerRow = 12;
 
         [Test]
         public void Parse_ReadsColumnsByHeaderName()
@@ -35,6 +35,10 @@ namespace TwoDude.FactoryTwin.Tests
             Assert.IsTrue(rows[2].MachineFailure);
             Assert.AreEqual(FaultMode.ToolWear, rows[2].Faults);
             Assert.AreEqual(FaultMode.HeatDissipation | FaultMode.Overstrain, rows[3].Faults);
+
+            Assert.AreEqual(ProductQuality.Medium, rows[0].Quality);
+            Assert.AreEqual(ProductQuality.Low, rows[1].Quality);
+            Assert.AreEqual(ProductQuality.High, rows[3].Quality);
         }
 
         [Test]
@@ -74,6 +78,7 @@ namespace TwoDude.FactoryTwin.Tests
 
             CollectionAssert.AreEqual(new[]
             {
+                "cell/press/product_quality",
                 "cell/press/air_temp_k",
                 "cell/press/process_temp_k",
                 "cell/press/speed_rpm",

@@ -31,8 +31,14 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath PressTorque = new TopicPath("press", "torque_nm");
         public static readonly TopicPath PressToolWear = new TopicPath("press", "tool_wear_min");
 
-        // Failure risk, 0–1, from the M5 risk model. Nothing publishes it before M5; the dashboard shows "—".
+        // The AI4I product type of the row being machined: a ProductQuality value (0 L, 1 M, 2 H). Sets the
+        // overstrain limit. Published first in each row.
+        public static readonly TopicPath PressProductQuality = new TopicPath("press", "product_quality");
+
+        // Risk model outputs (M5): failure risk 0–1, tool life left before the failure window (min), act-now flag.
         public static readonly TopicPath PressFailureRisk = new TopicPath("press", "failure_risk");
+        public static readonly TopicPath PressToolRemaining = new TopicPath("press", "tool_rul_min");
+        public static readonly TopicPath PressMaintenanceDue = new TopicPath("press", "maint_due");
 
         // Press station (AI4I telemetry). The line holds while the press reports any of these.
         public static readonly TopicPath PressMachineFailure = new TopicPath("press", "machine_failure");

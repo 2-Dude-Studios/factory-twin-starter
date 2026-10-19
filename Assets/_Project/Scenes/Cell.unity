@@ -57291,6 +57291,7 @@ GameObject:
   - component: {fileID: 2108969895}
   - component: {fileID: 2108969896}
   - component: {fileID: 2108969897}
+  - component: {fileID: 2108969898}
   m_Layer: 0
   m_Name: Press
   m_TagString: Untagged
@@ -57365,7 +57366,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.PressHealthReporter
   context: {fileID: 1633254721}
+  riskConfig: {fileID: 11400000, guid: fd73a156b783132499050b6d980d335f, type: 2}
   health: 0
+  warning: 0
+--- !u!114 &2108969898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2108969893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 695a36e00bbb96d46b3aa814ef701dc1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.PressRiskReporter
+  context: {fileID: 1633254721}
+  config: {fileID: 11400000, guid: fd73a156b783132499050b6d980d335f, type: 2}
+  risk: 0
+  likelyMode: 0
+  toolRemainingMin: 0
+  maintenanceDue: 0
 --- !u!1 &2112621187
 GameObject:
   m_ObjectHideFlags: 0

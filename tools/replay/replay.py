@@ -33,6 +33,8 @@ FIELDS = {
     "Tool wear [min]": "tool_wear_min",
 }
 FAULTS = ["TWF", "HDF", "PWF", "OSF", "RNF"]
+# AI4I product type -> ProductQuality value in Unity (sets the overstrain limit). Published first in each row.
+QUALITY = {"L": 0, "M": 1, "H": 2}
 
 
 def main():
@@ -61,6 +63,7 @@ def main():
                 if a.fault and row.get(a.fault) != "1":
                     continue
                 now = int(time.time() * 1000)
+                client.publish(f"{base}/product_quality", json.dumps({"v": QUALITY[row["Type"]], "t": now}))
                 for col, sig in FIELDS.items():
                     client.publish(f"{base}/{sig}", json.dumps({"v": float(row[col]), "t": now}))
                 for fcode in FAULTS:

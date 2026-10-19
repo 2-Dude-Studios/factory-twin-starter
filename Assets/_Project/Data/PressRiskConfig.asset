@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 164a55c84af51764eb1a1035f1a34c9b, type: 3}
+  m_Name: PressRiskConfig
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.PressRiskConfig
+  settings:
+    toolFailureStartMin: 200
+    toolRiskStartMin: 180
+    toolChangeLeadMin: 20
+    overstrainLimitLow: 11000
+    overstrainLimitMedium: 12000
+    overstrainLimitHigh: 13000
+    overstrainRiskStart: 0.9
+    powerLowLimitW: 3500
+    powerLowRiskStartW: 3800
+    powerHighLimitW: 9000
+    powerHighRiskStartW: 8700
+    heatDeltaLimitK: 8.6
+    heatDeltaMarginK: 0.5
+    heatSpeedLimitRpm: 1380
+    heatSpeedMarginRpm: 50
+    warningRisk: 0.5
+  warningClearRisk: 0.4

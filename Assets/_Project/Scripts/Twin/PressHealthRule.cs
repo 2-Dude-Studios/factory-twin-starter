@@ -24,7 +24,16 @@ namespace TwoDude.FactoryTwin.Twin
             return false;
         }
 
-        /// <summary>A fault outranks a warning. Until M5's risk model exists, nothing raises a warning.</summary>
+        /// <summary>
+        /// Warning with hysteresis: it comes on when risk reaches <paramref name="onAt"/> and goes off only when
+        /// risk falls below <paramref name="offBelow"/>, so noise around the warning level cannot flicker it.
+        /// </summary>
+        public static bool UpdateWarning(bool warning, double risk, double onAt, double offBelow)
+        {
+            return warning ? risk >= offBelow : risk >= onAt;
+        }
+
+        /// <summary>A fault outranks a warning.</summary>
         public static MachineHealth Evaluate(bool faulted, bool warning)
         {
             if (faulted)
