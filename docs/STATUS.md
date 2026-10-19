@@ -1,7 +1,7 @@
 # Status
 
 **Current milestone:** M4 — Dashboard (M3 closed 2026-10-12; plan narrowed to predictive maintenance, M4–M6, on 2026-10-19 — build plan Rev 3)
-**Last updated:** 2026-10-12
+**Last updated:** 2026-10-20
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
@@ -47,7 +47,18 @@
 - [x] The line holds on a press fault: `CellSequence` has a `Hold` input and a `Held` state (both conveyors off, no pick). `CellSequencer` asserts it while `press/machine_failure` or any `press/fault_*` is true. A pick already under way finishes first. 117 EditMode tests pass.
 - [x] **M3 exit met.** 80 s in Play with `mosquitto_sub -t 'cell/#'`: 36 topics (24 cell, 11 press, the inject command), about 2,500 messages, 0 console errors. Tool wear injected from the broker: 0.5 s later the press reported 208 min with `fault_twf` and `machine_failure` true; the arm finished its pick, then `line/state` went to 3 and both conveyors stopped for the 18 s the fault stayed on. On clear the faults dropped within 0.3 s and parts flowed again (3 parts out before, 6 by the end; 0 pick retries, 0 stalls).
 
+## M4 — Dashboard (exit: the "inject fault" beat looks good on camera — the press goes red, the line holds, and press health, line state and parts lost move together)
+Smallest shippable step first:
+- [x] Derived signals for the dashboard. `LineMetrics` (pure, 8 tests) behind `LineMetricsReporter` (FixedUpdate, order 110, after the sequencer) publishes `cell/line/parts_per_hour` (exits over a 120 s rolling window, whole parts) and `cell/line/parts_lost` (held time × the rate just before the hold, whole parts; that rate stays frozen for a full window after a hold so back-to-back faults are not under-counted). `PressHealthReporter` (LateUpdate) publishes `cell/press/health` (`MachineHealth`: 0 ok, 1 warning, 2 fault) through `PressHealthRule` (8 tests), which `CellSequencer` now shares for its hold check. 133 EditMode tests pass headless on 6000.3.19f1. **Not wired into `Cell.unity` yet** (manual step below).
+- [ ] UI assembly `TwoDude.FactoryTwin.UI` and a bus → view model: latest values, sparkline buffers for the five press telemetry topics, event-log lines with readable text for numeric states.
+- [ ] UXML/USS layout under `Assets/_Project/UI/`: press panel, line panel, event log, Inject/Clear buttons, broker link indicator, credits panel.
+- [ ] Dashboard host (`UIDocument` + `PanelSettings`) in `Cell.unity`.
+- [ ] Press geometry from a source with a known licence, plus a highlighter driven by `cell/press/health` (amber at 1, red at 2).
+- [ ] Hide realvirtual's runtime toolbar.
+- [ ] Exit run: inject tool wear on camera, check the three readings move together, clear, check recovery.
+
 ## Manual steps pending
+- **Wire the M4 reporters into Cell.unity** (no Editor bridge was running for this project; the open Editor had another project). In the Hierarchy: select `Cell` → Add Component → `Line Metrics Reporter` → drag `Cell` onto its **Context** field (Rate Window Seconds stays 120). Select `Cell/Press` → Add Component → `Press Health Reporter` → drag `Cell` onto **Context**. Save the scene. Check in Play with `docker exec factory-twin-broker mosquitto_sub -v -t 'cell/line/#' -t 'cell/press/health'`: parts_per_hour climbs, press/health is 0, and injecting a fault sets it to 2 and starts parts_lost counting.
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Deletes are blocked for Claude; either delete them in the Hierarchy or add `gameobject_delete_batch` to the UnitySkills allowlist.
 - Delete `Assets/Screenshots/` (UnitySkills capture output; git-ignored).
 - Play mode restarted itself once during the first soak attempt (~375 s in; no compile, refresh or skill call in the log). Did not recur in the 10-minute rerun. If it happens again, check the realvirtual runtime toolbar's restart/reset controls.

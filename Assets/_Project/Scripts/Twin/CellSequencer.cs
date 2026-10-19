@@ -49,7 +49,7 @@ namespace TwoDude.FactoryTwin.Twin
                 ReadBool(CellTopics.GatePartPresent),
                 ReadBool(CellTopics.ArmBusy),
                 ReadBool(CellTopics.OutfeedPartExit),
-                PressFaulted());
+                PressHealthRule.IsFaulted(_bus));
 
             _sequence.Tick(inputs, Time.fixedDeltaTime);
             PublishChanges();
@@ -64,18 +64,6 @@ namespace TwoDude.FactoryTwin.Twin
             pickRetries = _sequence.PickRetries;
             stalls = _sequence.Stalls;
             runSeconds = (float)_sequence.ElapsedSeconds;
-        }
-
-        private bool PressFaulted()
-        {
-            if (ReadBool(CellTopics.PressMachineFailure))
-                return true;
-            for (int i = 0; i < CellTopics.PressFaults.Count; i++)
-            {
-                if (ReadBool(CellTopics.PressFaults[i]))
-                    return true;
-            }
-            return false;
         }
 
         private bool ReadBool(TopicPath topic)

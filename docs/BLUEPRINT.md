@@ -106,7 +106,7 @@ Three ideas hold the design together:
 - Subscriptions use MQTT wildcards (`+` one level, `#` everything below); `TopicFilter` implements the matching for the in-process bus.
 - QoS 0, not retained. A client that connects mid-run sees a signal only when it next changes.
 
-### Topic catalogue (36 topics)
+### Topic catalogue (39 topics)
 
 Direction is from the simulation's point of view: **out** is state leaving the cell, **in** is a command the cell obeys. Commands are also visible on the broker, because `TwinSignals` publishes outputs that a station writes directly.
 
@@ -130,6 +130,8 @@ Direction is from the simulation's point of view: **out** is state leaving the c
 | `cell/line/stalled` | bool | out | CellSequencer | Convenience flag for state 2 |
 | `cell/line/parts_out` | number | out | CellSequencer | Parts that have left the cell this run |
 | `cell/line/cycle_time_s` | number | out | CellSequencer | Seconds between the last two exits |
+| `cell/line/parts_per_hour` | number | out | LineMetricsReporter | Exits per hour over a 120 s rolling window, whole parts (M4) |
+| `cell/line/parts_lost` | number | out | LineMetricsReporter | Parts not made while a press fault held the line, at the pre-hold rate, whole parts (M4) |
 | `cell/link/connected` | bool | out | MqttBridge | Broker link is up |
 | `cell/press/air_temp_k` | number | out | DatasetReplayer | AI4I air temperature, K |
 | `cell/press/process_temp_k` | number | out | DatasetReplayer | AI4I process temperature, K |
@@ -138,6 +140,7 @@ Direction is from the simulation's point of view: **out** is state leaving the c
 | `cell/press/tool_wear_min` | number | out | DatasetReplayer | AI4I tool wear, minutes |
 | `cell/press/fault_twf` `_hdf` `_pwf` `_osf` `_rnf` | bool | out | DatasetReplayer | Tool wear, heat dissipation, power, overstrain, random failure |
 | `cell/press/machine_failure` | bool | out | DatasetReplayer | The dataset's overall failure flag |
+| `cell/press/health` | number | out | PressHealthReporter | `MachineHealth`: 0 ok, 1 warning (from M5), 2 fault (M4) |
 | `cell/press/inject_fault` | number | in | FaultInjector / broker | `FaultMode` bitmask: 1 TWF, 2 HDF, 4 PWF, 8 OSF, 16 RNF; 0 clears |
 
 The 19 infeed, gate1, arm and outfeed topics each have a realvirtual signal component and are bound in the `TwinSignals` Inspector list on the `Cell` object. The line, link and press topics exist only on the bus. `CellTopics` holds the constants the logic uses; the press topic names are built inside `DatasetReplayer` and must stay identical to `tools/replay/replay.py`.
@@ -174,6 +177,8 @@ The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.F
 | `Cell/Signals/*` | realvirtual `PLCInput*` / `PLCOutput*` | — | One GameObject per signal, named `<station>.<signal>`. |
 | `Cell/Press` | `PressStation` | 0 | Parses `ai4i2020.csv`, hosts `DatasetReplayer`, 2 rows/s, healthy baseline. |
 | `Cell/Press` | `FaultInjector` | 0 | Turns `press/inject_fault` into the press's fault filter. |
+| `Cell/Press` | `PressHealthReporter` | 0 (LateUpdate) | Publishes `press/health` on change. **Not wired yet** (STATUS manual steps). |
+| `Cell` | `LineMetricsReporter` | 110 | Ticks `LineMetrics` after the sequencer; publishes parts/hour and parts lost. **Not wired yet** (STATUS manual steps). |
 | `Arm` | `ArmController` | 0 | Reads joint positions, ticks `ArmProgram`, writes drive targets. |
 | `Arm` | `ArmSignalBridge` | 50 | Pick command edge → `RequestPick()`; writes busy, grip command and joint angles to signals. |
 | `Arm/…/tool0` | `PartGripper` | 0 | On grip command, fixes the part at the gate to the flange; releases on open. |
@@ -285,7 +290,7 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `TwoDude.FactoryTwin.Twin.Realvirtual` | `Scripts/Twin/Realvirtual/` | Twin, Robot, `realvirtual.base` | The bridge layer |
 | `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | — (Editor only) | `ProjectSettingsGuard` |
 | `TwoDude.FactoryTwin.Robot.Editor` | `Scripts/Robot/Editor/` | URDF-Importer (Editor only) | `ArmImporter` |
-| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, NUnit | 117 tests |
+| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, NUnit | 133 tests |
 
 `Scripts/UI/` exists and is empty. There is no UI assembly and no `Assets/_Project/UI/` folder yet.
 
@@ -309,6 +314,10 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `Twin/DatasetReplayer.cs` | class | Rows → bus at N rows/s; loop, fault filter, healthy baseline, backlog cap |
 | `Twin/PressStation.cs` | MonoBehaviour | Hosts `DatasetReplayer`; Inspector controls live in Play mode |
 | `Twin/FaultInjector.cs` | MonoBehaviour | `inject_fault` command → press fault filter; `Inject()` / `Clear()` API |
+| `Twin/PressHealthRule.cs` | enum + static | `MachineHealth`; `IsFaulted(bus)` (shared with `CellSequencer`) and `Evaluate(faulted, warning)` |
+| `Twin/PressHealthReporter.cs` | MonoBehaviour | Publishes `press/health` on change (M4) |
+| `Twin/LineMetrics.cs` | class | Rolling parts/hour; parts lost while held at the frozen pre-hold rate (M4) |
+| `Twin/LineMetricsReporter.cs` | MonoBehaviour | Hosts `LineMetrics`; publishes parts/hour and parts lost as whole numbers (M4) |
 | `Twin/FrameRateLock.cs` | static | 60 fps and vSync off in player builds (not in the Editor) |
 | `Twin/Realvirtual/TwinSignals.cs` | MonoBehaviour | Signal ↔ bus mirror |
 | `Twin/Realvirtual/ArmSignalBridge.cs` | MonoBehaviour | Arm ↔ signals |

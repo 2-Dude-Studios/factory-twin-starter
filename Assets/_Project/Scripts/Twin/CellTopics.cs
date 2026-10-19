@@ -35,6 +35,9 @@ namespace TwoDude.FactoryTwin.Twin
             new TopicPath("press", "fault_rnf"),
         };
 
+        // Press health for the dashboard and the 3D press: a MachineHealth value (0 ok, 1 warning, 2 fault)
+        public static readonly TopicPath PressHealth = new TopicPath("press", "health");
+
         // Fault injector command: a FaultMode value (1 TWF, 2 HDF, 4 PWF, 8 OSF, 16 RNF; 0 clears)
         public static readonly TopicPath PressInjectFault = new TopicPath("press", "inject_fault");
 
@@ -46,5 +49,9 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath LineStalled = new TopicPath("line", "stalled");
         public static readonly TopicPath LinePartsOut = new TopicPath("line", "parts_out");
         public static readonly TopicPath LineCycleTime = new TopicPath("line", "cycle_time_s");
+
+        // Line figures derived by LineMetricsReporter for the dashboard
+        public static readonly TopicPath LinePartsPerHour = new TopicPath("line", "parts_per_hour");
+        public static readonly TopicPath LinePartsLost = new TopicPath("line", "parts_lost");
     }
 }
