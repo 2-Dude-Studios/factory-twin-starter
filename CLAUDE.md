@@ -29,7 +29,7 @@ The `unity` CLI / MCP is available on this machine. Prefer it for scene edits ov
 Log location on Windows: `%LOCALAPPDATA%\Unity\Editor\Editor.log` — read the tail when a compile fails.
 
 ## Milestones (exit conditions in docs/build-plan.md)
-M0 setup · M1 cell loop · M2 arm · M3 data spine · M4 dashboard · M5 polish + capture.
+M0 setup · M1 cell loop · M2 arm · M3 data spine · M4 monitoring & visibility · M5 predictive maintenance · M6 training & safety · M7 virtual commissioning · M8 layout & what-if · M9 pre-planning · M10 polish + capture.
 Current milestone is recorded at the top of `docs/STATUS.md`. Update it when a milestone's exit condition is met.
 
 ## When unsure
