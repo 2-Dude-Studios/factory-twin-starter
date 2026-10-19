@@ -4,9 +4,9 @@ using UnityEngine;
 namespace TwoDude.FactoryTwin.Twin
 {
     /// <summary>
-    /// Press station: plays particle effects (sparks, steam) on the machine while cell/&lt;station&gt;/health reports
-    /// Fault, and stops them when the fault clears. The effects are set to loop at runtime so a burst effect keeps
-    /// going for as long as the fault lasts; nothing reads the machine itself.
+    /// Press station: plays particle effects (sparks, steam) and sounds (spark crackle) on the machine while
+    /// cell/&lt;station&gt;/health reports Fault, and stops them when the fault clears. Effects and sounds loop for as
+    /// long as the fault lasts; nothing reads the machine itself.
     /// </summary>
     public sealed class FaultEffects : MonoBehaviour
     {
@@ -14,6 +14,8 @@ namespace TwoDude.FactoryTwin.Twin
         [Tooltip("Station segment of the health topic, e.g. press for cell/press/health.")]
         [SerializeField] private string station = "press";
         [SerializeField] private ParticleSystem[] effects;
+        [Tooltip("Looping sounds that play only during a fault, e.g. the spark crackle at the machine.")]
+        [SerializeField] private AudioSource[] sounds;
 
         [Header("Status (play mode, read-only)")]
         [SerializeField] private bool playing;
@@ -52,6 +54,7 @@ namespace TwoDude.FactoryTwin.Twin
             if (!force && on == playing)
                 return;
             playing = on;
+            SetSounds(on);
             if (effects == null)
                 return;
 
@@ -69,6 +72,22 @@ namespace TwoDude.FactoryTwin.Twin
                 {
                     effect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
                 }
+            }
+        }
+
+        private void SetSounds(bool on)
+        {
+            if (sounds == null)
+                return;
+            foreach (AudioSource sound in sounds)
+            {
+                if (sound == null)
+                    continue;
+                sound.loop = true;
+                if (on && !sound.isPlaying)
+                    sound.Play();
+                else if (!on)
+                    sound.Stop();
             }
         }
     }
