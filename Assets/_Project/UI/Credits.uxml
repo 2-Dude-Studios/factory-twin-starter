@@ -18,5 +18,10 @@
         <ui:Label class="credit__text" text="The MQTTnet contributors, MIT licence." />
 
         <ui:Label class="credit__text credit__text--muted" text="Built by 2 Dude Studios with Unity and realvirtual.io." />
+
+        <ui:Button name="license-toggle" text="Full licence texts" class="link-button license-toggle" />
+        <ui:ScrollView name="license-scroll" class="license-scroll hidden">
+            <ui:Label name="license-text" text="" class="license-text" />
+        </ui:ScrollView>
     </ui:VisualElement>
 </ui:UXML>

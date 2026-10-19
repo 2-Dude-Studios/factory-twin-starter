@@ -1,0 +1,15 @@
+AI4I 2020 Predictive Maintenance Dataset
+
+Creator: Stephan Matzka
+Source: UCI Machine Learning Repository, 2020. https://doi.org/10.24432/C5HS5C
+Licence: Creative Commons Attribution 4.0 International (CC BY 4.0)
+         https://creativecommons.org/licenses/by/4.0/
+
+Changes made in this application:
+- Rows are replayed in order as the live telemetry of a simulated CNC machining centre.
+- The product type (L, M, H) is published as a number (0, 1, 2).
+- Normal running skips rows that report a failure or are close to a failure limit.
+- In the "Wear tool out" scenario the tool-wear value is replaced by a scheduled ramp from 160 to 215 min;
+  the other values come from dataset rows.
+- Failure risk, remaining tool life and the maintenance advice are computed by this application from the
+  dataset's published failure rules; they are not part of the dataset.

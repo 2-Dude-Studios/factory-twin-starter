@@ -1,0 +1,4 @@
+URDF Importer v0.5.2
+
+Source: https://github.com/Unity-Technologies/URDF-Importer
+Licence: Apache License, Version 2.0. The full licence text is in 05-Apache-License-2.0.txt.

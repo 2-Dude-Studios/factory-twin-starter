@@ -381,6 +381,27 @@
     padding: 0;
 }
 
+.license-toggle {
+    -unity-text-align: middle-left;
+    margin-top: 10px;
+}
+
+.license-scroll {
+    max-height: 360px;
+    margin-top: 6px;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+.license-text {
+    white-space: normal;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 0;
+    margin: 0;
+}
+
 .credit__text--muted {
     margin-top: 16px;
     font-size: 12px;

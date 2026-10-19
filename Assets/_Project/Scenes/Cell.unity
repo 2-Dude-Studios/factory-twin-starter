@@ -34714,6 +34714,7 @@ GameObject:
   - component: {fileID: 1136391614}
   - component: {fileID: 1136391615}
   - component: {fileID: 1136391616}
+  - component: {fileID: 1136391617}
   m_Layer: 0
   m_Name: Dashboard
   m_TagString: Untagged
@@ -34804,6 +34805,26 @@ MonoBehaviour:
   faultInjector: {fileID: 2108969896}
   fpsReadout: {fileID: 1136391615}
   hideCursorOnStart: 0
+--- !u!114 &1136391617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1136391611}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6fc544a0fb484c46bf522c2e2ab403f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.UI::TwoDude.FactoryTwin.UI.LicenseTextsView
+  document: {fileID: 1136391613}
+  notices:
+  - {fileID: 4900000, guid: 9969212cfc2288248b4c8118d27cc9ad, type: 3}
+  - {fileID: 4900000, guid: 0e7a1ddac47e8b8449e3ffc864887b89, type: 3}
+  - {fileID: 4900000, guid: 9bb562f7ca1fd0a4098489e3f3f148de, type: 3}
+  - {fileID: 4900000, guid: e3a03d86442195c4d852ece68e7cc503, type: 3}
+  - {fileID: 4900000, guid: 5949bc152d7608544aaf3d6ca4a5c3e1, type: 3}
+  - {fileID: 4900000, guid: 1c845e3b114063f4fac5e16571cbb576, type: 3}
 --- !u!1001 &1145792234
 PrefabInstance:
   m_ObjectHideFlags: 0

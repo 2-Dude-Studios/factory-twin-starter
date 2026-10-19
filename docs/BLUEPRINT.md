@@ -346,6 +346,7 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `Twin/Realvirtual/ArmSignalBridge.cs` | MonoBehaviour | Arm ↔ signals |
 | `Twin/Realvirtual/PartGripper.cs` | MonoBehaviour | Gripper acting on realvirtual `MU` parts |
 | `Twin/Realvirtual/PartTransfer.cs` | MonoBehaviour | M1 placeholder, disabled in the scene |
+| `Twin/Editor/LicenseFilesPostprocessor.cs` | Editor | After a standalone build, copies `Assets/_Project/Licenses/*.txt` to `<build>/Licenses/` (M6) |
 | `Twin/Editor/ProjectSettingsGuard.cs` | Editor | On every reload: Build Settings = `Cell.unity` only, Run In Background on, realvirtual layers present |
 | `UI/DashboardViewModel.cs` | class | Bus → bindable display text, sparkline series and event log (M4) |
 | `UI/EventLog.cs` | class | Readable lines for state transitions, newest first (M4) |
@@ -354,6 +355,7 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `UI/TakeControls.cs` | MonoBehaviour | Capture keyboard shortcuts and fresh take (M6) |
 | `UI/FpsMeter.cs` | class | Average fps and worst frame per window (M6) |
 | `UI/FpsReadout.cs` | MonoBehaviour | FPS label (F9) and `-logfps` player-log lines (M6) |
+| `UI/LicenseTextsView.cs` | MonoBehaviour | Fills Credits → Full licence texts from `Licenses/*.txt` (M6) |
 | `UI/DashboardController.cs` | MonoBehaviour | Data source, sparkline series, status classes, fault buttons (M4). On the root `Dashboard` object with its `UIDocument`. |
 | `Robot/ArmProgram.cs` | class | Waypoint player; `ArmWaypoint`, `GripAction` |
 | `Robot/ArmController.cs` | MonoBehaviour | ArticulationBody drive targets and gains |
