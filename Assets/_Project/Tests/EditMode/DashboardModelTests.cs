@@ -67,17 +67,35 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
-        public void PressFailureFlag_RisingIsLoggedOnceWithItsName()
+        public void PressFailure_IsLoggedOnceWhenHealthTurnsToFaultAndNamesTheActiveModes()
         {
             var log = new EventLog(10);
+            log.Observe(Num(CellTopics.PressHealth, (int)MachineHealth.Ok));
             log.Observe(Flag(CellTopics.PressFaults[0], false));
+            log.Observe(Flag(CellTopics.PressFaults[3], false));
+
             log.Observe(Flag(CellTopics.PressFaults[0], true, 2L));
-            log.Observe(Flag(CellTopics.PressFaults[0], true, 3L));
+            log.Observe(Flag(CellTopics.PressFaults[3], true, 2L));
+            log.Observe(Num(CellTopics.PressHealth, (int)MachineHealth.Fault, 2L));
+
+            // Later rows of the same fault flip the secondary flag off and on again.
+            log.Observe(Flag(CellTopics.PressFaults[3], false, 3L));
+            log.Observe(Flag(CellTopics.PressFaults[3], true, 4L));
 
             Assert.AreEqual(1, log.Entries.Count);
-            Assert.AreEqual("Press failure: tool wear", log.Entries[0].Text);
+            Assert.AreEqual("Press failure: tool wear, overstrain", log.Entries[0].Text);
             Assert.AreEqual(LogSeverity.Fault, log.Entries[0].Severity);
             Assert.AreEqual(2L, log.Entries[0].UnixMs);
+        }
+
+        [Test]
+        public void PressFailure_WithoutAModeFlagIsStillLogged()
+        {
+            var log = new EventLog(10);
+            log.Observe(Num(CellTopics.PressHealth, (int)MachineHealth.Ok));
+            log.Observe(Num(CellTopics.PressHealth, (int)MachineHealth.Fault, 2L));
+
+            Assert.AreEqual("Press failure", log.Entries[0].Text);
         }
 
         [Test]

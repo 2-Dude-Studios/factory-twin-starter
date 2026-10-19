@@ -177,11 +177,12 @@ The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.F
 | `Cell/Signals/*` | realvirtual `PLCInput*` / `PLCOutput*` | — | One GameObject per signal, named `<station>.<signal>`. |
 | `Cell/Press` | `PressStation` | 0 | Parses `ai4i2020.csv`, hosts `DatasetReplayer`, 2 rows/s, healthy baseline. |
 | `Cell/Press` | `FaultInjector` | 0 | Turns `press/inject_fault` into the press's fault filter. |
-| `Cell/Press` | `PressHealthReporter` | 0 (LateUpdate) | Publishes `press/health` on change. **Not wired yet** (STATUS manual steps). |
-| `Cell` | `LineMetricsReporter` | 110 | Ticks `LineMetrics` after the sequencer; publishes parts/hour and parts lost. **Not wired yet** (STATUS manual steps). |
+| `Cell/Press` | `PressHealthReporter` | 0 (LateUpdate) | Publishes `press/health` on change. |
+| `Cell` | `LineMetricsReporter` | 110 | Ticks `LineMetrics` after the sequencer; publishes parts/hour and parts lost. |
 | `Arm` | `ArmController` | 0 | Reads joint positions, ticks `ArmProgram`, writes drive targets. |
 | `Arm` | `ArmSignalBridge` | 50 | Pick command edge → `RequestPick()`; writes busy, grip command and joint angles to signals. |
 | `Arm/…/tool0` | `PartGripper` | 0 | On grip command, fixes the part at the gate to the flange; releases on open. |
+| `Dashboard` | `UIDocument` + `DashboardController` | 200 | `Dashboard.uxml` on `DashboardPanelSettings`; view model bound to the bus; fault buttons call `FaultInjector`. |
 | `PickStation` (prefab instance) | `PartTransfer` | — | M1 placeholder, **disabled**. Same `pick_cmd`/`busy` contract the arm uses. |
 
 `Cell` also parents seven prefab instances that make up the physical line: `PartSource`, `Infeed`, `Gate1`, `PickStation`, `Outfeed`, `ExitSensor` and `Sink`.
@@ -329,7 +330,7 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `UI/EventLog.cs` | class | Readable lines for state transitions, newest first (M4) |
 | `UI/SparkSeries.cs` | class | Fixed-size sample ring with a version counter (M4) |
 | `UI/Sparkline.cs` | VisualElement | `[UxmlElement]` Painter2D line for a `SparkSeries` (M4) |
-| `UI/DashboardController.cs` | MonoBehaviour | Data source, sparkline series, status classes, fault buttons (M4). **Not in the scene yet.** |
+| `UI/DashboardController.cs` | MonoBehaviour | Data source, sparkline series, status classes, fault buttons (M4). On the root `Dashboard` object with its `UIDocument`. |
 | `Robot/ArmProgram.cs` | class | Waypoint player; `ArmWaypoint`, `GripAction` |
 | `Robot/ArmController.cs` | MonoBehaviour | ArticulationBody drive targets and gains |
 | `Robot/Editor/ArmImporter.cs` | Editor | `Tools > Factory Twin > Import Cell Arm (UR5e)`; pins the articulation root |

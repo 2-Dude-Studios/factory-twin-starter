@@ -83,17 +83,6 @@ namespace TwoDude.FactoryTwin.UI
                 LogLineState((CellState)(int)previous, (CellState)(int)value, message.UnixMs);
             else if (topic == CellTopics.PressHealth)
                 LogPressHealth((MachineHealth)(int)previous, (MachineHealth)(int)value, message.UnixMs);
-            else if (value != 0d)
-            {
-                for (int i = 0; i < CellTopics.PressFaults.Count; i++)
-                {
-                    if (topic == CellTopics.PressFaults[i])
-                    {
-                        Add(message.UnixMs, "Press failure: " + FaultName((FaultMode)(1 << i)), LogSeverity.Fault);
-                        return;
-                    }
-                }
-            }
         }
 
         private void LogLineState(CellState from, CellState to, long unixMs)
@@ -106,10 +95,17 @@ namespace TwoDude.FactoryTwin.UI
                 Add(unixMs, "Line running again", LogSeverity.Info);
         }
 
+        // A failure is logged once, when the press's health turns to Fault, naming every mode active at that moment.
+        // The dataset's failure rows often carry several flags that come and go row to row, so logging each flag
+        // would fill the log while one fault is in progress.
         private void LogPressHealth(MachineHealth from, MachineHealth to, long unixMs)
         {
-            // A fault is logged by its failure-mode flag, which names the cause.
-            if (to == MachineHealth.Warning)
+            if (to == MachineHealth.Fault)
+            {
+                FaultMode active = ActiveFaults();
+                Add(unixMs, active == FaultMode.None ? "Press failure" : ModeList("Press failure: ", active), LogSeverity.Fault);
+            }
+            else if (to == MachineHealth.Warning)
                 Add(unixMs, "Press warning: failure risk rising", LogSeverity.Warning);
             else if (to == MachineHealth.Ok && from != MachineHealth.Ok)
                 Add(unixMs, "Press healthy again", LogSeverity.Info);
@@ -118,24 +114,37 @@ namespace TwoDude.FactoryTwin.UI
         private void LogInjection(FaultMode mode, long unixMs)
         {
             if (mode == FaultMode.None)
-            {
                 Add(unixMs, "Injected fault cleared", LogSeverity.Info);
-                return;
-            }
+            else
+                Add(unixMs, ModeList("Fault injected: ", mode), LogSeverity.Warning);
+        }
 
-            var text = new StringBuilder("Fault injected: ");
+        private FaultMode ActiveFaults()
+        {
+            FaultMode active = FaultMode.None;
+            for (int i = 0; i < CellTopics.PressFaults.Count; i++)
+            {
+                if (_last.TryGetValue(CellTopics.PressFaults[i], out double flag) && flag != 0d)
+                    active |= (FaultMode)(1 << i);
+            }
+            return active;
+        }
+
+        private static string ModeList(string prefix, FaultMode modes)
+        {
+            var text = new StringBuilder(prefix);
             bool first = true;
             for (int i = 0; i < CellTopics.PressFaults.Count; i++)
             {
                 var flag = (FaultMode)(1 << i);
-                if ((mode & flag) == 0)
+                if ((modes & flag) == 0)
                     continue;
                 if (!first)
                     text.Append(", ");
                 text.Append(FaultName(flag));
                 first = false;
             }
-            Add(unixMs, text.ToString(), LogSeverity.Warning);
+            return text.ToString();
         }
 
         /// <summary>The AI4I failure modes in words a plant manager uses.</summary>
