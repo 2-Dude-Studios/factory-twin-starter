@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="credits-card" class="credits">
+        <ui:VisualElement class="section__header">
+            <ui:Label text="Credits" class="panel__title" />
+            <ui:Button name="credits-close" text="Close" class="link-button" />
+        </ui:VisualElement>
+
+        <ui:Label class="credit__name" text="AI4I 2020 Predictive Maintenance Dataset" />
+        <ui:Label class="credit__text" text="S. Matzka, UCI Machine Learning Repository, 2020. doi:10.24432/C5HS5C. Licensed under CC BY 4.0. Replayed as the press's telemetry; values and failure flags are used as published." />
+
+        <ui:Label class="credit__name" text="UR5e robot description" />
+        <ui:Label class="credit__text" text="From ros-industrial/universal_robot (ur_description), BSD 3-Clause licence. Meshes used without vendor branding." />
+
+        <ui:Label class="credit__name" text="URDF Importer" />
+        <ui:Label class="credit__text" text="Unity Technologies, Apache License 2.0." />
+
+        <ui:Label class="credit__name" text="MQTTnet" />
+        <ui:Label class="credit__text" text="The MQTTnet contributors, MIT licence." />
+
+        <ui:Label class="credit__text credit__text--muted" text="Built by 2 Dude Studios with Unity and realvirtual.io." />
+    </ui:VisualElement>
+</ui:UXML>

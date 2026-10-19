@@ -288,11 +288,12 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `TwoDude.FactoryTwin.Twin` | `Scripts/Twin/` (incl. `Mqtt/`) | MQTTnet DLL (auto) | Data spine, cell logic, press, MQTT bridge |
 | `TwoDude.FactoryTwin.Robot` | `Scripts/Robot/` | — | Arm program and controller |
 | `TwoDude.FactoryTwin.Twin.Realvirtual` | `Scripts/Twin/Realvirtual/` | Twin, Robot, `realvirtual.base` | The bridge layer |
+| `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin | Dashboard view model, sparkline element, controller (M4) |
 | `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | — (Editor only) | `ProjectSettingsGuard` |
 | `TwoDude.FactoryTwin.Robot.Editor` | `Scripts/Robot/Editor/` | URDF-Importer (Editor only) | `ArmImporter` |
-| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, NUnit | 133 tests |
+| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 149 tests |
 
-`Scripts/UI/` exists and is empty. There is no UI assembly and no `Assets/_Project/UI/` folder yet.
+UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `Credits.uxml`).
 
 ### Files
 
@@ -324,6 +325,11 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `Twin/Realvirtual/PartGripper.cs` | MonoBehaviour | Gripper acting on realvirtual `MU` parts |
 | `Twin/Realvirtual/PartTransfer.cs` | MonoBehaviour | M1 placeholder, disabled in the scene |
 | `Twin/Editor/ProjectSettingsGuard.cs` | Editor | On every reload: Build Settings = `Cell.unity` only, Run In Background on, realvirtual layers present |
+| `UI/DashboardViewModel.cs` | class | Bus → bindable display text, sparkline series and event log (M4) |
+| `UI/EventLog.cs` | class | Readable lines for state transitions, newest first (M4) |
+| `UI/SparkSeries.cs` | class | Fixed-size sample ring with a version counter (M4) |
+| `UI/Sparkline.cs` | VisualElement | `[UxmlElement]` Painter2D line for a `SparkSeries` (M4) |
+| `UI/DashboardController.cs` | MonoBehaviour | Data source, sparkline series, status classes, fault buttons (M4). **Not in the scene yet.** |
 | `Robot/ArmProgram.cs` | class | Waypoint player; `ArmWaypoint`, `GripAction` |
 | `Robot/ArmController.cs` | MonoBehaviour | ArticulationBody drive targets and gains |
 | `Robot/Editor/ArmImporter.cs` | Editor | `Tools > Factory Twin > Import Cell Arm (UR5e)`; pins the articulation root |

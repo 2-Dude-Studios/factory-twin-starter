@@ -4,6 +4,7 @@
     "references": [
         "TwoDude.FactoryTwin.Twin",
         "TwoDude.FactoryTwin.Robot",
+        "TwoDude.FactoryTwin.UI",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

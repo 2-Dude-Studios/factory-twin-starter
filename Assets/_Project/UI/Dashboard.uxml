@@ -1,0 +1,147 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="Dashboard.uss" />
+    <ui:Template name="Credits" src="Credits.uxml" />
+    <ui:VisualElement name="dashboard" class="dashboard" picking-mode="Ignore">
+        <ui:VisualElement name="panel" class="panel">
+
+            <ui:VisualElement class="panel__header">
+                <ui:VisualElement>
+                    <ui:Label text="PRODUCTION CELL 1" class="eyebrow" />
+                    <ui:Label text="Press &amp; line" class="panel__title" />
+                </ui:VisualElement>
+                <ui:Label name="link" text="Broker offline" class="chip link link--down">
+                    <Bindings>
+                        <ui:DataBinding property="text" data-source-path="LinkText" binding-mode="ToTarget" />
+                    </Bindings>
+                </ui:Label>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="press-panel" class="section section--press">
+                <ui:VisualElement class="section__header">
+                    <ui:Label text="Press" class="section__title" />
+                    <ui:Label name="press-health" text="—" class="chip health">
+                        <Bindings>
+                            <ui:DataBinding property="text" data-source-path="PressHealthText" binding-mode="ToTarget" />
+                        </Bindings>
+                    </ui:Label>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="risk">
+                    <ui:VisualElement class="risk__labels">
+                        <ui:Label text="Failure risk" class="metric__name" />
+                        <ui:Label name="risk-value" text="—" class="risk__value">
+                            <Bindings>
+                                <ui:DataBinding property="text" data-source-path="FailureRiskText" binding-mode="ToTarget" />
+                            </Bindings>
+                        </ui:Label>
+                    </ui:VisualElement>
+                    <ui:ProgressBar name="risk-bar" low-value="0" high-value="100" class="risk__bar">
+                        <Bindings>
+                            <ui:DataBinding property="value" data-source-path="FailureRiskPercent" binding-mode="ToTarget" />
+                        </Bindings>
+                    </ui:ProgressBar>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="telemetry">
+                    <ui:VisualElement class="telemetry__row">
+                        <ui:Label text="Tool wear" class="metric__name" />
+                        <ui:Label text="—" class="metric__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="ToolWearText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                        <TwoDude.FactoryTwin.UI.Sparkline name="tool-wear-spark" class="spark--key" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="telemetry__row">
+                        <ui:Label text="Torque" class="metric__name" />
+                        <ui:Label text="—" class="metric__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="TorqueText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                        <TwoDude.FactoryTwin.UI.Sparkline name="torque-spark" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="telemetry__row">
+                        <ui:Label text="Speed" class="metric__name" />
+                        <ui:Label text="—" class="metric__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="SpeedText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                        <TwoDude.FactoryTwin.UI.Sparkline name="speed-spark" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="telemetry__row">
+                        <ui:Label text="Process temp" class="metric__name" />
+                        <ui:Label text="—" class="metric__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="ProcessTempText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                        <TwoDude.FactoryTwin.UI.Sparkline name="process-temp-spark" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="telemetry__row">
+                        <ui:Label text="Air temp" class="metric__name" />
+                        <ui:Label text="—" class="metric__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="AirTempText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                        <TwoDude.FactoryTwin.UI.Sparkline name="air-temp-spark" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="line-panel" class="section">
+                <ui:VisualElement class="section__header">
+                    <ui:Label text="Line" class="section__title" />
+                    <ui:Label name="line-state" text="—" class="chip state">
+                        <Bindings>
+                            <ui:DataBinding property="text" data-source-path="LineStateText" binding-mode="ToTarget" />
+                        </Bindings>
+                    </ui:Label>
+                </ui:VisualElement>
+                <ui:VisualElement class="kpis">
+                    <ui:VisualElement class="kpi">
+                        <ui:Label text="Parts / hour" class="metric__name" />
+                        <ui:Label text="—" class="kpi__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="PartsPerHourText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                        <TwoDude.FactoryTwin.UI.Sparkline name="parts-per-hour-spark" class="kpi__spark" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="kpi kpi--lost">
+                        <ui:Label text="Parts lost" class="metric__name" />
+                        <ui:Label text="—" class="kpi__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="PartsLostText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="kpi">
+                        <ui:Label text="Parts out" class="metric__name" />
+                        <ui:Label text="—" class="kpi__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="PartsOutText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="kpi">
+                        <ui:Label text="Cycle time" class="metric__name" />
+                        <ui:Label text="—" class="kpi__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="CycleTimeText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="fault-panel" class="section section--faults">
+                <ui:Label text="Inject a press failure" class="section__title" />
+                <ui:VisualElement class="fault-buttons">
+                    <ui:Button name="inject-twf" text="Tool wear" class="fault-button fault-button--key" />
+                    <ui:Button name="inject-hdf" text="Heat" class="fault-button" />
+                    <ui:Button name="inject-pwf" text="Power" class="fault-button" />
+                    <ui:Button name="inject-osf" text="Overstrain" class="fault-button" />
+                    <ui:Button name="inject-rnf" text="Random" class="fault-button" />
+                    <ui:Button name="clear-fault" text="Clear" class="fault-button fault-button--clear" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="section section--log">
+                <ui:Label text="Event log" class="section__title" />
+                <ui:ListView name="event-log" fixed-item-height="22" selection-type="None" class="event-log" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="panel__footer">
+                <ui:Label text="Telemetry: AI4I 2020 dataset (CC BY 4.0), replayed" class="footnote" />
+                <ui:Button name="credits-button" text="Credits" class="link-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:Instance template="Credits" name="credits" class="credits-overlay hidden" />
+    </ui:VisualElement>
+</ui:UXML>

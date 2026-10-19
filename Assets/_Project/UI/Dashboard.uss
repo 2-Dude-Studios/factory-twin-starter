@@ -1,0 +1,352 @@
+/* Dashboard for the 1920×1080 capture: one dark panel on the right of the 3D view, status in colour chips,
+   telemetry as value + sparkline rows. Colours are variables so M6 can retune them for the final grade. */
+
+.dashboard {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    --ink: rgb(231, 236, 239);
+    --muted: rgb(147, 160, 170);
+    --panel: rgba(16, 20, 23, 0.9);
+    --surface: rgba(255, 255, 255, 0.05);
+    --line: rgba(255, 255, 255, 0.1);
+    --ok: rgb(54, 168, 108);
+    --warning: rgb(242, 183, 5);
+    --fault: rgb(214, 69, 65);
+    color: var(--ink);
+    font-size: 14px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Panel */
+
+.panel {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    bottom: 24px;
+    width: 440px;
+    padding: 18px 18px 12px 18px;
+    background-color: var(--panel);
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: var(--line);
+}
+
+.panel__header,
+.section__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel__header {
+    margin-bottom: 14px;
+}
+
+.eyebrow {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    padding: 0;
+    margin: 0;
+}
+
+.panel__title {
+    font-size: 20px;
+    -unity-font-style: bold;
+    padding: 0;
+    margin: 2px 0 0 0;
+}
+
+.panel__footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.footnote {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+/* Sections */
+
+.section {
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background-color: var(--surface);
+    border-radius: 6px;
+    border-left-width: 4px;
+    border-left-color: var(--line);
+}
+
+.section--press.health--ok { border-left-color: var(--ok); }
+.section--press.health--warning { border-left-color: var(--warning); }
+.section--press.health--fault { border-left-color: var(--fault); }
+
+.section__title {
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    -unity-font-style: bold;
+    padding: 0;
+    margin: 0 0 8px 0;
+}
+
+.section__header .section__title {
+    margin-bottom: 0;
+}
+
+.section__header {
+    margin-bottom: 10px;
+}
+
+/* Chips */
+
+.chip {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    -unity-font-style: bold;
+    background-color: var(--line);
+    color: var(--ink);
+    margin: 0;
+}
+
+.health--ok.chip, .state--running { background-color: var(--ok); color: rgb(8, 24, 15); }
+.health--warning.chip, .state--stalled { background-color: var(--warning); color: rgb(29, 22, 0); }
+.health--fault.chip, .state--held { background-color: var(--fault); color: rgb(255, 255, 255); }
+
+.link--up { background-color: rgba(54, 168, 108, 0.2); color: var(--ok); }
+.link--down { background-color: rgba(214, 69, 65, 0.2); color: var(--fault); }
+
+/* Failure risk */
+
+.risk {
+    margin-bottom: 10px;
+}
+
+.risk__labels {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.risk__value {
+    font-size: 22px;
+    -unity-font-style: bold;
+    padding: 0;
+    margin: 0;
+}
+
+.risk__bar {
+    margin: 4px 0 0 0;
+    height: 12px;
+}
+
+.risk__bar .unity-progress-bar__background {
+    background-color: var(--line);
+    border-width: 0;
+    border-radius: 6px;
+}
+
+.risk__bar .unity-progress-bar__progress {
+    background-color: var(--warning);
+    border-radius: 6px;
+}
+
+.risk__bar .unity-progress-bar__title {
+    display: none;
+}
+
+/* Telemetry rows */
+
+.telemetry__row {
+    flex-direction: row;
+    align-items: center;
+    height: 26px;
+}
+
+.metric__name {
+    width: 104px;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 0;
+    margin: 0;
+}
+
+.metric__value {
+    width: 96px;
+    -unity-text-align: middle-right;
+    -unity-font-style: bold;
+    padding: 0 10px 0 0;
+    margin: 0;
+}
+
+/* Sparkline reads --spark-color through its own custom style, which is not inherited, so it is set here. */
+.sparkline {
+    flex-grow: 1;
+    height: 22px;
+    --spark-color: rgb(143, 199, 219);
+}
+
+.spark--key {
+    --spark-color: rgb(242, 183, 5);
+}
+
+/* Line KPIs */
+
+.kpis {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.kpi {
+    width: 50%;
+    padding: 4px 6px 6px 0;
+}
+
+.kpi .metric__name {
+    width: auto;
+}
+
+.kpi__value {
+    font-size: 22px;
+    -unity-font-style: bold;
+    padding: 0;
+    margin: 0;
+}
+
+.kpi__spark {
+    height: 18px;
+    flex-grow: 0;
+    margin-top: 2px;
+}
+
+.kpi--lost .kpi__value {
+    color: var(--fault);
+}
+
+/* Fault buttons */
+
+.fault-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.fault-button {
+    margin: 0 6px 6px 0;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: var(--line);
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--ink);
+    font-size: 13px;
+}
+
+.fault-button:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+}
+
+.fault-button--key {
+    border-color: var(--warning);
+    color: var(--warning);
+    -unity-font-style: bold;
+}
+
+.fault-button--clear {
+    border-color: var(--ok);
+    color: var(--ok);
+}
+
+/* Event log */
+
+.section--log {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 120px;
+}
+
+.event-log {
+    flex-grow: 1;
+}
+
+.log-line {
+    font-size: 12px;
+    padding: 0;
+    margin: 0;
+    -unity-text-align: middle-left;
+    color: var(--ink);
+}
+
+.log--warning { color: var(--warning); }
+.log--fault { color: var(--fault); }
+
+.event-log .unity-list-view__item:hover,
+.event-log .unity-list-view__item:checked {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/* Buttons that read as links */
+
+.link-button {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 2px 4px;
+    margin: 0;
+}
+
+.link-button:hover {
+    color: var(--ink);
+}
+
+/* Credits overlay */
+
+.credits-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.credits {
+    width: 560px;
+    padding: 20px 22px;
+    background-color: var(--panel);
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: var(--line);
+}
+
+.credit__name {
+    -unity-font-style: bold;
+    margin: 12px 0 2px 0;
+    padding: 0;
+}
+
+.credit__text {
+    white-space: normal;
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+    padding: 0;
+}
+
+.credit__text--muted {
+    margin-top: 16px;
+    font-size: 12px;
+}

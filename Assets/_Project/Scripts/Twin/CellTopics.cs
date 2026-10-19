@@ -24,6 +24,16 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath OutfeedRunning = new TopicPath("outfeed", "running");
         public static readonly TopicPath OutfeedPartExit = new TopicPath("outfeed", "part_exit");
 
+        // Press station telemetry. DatasetReplayer builds the same names; tools/replay/replay.py must match too.
+        public static readonly TopicPath PressAirTemp = new TopicPath("press", "air_temp_k");
+        public static readonly TopicPath PressProcessTemp = new TopicPath("press", "process_temp_k");
+        public static readonly TopicPath PressSpeed = new TopicPath("press", "speed_rpm");
+        public static readonly TopicPath PressTorque = new TopicPath("press", "torque_nm");
+        public static readonly TopicPath PressToolWear = new TopicPath("press", "tool_wear_min");
+
+        // Failure risk, 0–1, from the M5 risk model. Nothing publishes it before M5; the dashboard shows "—".
+        public static readonly TopicPath PressFailureRisk = new TopicPath("press", "failure_risk");
+
         // Press station (AI4I telemetry). The line holds while the press reports any of these.
         public static readonly TopicPath PressMachineFailure = new TopicPath("press", "machine_failure");
         public static readonly IReadOnlyList<TopicPath> PressFaults = new[]

@@ -1,0 +1,16 @@
+{
+    "name": "TwoDude.FactoryTwin.UI",
+    "rootNamespace": "TwoDude.FactoryTwin.UI",
+    "references": [
+        "TwoDude.FactoryTwin.Twin"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
