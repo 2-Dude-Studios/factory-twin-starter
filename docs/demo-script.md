@@ -1,6 +1,6 @@
 # Demo script — 90-second walkthrough beats (predictive maintenance)
 
-Structure follows the walkthrough video playbook: promise / proof / path / ask. Voiceover is rendered before capture; these beats are what the camera must show under each line.
+Structure follows the walkthrough video playbook: promise / proof / path / ask. Voiceover is rendered before capture; these beats are what the camera must show under each line. **The word-for-word voiceover, timing sheet and capture takes are in `docs/voiceover.md`.**
 
 The machine on screen is a **CNC machining centre**, because the AI4I 2020 telemetry models a milling process (spindle speed, torque, tool wear). The signal names keep their station name `press`; only the words on screen and in the voiceover say CNC.
 
