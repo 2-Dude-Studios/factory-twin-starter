@@ -16,6 +16,14 @@ namespace TwoDude.FactoryTwin.Twin
         Random = 1 << 4,          // RNF
     }
 
+    /// <summary>Press station: AI4I product quality variant (the Type column). Sets the overstrain limit.</summary>
+    public enum ProductQuality
+    {
+        Low = 0,
+        Medium = 1,
+        High = 2,
+    }
+
     /// <summary>Press station: one row of the AI4I 2020 dataset, in the dataset's own units (K, rpm, Nm, min).</summary>
     public readonly struct Ai4iRow
     {
@@ -26,9 +34,10 @@ namespace TwoDude.FactoryTwin.Twin
         public double ToolWearMin { get; }
         public bool MachineFailure { get; }
         public FaultMode Faults { get; }
+        public ProductQuality Quality { get; }
 
         public Ai4iRow(double airTempK, double processTempK, double speedRpm, double torqueNm, double toolWearMin,
-            bool machineFailure, FaultMode faults)
+            bool machineFailure, FaultMode faults, ProductQuality quality = ProductQuality.Low)
         {
             AirTempK = airTempK;
             ProcessTempK = processTempK;
@@ -37,6 +46,7 @@ namespace TwoDude.FactoryTwin.Twin
             ToolWearMin = toolWearMin;
             MachineFailure = machineFailure;
             Faults = faults;
+            Quality = quality;
         }
     }
 
@@ -52,6 +62,7 @@ namespace TwoDude.FactoryTwin.Twin
         private const string Torque = "Torque [Nm]";
         private const string ToolWear = "Tool wear [min]";
         private const string Failure = "Machine failure";
+        private const string Type = "Type";
 
         private static readonly string[] FaultColumns = { "TWF", "HDF", "PWF", "OSF", "RNF" };
 
@@ -69,6 +80,7 @@ namespace TwoDude.FactoryTwin.Twin
             int torque = Find(header, Torque);
             int toolWear = Find(header, ToolWear);
             int failure = Find(header, Failure);
+            int type = Array.IndexOf(header, Type); // optional; older test files leave it out
             var faults = new int[FaultColumns.Length];
             for (int f = 0; f < FaultColumns.Length; f++)
                 faults[f] = Find(header, FaultColumns[f]);
@@ -97,7 +109,8 @@ namespace TwoDude.FactoryTwin.Twin
                     Number(cells[torque], i),
                     Number(cells[toolWear], i),
                     Flag(cells[failure], i),
-                    mode));
+                    mode,
+                    type < 0 ? ProductQuality.Low : Quality(cells[type], i)));
             }
             return rows;
         }
@@ -118,6 +131,17 @@ namespace TwoDude.FactoryTwin.Twin
             if (!double.TryParse(cell, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
                 throw new FormatException($"AI4I CSV line {lineIndex + 1}: '{cell}' is not a number.");
             return value;
+        }
+
+        private static ProductQuality Quality(string cell, int lineIndex)
+        {
+            switch (cell)
+            {
+                case "L": return ProductQuality.Low;
+                case "M": return ProductQuality.Medium;
+                case "H": return ProductQuality.High;
+                default: throw new FormatException($"AI4I CSV line {lineIndex + 1}: '{cell}' is not a product type (L, M or H).");
+            }
         }
 
         private static bool Flag(string cell, int lineIndex)

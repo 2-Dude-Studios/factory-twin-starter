@@ -294,7 +294,7 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin | Dashboard view model, sparkline element, controller (M4) |
 | `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | — (Editor only) | `ProjectSettingsGuard` |
 | `TwoDude.FactoryTwin.Robot.Editor` | `Scripts/Robot/Editor/` | URDF-Importer (Editor only) | `ArmImporter` |
-| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 154 tests |
+| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 164 tests |
 
 UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `Credits.uxml`).
 
@@ -320,6 +320,7 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `Twin/FaultInjector.cs` | MonoBehaviour | `inject_fault` command → press fault filter; `Inject()` / `Clear()` API |
 | `Twin/PressHealthRule.cs` | enum + static | `MachineHealth`; `IsFaulted(bus)` (shared with `CellSequencer`) and `Evaluate(faulted, warning)` |
 | `Twin/PressHealthReporter.cs` | MonoBehaviour | Publishes `press/health` on change (M4) |
+| `Twin/FailureRiskModel.cs` | static + types | `PressReading`, `FailureRiskSettings`, `RiskAssessment`; threshold-margin failure risk, remaining tool life, maintenance due (M5) |
 | `Twin/StackLightPattern.cs` | static | Lamp and glow levels for a health value; red flashes at 1.5 Hz (M4) |
 | `Twin/StackLight.cs` | MonoBehaviour | Health topic → stack-light lamps (MaterialPropertyBlock) and glow light (M4) |
 | `Twin/LineMetrics.cs` | class | Rolling parts/hour; parts lost while held at the frozen pre-hold rate (M4) |
