@@ -83,8 +83,9 @@ Smallest shippable step first:
 
 ## M6 — Polish and capture (exit: the 90-second video is captured from the Windows build)
 Smallest shippable step first:
-- [ ] **Windows build** of `Cell.unity` into `Builds/Windows/` (git-ignored), run it, and check the player log: no errors, 60 fps lock active, dashboard and degradation work outside the Editor.
-  - Blocked for Claude (2026-10-20): UnitySkills classes `build_player` as high-risk, and in its current Auto mode it runs only in Bypass mode or when allowlisted. Batchmode cannot build while the Editor has the project open. See "Manual steps pending".
+- [x] **Windows build** (2026-10-20, via UnitySkills `build_player` with the panel switched to Bypass mode for the build; switch it back to Auto afterwards): `Builds/Windows/FactoryTwin.exe` (git-ignored), StandaloneWindows64, Mono, about 16 minutes to build. Ran 90 s windowed at 1280×720 with `-logFile`: realvirtual starts the Cell scene, Direct3D 11, **no exceptions, errors or missing-shader messages**; the only repeated line is "[MqttBridge] 127.0.0.1:1883 unreachable … retrying in 5 s" because no broker was running. Not verified from the log: how the window looks (dashboard, stack light) and the actual frame rate. Check them with your eyes or OBS stats on the first capture take, or add an FPS readout with the take controls.
+  - Do not ship `Builds/Windows/factory-twin-starter_BurstDebugInformation_DoNotShip/` when zipping the build.
+  - Polish: log the broker-unreachable line once (then on reconnect) rather than every 5 s, so a broker-less demo keeps a clean player log.
 - [ ] **Licence texts in the build.** BSD-3 (UR5e description) and Apache-2.0 (URDF-Importer) want their full notices with a binary; MIT (MQTTnet) too. A `Licenses/` folder next to the .exe, or a scrollable full-text section in the Credits overlay.
 - [ ] **Dashboard polish.** Cycle time leaves held time out. A way to clear the event log between takes. Check whether the 12 px section titles read at 1080p, and decide what fills the empty bottom of the log.
 - [ ] **Take controls** for capture: keyboard shortcuts for Wear tool out / Change tool / Clear / reset, the cursor hidden outside beats 4–5, and a "fresh take" reset (log cleared, tool fresh, counters zeroed).
@@ -96,7 +97,6 @@ Smallest shippable step first:
 Decide: Player Settings still have Unity's defaults (product "factory-twin-starter", company "DefaultCompany", 1024×768 windowed default). Set "Factory Twin" / "2 Dude Studios" and a 1920×1080 default? That is a ProjectSettings change.
 
 ## Manual steps pending
-- **Make the M6 Windows build** (one of): (a) in the UnitySkills panel, add `build_player` to the Allowlist and Claude builds it; (b) in Unity: File → Build Profiles → Windows (Architecture x86_64) → check the Scene List holds only `Assets/_Project/Scenes/Cell.unity` → Build → folder `Builds/Windows/`, name `FactoryTwin.exe`; (c) close the Editor and Claude builds headless. After (b) or (c), Claude can launch the .exe and read `%USERPROFILE%\AppData\LocalLow\DefaultCompany\factory-twin-starter\Player.log`.
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Deletes are blocked for Claude; either delete them in the Hierarchy or add `gameobject_delete_batch` to the UnitySkills allowlist.
 - Delete `Assets/Screenshots/` (UnitySkills capture output; git-ignored).
 - Play mode restarted itself once during the first soak attempt (~375 s in; no compile, refresh or skill call in the log). Did not recur in the 10-minute rerun. If it happens again, check the realvirtual runtime toolbar's restart/reset controls.
