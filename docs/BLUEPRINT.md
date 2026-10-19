@@ -1,8 +1,8 @@
 # Factory Twin — project blueprint
 
-As of 2026-10-12, commit `40aa013` (M3 closed, M4 next). Written from the code, the scene file and the docs in this repo; where the docs and the code disagree, the code is described and the difference is listed in section 12. Objective, milestones and remaining work revised 2026-10-19 for build plan Rev 2 (six use cases, M4–M10); the code sections are unchanged.
+As of 2026-10-12, commit `40aa013` (M3 closed, M4 next). Written from the code, the scene file and the docs in this repo; where the docs and the code disagree, the code is described and the difference is listed in section 12. Objective, milestones and remaining work revised 2026-10-19 for build plan Rev 3 (predictive maintenance only, M4–M6); the code sections are unchanged.
 
-Companion documents: `docs/build-plan.md` (why and in what order), `docs/STATUS.md` (running log and decisions), `docs/demo-script.md` (the hub video and six use-case clips), `docs/LICENSES.md` (what may ship), `CLAUDE.md` (rules for working in the repo).
+Companion documents: `docs/build-plan.md` (why and in what order), `docs/STATUS.md` (running log and decisions), `docs/demo-script.md` (the 90-second video), `docs/LICENSES.md` (what may ship), `CLAUDE.md` (rules for working in the repo).
 
 ---
 
@@ -12,46 +12,34 @@ Companion documents: `docs/build-plan.md` (why and in what order), `docs/STATUS.
 
 A Unity prototype of one working production cell: an infeed conveyor, a sensor gate, a six-axis pick-and-place arm, an outfeed conveyor, and a press reporting machine telemetry. Every drive, sensor and joint publishes its state over MQTT to a live dashboard.
 
-It has to prove that the studio can build a robotic or otherwise automated factory as a digital twin that serves six uses, all on this one cell and its one signal contract:
+It proves one use case, **predictive maintenance**: the twin sees a press failure coming, shows where it is and what it will cost the line, and recommends a tool change in time. It was chosen as the most-asked-for digital-twin use in manufacturing and the one this build is closest to. Five other use cases (virtual commissioning, full monitoring, training and safety, layout what-if, pre-planning) are parked under "Later" in `docs/build-plan.md`.
 
-| Use case | Proof in the prototype | Milestone |
-|---|---|---|
-| Real-time monitoring & visibility | Live dashboard and broker; hover any machine to read its signal | M4 |
-| Predictive maintenance | Failure risk and remaining tool life rise before the failure; maintenance recommended | M5 |
-| Workforce training & safety | Arm protective zone; guided lockout procedure that catches wrong steps | M6 |
-| Virtual commissioning | Cell driven by PLC-language logic outside Unity; scripted suite catches a seeded bug | M7 |
-| Factory layout & what-if simulation | Stations move, arm re-solves, faster-than-real-time comparison of layouts | M8 |
-| Pre-planning | Scenario sweep against a production target, with bottleneck and maintenance windows | M9 |
-
-It ships as a Windows build, a ~90-second hub video and six short use-case clips for the Manufacturing page on 2dudestudios.com, and it is run live in front of manufacturing prospects.
+It ships as a Windows build and a 90-second walkthrough video for the Manufacturing page on 2dudestudios.com, and it is run live in front of manufacturing prospects.
 
 ### What it is solving
 
 **For the studio.** 2 Dude Studios is selling factory digital twins ahead of its first manufacturing project. A prospect looking at a studio's reel cannot tell a factory that was rendered from one that is connected to plant data, and the second is what they would be paying for. This demo is the evidence: a twin whose 3D scene and dashboard are driven by the same signals, over the protocol a real plant would use.
 
-**For the prospect watching it.** It shows what a twin gives a manufacturer: a line they can see, query and stress-test before it exists, including what the line does when a machine fails, without stopping a real one. It also shows the route to their own line: CAD in, signals mapped, deployed on desktop, kiosk or headset.
+**For the prospect watching it.** It shows what a twin gives a maintenance or plant manager: a failure seen minutes before it happens, on the machine where it will happen, with what it will cost the line if nobody acts. It also shows the route to their own machines: their sensors over MQTT or OPC UA, their failure history, the same twin.
 
 ### The moment it has to deliver
 
-A fault is injected into the press. The press goes red in 3D, the dashboard's health and risk readings move, the arm finishes its pick and both conveyors stop. Everything in the architecture exists to make that moment real rather than staged: the line stops because a signal says the press failed, and the dashboard shows it because it reads the same signal.
+The press's tool wears. The failure risk climbs, the press turns amber and the twin recommends a tool change while the line is still running. Then two outcomes. Ignored, the press fails: it goes red in 3D, the arm finishes its pick, both conveyors stop and the dashboard counts parts lost. Acted on, the tool is changed and the line never stops.
 
-It stays the centre of the hub video. From M5 it also shows prediction rather than only detection: the risk climbs and maintenance is recommended before the failure arrives.
+Everything in the architecture exists to make that moment real rather than staged. The line stops because a signal says the press failed, and the dashboard shows it because it reads the same signal. The detection half already works (section 5); M5 adds the prediction half.
 
 ### Done when
 
-- Each use case's exit condition in `docs/build-plan.md` is met (M4–M9), and its clip has been roughly captured.
-- There is a Windows build locked to 60 fps, and the hub video and six clips have been captured from it (M10).
+- The M4 and M5 exit conditions in `docs/build-plan.md` are met.
+- There is a Windows build locked to 60 fps and the 90-second video has been captured from it (M6).
 - The same build can be driven live in a prospect meeting, with or without a broker on the network.
-
-If time runs short, the plan stops after M6 and goes straight to M10 with four clips.
 
 ### Not in scope
 
 - Client work. This is the studio's own marketing asset; a client project on this codebase needs a Unity Industry seat and a fresh licence pass.
-- A physical PLC or plant connection. The press telemetry is replayed from a public dataset. The cell's logic is a C# state machine until M7, which adds a soft PLC running as a separate process on the studio PC.
+- A real PLC or plant connection. The press telemetry is replayed from a public dataset, and the cell's "PLC" is a state machine in C#.
 - A whole plant. One cell, built well.
-- A VR training product. Training and safety are desktop features of the twin (M6); a Quest 3 view and a kiosk view are later phases, only if time or a prospect calls for them.
-- Robot and sensor validation of the Unity Simulation Pro kind (LiDAR, cameras, ROS 2). That product needs a Unity Industry licence and serves a different buyer.
+- The other five use cases, until a prospect asks (build plan, "Later"). Also not in scope: a VR product, and robot or sensor validation of the Unity Simulation Pro kind (Industry licence only).
 
 ### Where it stands
 
@@ -61,13 +49,9 @@ If time runs short, the plan stops after M6 and goes straight to M10 with four c
 | M1 Cell loop | Infeed → gate → pick → outfeed, 10-minute soak | Done |
 | M2 Arm | De-branded UR5e, baked pick-and-place | Done |
 | M3 Data spine | Signal bus, MQTT bridge, press telemetry, fault injector | Done 2026-10-12 |
-| M4 Monitoring & visibility | UI Toolkit dashboard, hover-to-inspect, fault beat on camera | **Next — nothing built yet** |
-| M5 Predictive maintenance | Degradation mode, failure risk, remaining tool life, recommendation | Not started |
-| M6 Training & safety | Arm protective zone, guided lockout procedure | Not started |
-| M7 Virtual commissioning | External soft-PLC logic, I/O list, scripted commissioning suite | Not started |
-| M8 Layout & what-if | Runtime UR5e IK, layout variants, faster-than-real-time comparison | Not started |
-| M9 Pre-planning | Scenario sweep against a production target | Not started |
-| M10 Polish and capture | Lighting, VFX, audio, camera paths, Windows build, hub video + six clips | Not started |
+| M4 Dashboard | Lean UI Toolkit dashboard for the press and the line, fault beat on camera | **Next — nothing built yet** |
+| M5 Prediction | Degradation mode, failure risk, remaining tool life, recommendation, tool change | Not started |
+| M6 Polish and capture | Lighting, VFX, audio, camera path, Windows build, 90-second video | Not started |
 
 ---
 
@@ -411,7 +395,7 @@ docker exec factory-twin-broker mosquitto_pub -t cell/press/inject_fault -m '{"v
 | Robot import | URDF-Importer | 0.5.2 | manifest | Apache-2.0; notice owed |
 | Telemetry | AI4I 2020 dataset | 2020 | yes | CC BY 4.0; credit owed in app and on the web page |
 | Packages we chose | Splines 2.9.0, Cinemachine 3.1.7, Input System 1.19.0, Test Framework 1.6.0 | | manifest | Cinemachine is 3.x (`Unity.Cinemachine`) |
-| Imported, unused so far | Fast IK 1.2, Particle Pack 3.1 | | no | Particle Pack is for M10 |
+| Imported, unused so far | Fast IK 1.2, Particle Pack 3.1 | | no | Particle Pack is for M6 |
 | Brought in by the sample | Timeline, uGUI, Post Processing v2, ProGrids, AI Navigation, Burst/Collections/Mathematics, Asset Manager | | manifest | Not chosen; prune once it is clear what the scene needs |
 
 Obligations that affect the build:
@@ -452,83 +436,46 @@ The arm cycle (7.0 s) is the cell's bottleneck and sets the parts/hour figure th
 
 ## 11. What is left to build
 
-Exit conditions and day estimates for every milestone are in `docs/build-plan.md`; the clip each one produces is in `docs/demo-script.md`. This section lists what each milestone needs from, or changes in, the code described above.
+Exit conditions and day estimates are in `docs/build-plan.md`; the video beats each piece serves are in `docs/demo-script.md`. This section lists what each milestone needs from, or changes in, the code described above.
 
-### M4 — Monitoring & visibility (exit: the "inject fault" beat looks good on camera; a late-joining MQTT client sees the same values)
+### M4 — Dashboard (exit: the "inject fault" beat looks good on camera)
 
-Nothing exists yet. From the build plan, the demo script and the rules in `CLAUDE.md`, M4 needs:
+Nothing exists yet. Only what the predictive-maintenance story needs:
 
 | Piece | Notes |
 |---|---|
 | UI assembly and folders | `Scripts/UI/` (namespace `TwoDude.FactoryTwin.UI`, references Twin only) and `Assets/_Project/UI/` for UXML/USS. UI Toolkit with runtime data binding; no uGUI. |
 | Bus → view model | A component that subscribes to the bus and exposes bindable values. The dashboard reads the bus, never scene objects. |
-| KPI tiles | Cycle time and parts out are already signals. Parts/hour and OEE have to be derived. |
-| Per-machine health | Infeed, gate, arm, outfeed, press — from `running`, `busy`, `line/state` and the press faults. |
-| Failure-risk gauge | No signal exists for this; needs a definition (see open decisions). |
+| Press panel | Health, sparklines for the five telemetry topics, and the failure-risk gauge (fed from M5). |
+| Line panel | Line state, parts out, parts/hour, parts lost. Parts/hour and parts lost have to be derived. Parts lost is held time × the running rate. |
 | Event log | `SignalBus.MessagePublished` is there for it. Needs readable text for numeric states. |
 | Fault buttons | Inject (TWF, HDF, PWF, OSF, RNF) and Clear, calling `FaultInjector.Inject()` / `Clear()`. |
-| 3D reaction | The press turning amber then red. Needs press geometry first, then a highlighter driven by the press's fault topics. |
-| Hover to inspect | Hovering a conveyor shows its topic and live value (demo beat 3). Needs a mapping from scene objects to topics. |
+| 3D reaction | The press turning amber then red. Needs press geometry first (gap 1), then a highlighter driven by `cell/press/health`. |
 | Broker link indicator | From `cell/link/connected`. |
 | Credits panel | The four notices in section 9. `/licence-check` already expects `Assets/_Project/UI/Credits.uxml`. |
 | Hide realvirtual's runtime toolbar | It is uGUI and visible in Play. |
-| Retained state | Decide retained publishes plus a last will on `cell/link/connected` (section 12, carried-over list), so a client joining mid-run gets the whole cell. `SignalPublisher` and `MqttBridge` change; the payload does not. |
-| New signals | `cell/line/parts_per_hour`, `cell/line/oee`, `cell/<station>/health` (0 ok, 1 warning, 2 fault). |
+| New signals | `cell/press/health` (0 ok, 1 warning, 2 fault), `cell/line/parts_per_hour`, `cell/line/parts_lost`. |
 
-### M5 — Predictive maintenance
+Dropped from the Rev 2 M4: OEE, health for every station, hover-to-inspect and retained MQTT state. They are now under "Later".
+
+### M5 — Prediction
 
 | Piece | Notes |
 |---|---|
 | Degradation mode | A third press mode beside healthy baseline and fault filter: rows chosen so tool wear and torque climb through a warning band to failure over about a minute. Lives with `DatasetReplayer` / `FaultInjector`; the hold path in section 5 is unchanged. |
 | Risk model | A pure, tested class turning press telemetry into `cell/press/failure_risk` (0–1), `cell/press/tool_rul_min` and `cell/press/maint_due`. Definition is the M5 open decision in the build plan. Parameters in a ScriptableObject, not code. |
-| Press health | `cell/press/health` derived from risk and faults; the dashboard's gauge and the 3D amber state read it. |
+| Tool change | `cell/press/tool_change` (in) switches the replay back to low-tool-wear rows, so acting on the recommendation visibly resets wear and risk. |
+| Press health | `cell/press/health` derived from risk as well as faults; the dashboard's gauge and the 3D amber state read it. |
 
-### M6 — Workforce training & safety
+### M6 — Polish and capture
 
-| Piece | Notes |
-|---|---|
-| Protective zone | A sensor volume around the arm publishing `cell/safety/arm_zone_occupied`. Must go through a realvirtual signal like the other sensors. |
-| Protective stop | `cell/safety/protective_stop` latches until reset. Unlike the press hold, it must **interrupt** a pick: `ArmProgram` / `ArmController` need a freeze-in-place input, and `CellSequence` a second hold reason. |
-| Operator | A figure on a walking path, or the viewer in first person. Model licence to be confirmed. |
-| Lockout procedure | A pure step machine (tested), `cell/press/lockout`, `cell/training/step`, `cell/training/errors`. Restart with the lock on is refused by the sequence, not only by the UI. Tool change resets the press's tool wear. |
+Foundry HDRI and ambientCG materials (`Assets/_Project/Lighting`, `Materials` — folders not created yet), sparks/steam from the Particle Pack, ambience audio (`Assets/_Project/Audio`), a Cinemachine 3 camera path on Unity Splines, the Windows build (`Builds/` is empty; the 60 fps lock only takes effect in a build), then capture at 1920×1080, 60 fps per the demo script.
 
-### M7 — Virtual commissioning
+Still pending by hand from `docs/STATUS.md`: delete the deactivated training objects in `Cell.unity`, delete `Assets/Screenshots/`, restart the Editor once for the colour-space and input-backend switch.
 
-| Piece | Notes |
-|---|---|
-| Logic-source switch | `cell/plc/source`: 0 runs `CellSequencer`, 1 disables it and lets an external controller write the same command topics. This also resolves the carried-over "sequencer owns `drive_fwd`" risk. |
-| Watchdog | `cell/plc/heartbeat` from the external controller; silence holds the line. |
-| Soft PLC project | The sequence in Structured Text under `tools/plc/`. Talks MQTT, or OPC UA if the chosen PLC needs it (a new DLL; ask first). |
-| Cell fault injection | `cell/gate1/force` (0 none, 1 forced off, 2 forced on), missing part, arm held busy. Extends `FaultInjector`'s pattern to the cell. |
-| I/O list | CSV generated from the topic catalogue (`CellTopics` plus the press and new topics). |
-| Commissioning suite | Scripted scenarios run in Play against either logic source; pass/fail report. |
+### Later (not scheduled)
 
-### M8 — Factory layout & what-if simulation
-
-| Piece | Notes |
-|---|---|
-| Runtime IK | UR5e closed-form IK in C#, pure and tested against the eight baked poses (0 mm TCP error). `ArmProgram` takes solved poses instead of baked ones. Reverses the "no runtime IK" decision in `docs/STATUS.md`. |
-| Bake script | The Python reference goes into `tools/kinematics/` (gap 4). |
-| Layout variants | ScriptableObjects: station positions, belt speeds, source rate, arm speed. Moving stations on a grid in Play; reach envelope drawn; unreachable moves refused. |
-| Speed-up | `Time.timeScale` with `cell/sim/time_scale`; measure the highest stable value with the stiff arm drives (section 12 records what PhysX does when the arm hits a part). `cell/sim/layout` names the active variant. |
-
-### M9 — Pre-planning
-
-| Piece | Notes |
-|---|---|
-| Scenario runner | Sweeps M8 variants and parameters at the speed-up, or in a batch-mode build without graphics if that proves stable. |
-| Plan report | Throughput, utilisation per station, bottleneck, target met or not, maintenance downtime from M5's remaining tool life. Planning tab on the dashboard plus CSV. |
-| Validation | One predicted configuration re-run in real time; within 5%. |
-
-### M10 — Polish and capture
-
-Foundry HDRI and ambientCG materials (`Assets/_Project/Lighting`, `Materials` — folders not created yet), sparks/steam from the Particle Pack, ambience audio (`Assets/_Project/Audio`), Cinemachine 3 camera paths on Unity Splines (one per video piece), the Windows build (`Builds/` is empty; the 60 fps lock only takes effect in a build), then capture of the hub video and six clips at 1920×1080, 60 fps per the demo script.
-
-Still pending by hand from `docs/STATUS.md`: delete the deactivated training objects in `Cell.unity`, delete `Assets/Screenshots/`, restart the Editor once for the colour-space and input-backend switch. Check the training objects before deleting them if M6 might reuse any of the sample's training content.
-
-### Later phases (not scheduled)
-
-Touch/kiosk view, Quest 3 view (M6's lockout procedure is the natural first VR content). OPC UA moves into M7 if the chosen soft PLC needs it; realvirtual's S7 interface is folded into the same choice.
+The five parked use cases and the touch/kiosk and Quest 3 views; see "Later" in `docs/build-plan.md`. Rev 2's code-level notes for them (soft-PLC logic source, protective stop that interrupts a pick, runtime IK, scenario runner) are in commit `ee852e9`.
 
 ---
 
@@ -539,9 +486,9 @@ Found while writing this blueprint:
 | # | Finding | Why it matters |
 |---|---|---|
 | 1 | **No press in 3D.** `Cell/Press` has no renderer or children. | Demo beat 4 shows the press turning red. Geometry has to come from somewhere with a known licence before the highlight can be built. |
-| 2 | **The demo script names signals that do not exist**: `cell/*/state`, `outfeed/count`, `press/health`. The real ones are `line/state` and `line/parts_out`; there is no health signal. | Update `docs/demo-script.md` or add the signals; either way decide before building the dashboard against them. **Resolved 2026-10-19:** the rewritten demo script uses the real names and marks planned ones with the milestone that adds them; `press/health` is added in M4/M5. |
-| 3 | **OEE and failure risk are undefined.** No reject or quality data exists, and nothing computes risk. | OEE needs availability × performance × quality; quality has no source in this cell. Risk could be derived from tool wear, torque and temperature spread, but it is a design decision, not a wiring task. Now an open decision at the start of M4 (OEE) and M5 (risk) in the build plan. |
-| 4 | **The arm bake script is not in the repo.** `docs/STATUS.md` points at `scratchpad/ur5e_kin.py`; no such file exists here. | The eight poses cannot be regenerated after a layout change without rewriting it. Worth committing under `tools/`. Scheduled in M8 (`tools/kinematics/`), where runtime IK replaces the baked poses. |
+| 2 | **The demo script names signals that do not exist**: `cell/*/state`, `outfeed/count`, `press/health`. The real ones are `line/state` and `line/parts_out`; there is no health signal. | Update `docs/demo-script.md` or add the signals; either way decide before building the dashboard against them. **Resolved 2026-10-19:** the rewritten demo script uses the real names and marks planned ones with the milestone that adds them; `press/health` is added in M4. |
+| 3 | **OEE and failure risk are undefined.** No reject or quality data exists, and nothing computes risk. | OEE needs availability × performance × quality; quality has no source in this cell. Risk could be derived from tool wear, torque and temperature spread, but it is a design decision, not a wiring task. OEE is parked under Later (Rev 3). The risk definition is the open decision at the start of M5. |
+| 4 | **The arm bake script is not in the repo.** `docs/STATUS.md` points at `scratchpad/ur5e_kin.py`; no such file exists here. | The eight poses cannot be regenerated after a layout change without rewriting it. Worth committing under `tools/`. Needed before the parked layout what-if work, where runtime IK would replace the baked poses. |
 | 5 | **UnitySkills version drift.** The working tree bumps it to v2.9.0 (uncommitted in `Packages/manifest.json` and the lock file); `docs/LICENSES.md` and `docs/STATUS.md` say v2.8.4. | The licence register must match the manifest in the same commit. |
 | 6 | **`/test` command names Editor `6000.3.0f1`**; the project is on `6000.3.19f1`. | The headless command fails as written unless that exact version is installed. |
 | 7 | **Untracked `Assets/Temp.meta` and `Assets/UnitySkillsTests_Temp.meta`.** | Leftovers from UnitySkills' test run; delete or ignore rather than commit. |

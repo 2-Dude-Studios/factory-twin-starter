@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M4 — Monitoring & visibility (dashboard) (M3 closed 2026-10-12; plan widened to M4–M10 on 2026-10-19, see build plan Rev 2)
+**Current milestone:** M4 — Dashboard (M3 closed 2026-10-12; plan narrowed to predictive maintenance, M4–M6, on 2026-10-19 — build plan Rev 3)
 **Last updated:** 2026-10-12
 
 ## Done
@@ -66,9 +66,9 @@
 - **The URDF import leaves the articulation root free-floating and the drives at zero gain**, so the arm fell through the floor on the first run. `ArmImporter` now pins the root and `ArmController` sets the gains, both reproducible on re-import.
 - **Raycast sensors never fill `CollidingMus`.** Anything reading parts off a light barrier must also use `LastTriggeredBy` (`PartGripper` does, distance-checked).
 - **Cell.unity is a copy of the sample scene** (placement data referencing sample assets, committed to git). The sample's own files stay out of git and ship only inside builds, so licence rule 1 holds; revisit if the repo is ever shared outside the studio.
-- **Conveyors are straight realvirtual `ConveyorSmall`s, not spline-built.** Nothing in the M1 layout curves; Splines stay for curved routes, AGV paths and the M10 camera dolly.
+- **Conveyors are straight realvirtual `ConveyorSmall`s, not spline-built.** Nothing in the M1 layout curves; Splines stay for curved routes, AGV paths and the M6 camera dolly.
 - **`PartTransfer` talks to realvirtual `Sensor`/`MU` directly** (in the bridge assembly), a deliberate exception to the TwinSignals-only rule for an actuator stand-in that is deleted at M2.
-- **Camera for now:** realvirtual's `Main Camera` (orbit navigation) is active; the hall's camera is off. realvirtual's runtime toolbar (uGUI) is visible in Play and must be hidden before capture. Both are replaced by the Cinemachine camera at M10 (milestones renumbered in build plan Rev 2).
+- **Camera for now:** realvirtual's `Main Camera` (orbit navigation) is active; the hall's camera is off. realvirtual's runtime toolbar (uGUI) is visible in Play and must be hidden before capture. Both are replaced by the Cinemachine camera at M6.
 - **Line status as numbers.** `cell/line/state` is 0 feeding, 1 transferring, 2 stalled, 3 held (press fault); the payload scheme has no strings.
 - **An injected fault stops the line** (decided 2026-10-12). The demo script used to say the infeed slows to buffer; beat 4 in `docs/demo-script.md` now says the line holds.
 - **The hold follows the press's fault signals, wherever they come from.** With `tools/replay/replay.py` feeding the broker, the dataset's own failure rows (about 1 in 30) will each hold the line for one row; run it with `--fault` on purpose, or add a healthy-only switch to it if that gets in the way.

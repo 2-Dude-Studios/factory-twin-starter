@@ -4,7 +4,7 @@ Unity 6000.3 · URP · Windows target · marketing demo of a factory digital twi
 Full plan: `docs/build-plan.md`. Demo beats: `docs/demo-script.md`. Third-party licences: `docs/LICENSES.md`.
 
 ## What we are building
-One production cell: infeed conveyor → sensor gate → six-axis arm pick-and-place → outfeed conveyor. Every drive, sensor and joint publishes state over MQTT to a UI Toolkit dashboard. A fault-injection button makes the 3D cell and the dashboard react together. That beat is the whole pitch.
+One production cell: infeed conveyor → sensor gate → six-axis arm pick-and-place → outfeed conveyor. Every drive, sensor and joint publishes state over MQTT to a UI Toolkit dashboard. The prototype proves one use case, predictive maintenance: the press's failure risk climbs and the twin recommends a tool change before the failure; ignored, the press fails and the line stops, in 3D and on the dashboard together. That beat is the whole pitch. Other use cases are parked under "Later" in docs/build-plan.md.
 
 ## Hard rules
 - Write new code only under `Assets/_Project/`. Never edit anything under `Assets/ThirdParty/` (Factory Training sample, Fast IK, Particle Pack, MQTTnet) or under `Assets/realvirtual/` and `Assets/Gizmos/realvirtual/` (realvirtual's fixed import paths). All are updated by re-import and kept out of git.
@@ -29,7 +29,7 @@ The `unity` CLI / MCP is available on this machine. Prefer it for scene edits ov
 Log location on Windows: `%LOCALAPPDATA%\Unity\Editor\Editor.log` — read the tail when a compile fails.
 
 ## Milestones (exit conditions in docs/build-plan.md)
-M0 setup · M1 cell loop · M2 arm · M3 data spine · M4 monitoring & visibility · M5 predictive maintenance · M6 training & safety · M7 virtual commissioning · M8 layout & what-if · M9 pre-planning · M10 polish + capture.
+M0 setup · M1 cell loop · M2 arm · M3 data spine · M4 dashboard · M5 prediction · M6 polish + capture.
 Current milestone is recorded at the top of `docs/STATUS.md`. Update it when a milestone's exit condition is met.
 
 ## When unsure
