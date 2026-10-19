@@ -54886,6 +54886,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1498409059635385976, guid: f88301b6397183a449455ed3110ed39d, type: 3}
+      propertyPath: UIEnabledOnStart
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1498409059635385976, guid: f88301b6397183a449455ed3110ed39d, type: 3}
       propertyPath: ModelCheckerEnabled
       value: 1
       objectReference: {fileID: 0}

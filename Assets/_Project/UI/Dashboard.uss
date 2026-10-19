@@ -203,14 +203,16 @@
 
 /* Line KPIs */
 
+/* Two 50% columns wrap on sub-pixel rounding, so the columns are 48% with the gap from space-between. */
 .kpis {
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: space-between;
 }
 
 .kpi {
-    width: 50%;
-    padding: 4px 6px 6px 0;
+    width: 48%;
+    padding: 4px 0 6px 0;
 }
 
 .kpi .metric__name {
