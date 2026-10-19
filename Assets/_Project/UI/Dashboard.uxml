@@ -120,9 +120,13 @@
             </ui:VisualElement>
 
             <ui:VisualElement name="fault-panel" class="section section--faults">
-                <ui:Label text="Inject a CNC failure" class="section__title" />
+                <ui:Label text="Scenarios" class="section__title" />
                 <ui:VisualElement class="fault-buttons">
-                    <ui:Button name="inject-twf" text="Tool wear" class="fault-button fault-button--key" />
+                    <ui:Button name="degrade-tool" text="Wear tool out" class="fault-button fault-button--key" />
+                </ui:VisualElement>
+                <ui:Label text="Instant failures" class="metric__name fault-subtitle" />
+                <ui:VisualElement class="fault-buttons">
+                    <ui:Button name="inject-twf" text="Tool wear" class="fault-button" />
                     <ui:Button name="inject-hdf" text="Heat" class="fault-button" />
                     <ui:Button name="inject-pwf" text="Power" class="fault-button" />
                     <ui:Button name="inject-osf" text="Overstrain" class="fault-button" />

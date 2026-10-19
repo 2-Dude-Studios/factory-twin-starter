@@ -73,6 +73,18 @@ namespace TwoDude.FactoryTwin.Twin
         /// </summary>
         public bool SkipFailures { get; set; }
 
+        /// <summary>
+        /// Extra test for baseline rows (with <see cref="SkipFailures"/> on and no fault filter): a row is replayed
+        /// only if this returns true. Null accepts every healthy row.
+        /// </summary>
+        public Predicate<Ai4iRow> BaselineFilter { get; set; }
+
+        /// <summary>
+        /// When not NaN, published instead of each row's tool wear. The degradation scenario uses it to make the tool
+        /// wear out on a schedule while the other channels keep the dataset's real variation.
+        /// </summary>
+        public double ToolWearOverride { get; set; } = double.NaN;
+
         public bool Finished { get; private set; }
         public int RowsPublished { get; private set; }
 
@@ -130,7 +142,11 @@ namespace TwoDude.FactoryTwin.Twin
         {
             if (FaultFilter != FaultMode.None)
                 return (row.Faults & FaultFilter) != 0;
-            return !SkipFailures || (row.Faults == FaultMode.None && !row.MachineFailure);
+            if (!SkipFailures)
+                return true;
+            if (row.Faults != FaultMode.None || row.MachineFailure)
+                return false;
+            return BaselineFilter == null || BaselineFilter(row);
         }
 
         private void Publish(Ai4iRow row, long nowUnixMs)
@@ -141,7 +157,8 @@ namespace TwoDude.FactoryTwin.Twin
             _bus.Publish(_processTemp, SignalValue.FromNumber(row.ProcessTempK), nowUnixMs);
             _bus.Publish(_speed, SignalValue.FromNumber(row.SpeedRpm), nowUnixMs);
             _bus.Publish(_torque, SignalValue.FromNumber(row.TorqueNm), nowUnixMs);
-            _bus.Publish(_toolWear, SignalValue.FromNumber(row.ToolWearMin), nowUnixMs);
+            double wear = double.IsNaN(ToolWearOverride) ? row.ToolWearMin : ToolWearOverride;
+            _bus.Publish(_toolWear, SignalValue.FromNumber(wear), nowUnixMs);
             for (int f = 0; f < _faultTopics.Length; f++)
                 _bus.Publish(_faultTopics[f], SignalValue.FromBool((row.Faults & (FaultMode)(1 << f)) != 0), nowUnixMs);
             _bus.Publish(_machineFailure, SignalValue.FromBool(row.MachineFailure), nowUnixMs);

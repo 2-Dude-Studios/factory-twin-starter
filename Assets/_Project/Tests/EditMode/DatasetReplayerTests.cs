@@ -148,6 +148,43 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void BaselineFilter_SkipsHealthyRowsItRejects()
+        {
+            var bus = new SignalBus();
+            var toolWear = new List<double>();
+            bus.Subscribe("cell/press/tool_wear_min", m => toolWear.Add(m.Value.Number));
+            var replayer = new DatasetReplayer(Ai4iCsv.Parse(Csv), bus)
+            {
+                RowsPerSecond = 10d,
+                SkipFailures = true,
+                BaselineFilter = row => row.ToolWearMin < 1d,
+            };
+
+            for (int i = 0; i < 3; i++)
+                replayer.Tick(0.1, i);
+
+            CollectionAssert.AreEqual(new[] { 0d, 0d, 0d }, toolWear);
+        }
+
+        [Test]
+        public void ToolWearOverride_ReplacesTheRowsWearUntilClearedWithNaN()
+        {
+            var bus = new SignalBus();
+            var toolWear = new List<double>();
+            var torque = new List<double>();
+            bus.Subscribe("cell/press/tool_wear_min", m => toolWear.Add(m.Value.Number));
+            bus.Subscribe("cell/press/torque_nm", m => torque.Add(m.Value.Number));
+            var replayer = new DatasetReplayer(Ai4iCsv.Parse(Csv), bus) { RowsPerSecond = 10d, ToolWearOverride = 187.5 };
+
+            replayer.Tick(0.1, 0L);
+            replayer.ToolWearOverride = double.NaN;
+            replayer.Tick(0.1, 1L);
+
+            CollectionAssert.AreEqual(new[] { 187.5, 3d }, toolWear);
+            CollectionAssert.AreEqual(new[] { 42.8, 46.3 }, torque, "other channels keep the dataset's values");
+        }
+
+        [Test]
         public void FaultFilter_OverridesSkipFailuresAndTheBaselineReturnsWhenCleared()
         {
             var bus = new SignalBus();

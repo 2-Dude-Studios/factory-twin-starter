@@ -57,6 +57,9 @@ namespace TwoDude.FactoryTwin.Twin
         // Fault injector command: a FaultMode value (1 TWF, 2 HDF, 4 PWF, 8 OSF, 16 RNF; 0 clears)
         public static readonly TopicPath PressInjectFault = new TopicPath("press", "inject_fault");
 
+        // Degradation command (M5): true starts wearing the tool out on a schedule until it fails, false stops it.
+        public static readonly TopicPath PressDegrade = new TopicPath("press", "degrade");
+
         // Broker link, published by the MQTT bridge so the dashboard can show the connection
         public static readonly TopicPath LinkConnected = new TopicPath("link", "connected");
 

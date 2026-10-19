@@ -9756,7 +9756,7 @@ PrefabInstance:
     - target: {fileID: 114497208307164320, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
       propertyPath: realvirtualController
       value: 
-      objectReference: {fileID: 700966903}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -22718,17 +22718,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6652547975049344125, guid: 97bc87af3e02fc146944d43ff9eefa28, type: 3}
   m_PrefabInstance: {fileID: 695472577}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &700966903 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1498409059635385976, guid: f88301b6397183a449455ed3110ed39d, type: 3}
-  m_PrefabInstance: {fileID: 2005897827}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3d7eb697064db7340ac1022f7f281add, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &704321163
 GameObject:
   m_ObjectHideFlags: 0
@@ -49406,7 +49395,7 @@ PrefabInstance:
     - target: {fileID: 114497208307164320, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
       propertyPath: realvirtualController
       value: 
-      objectReference: {fileID: 700966903}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -57292,6 +57281,7 @@ GameObject:
   - component: {fileID: 2108969896}
   - component: {fileID: 2108969897}
   - component: {fileID: 2108969898}
+  - component: {fileID: 2108969899}
   m_Layer: 0
   m_Name: Press
   m_TagString: Untagged
@@ -57334,6 +57324,7 @@ MonoBehaviour:
   rowsPerSecond: 2
   loop: 1
   healthyBaseline: 1
+  riskConfig: {fileID: 11400000, guid: fd73a156b783132499050b6d980d335f, type: 2}
   faultFilter: 0
   rowsLoaded: 0
   rowsPublished: 0
@@ -57387,6 +57378,27 @@ MonoBehaviour:
   likelyMode: 0
   toolRemainingMin: 0
   maintenanceDue: 0
+--- !u!114 &2108969899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2108969893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 732fdfedec5e0de49b9122b8447853f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.PressDegradation
+  context: {fileID: 1633254721}
+  press: {fileID: 2108969895}
+  startWearMin: 160
+  failureWearMin: 215
+  durationSeconds: 75
+  startNow: 0
+  running: 0
+  elapsedSeconds: 0
+  wearMin: 0
 --- !u!1 &2112621187
 GameObject:
   m_ObjectHideFlags: 0

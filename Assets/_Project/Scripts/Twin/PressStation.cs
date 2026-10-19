@@ -17,6 +17,8 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField] private bool loop = true;
         [Tooltip("Skip the dataset's own failure rows so the press only reports a fault when one is injected.")]
         [SerializeField] private bool healthyBaseline = true;
+        [Tooltip("With a risk config, the healthy baseline also skips rows whose failure risk is at or above the warning clear level, so amber appears only when the demo asks for it (degradation).")]
+        [SerializeField] private PressRiskConfig riskConfig;
         [Tooltip("Only replay rows with at least one of these faults. Set by the FaultInjector; None is the baseline.")]
         [SerializeField] private FaultMode faultFilter = FaultMode.None;
 
@@ -26,12 +28,20 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField] private bool finished;
 
         private DatasetReplayer _replayer;
+        private double _toolWearOverride = double.NaN;
 
         /// <summary>The failure modes the press is currently made to report; None returns it to the baseline.</summary>
         public FaultMode FaultFilter
         {
             get => faultFilter;
             set => faultFilter = value;
+        }
+
+        /// <summary>Tool wear to publish instead of each row's own; NaN publishes the dataset's value.</summary>
+        public double ToolWearOverride
+        {
+            get => _toolWearOverride;
+            set => _toolWearOverride = value;
         }
 
         private void Start()
@@ -48,6 +58,8 @@ namespace TwoDude.FactoryTwin.Twin
                 var rows = Ai4iCsv.Parse(dataset.text);
                 rowsLoaded = rows.Count;
                 _replayer = new DatasetReplayer(rows, context.Bus);
+                if (riskConfig != null)
+                    _replayer.BaselineFilter = IsCalm;
             }
             catch (FormatException e)
             {
@@ -63,10 +75,26 @@ namespace TwoDude.FactoryTwin.Twin
             _replayer.Loop = loop;
             _replayer.SkipFailures = healthyBaseline;
             _replayer.FaultFilter = faultFilter;
+            _replayer.ToolWearOverride = _toolWearOverride;
 
             _replayer.Tick(Time.deltaTime, CellContext.NowUnixMs);
             rowsPublished = _replayer.RowsPublished;
             finished = _replayer.Finished;
+        }
+
+        // A baseline row is calm when its failure risk stays under the warning clear level. While the tool wear is
+        // overridden (degradation), the row is judged at that wear and the tool-wear term is left out, so only the
+        // scheduled wear drives the risk and no other mode can warn first.
+        private bool IsCalm(Ai4iRow row)
+        {
+            bool overridden = !double.IsNaN(_toolWearOverride);
+            double wear = overridden ? _toolWearOverride : row.ToolWearMin;
+            var reading = new PressReading(row.AirTempK, row.ProcessTempK, row.SpeedRpm, row.TorqueNm, wear, row.Quality);
+            RiskAssessment a = FailureRiskModel.Evaluate(reading, riskConfig.Settings);
+            double risk = overridden
+                ? System.Math.Max(a.OverstrainRisk, System.Math.Max(a.PowerRisk, a.HeatRisk))
+                : a.Risk;
+            return risk < riskConfig.WarningClearRisk;
         }
     }
 }

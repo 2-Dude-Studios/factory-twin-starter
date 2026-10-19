@@ -38,6 +38,7 @@ namespace TwoDude.FactoryTwin.UI
         };
         private Action[] _injectHandlers;
         private Action _clearHandler;
+        private Action _degradeHandler;
         private Action _toggleCredits;
 
         private void OnEnable()
@@ -120,12 +121,14 @@ namespace TwoDude.FactoryTwin.UI
                     _injectHandlers[i] = () => faultInjector.Inject(mode);
                 }
                 _clearHandler = () => faultInjector.Clear();
+                _degradeHandler = () => context.Bus.Publish(CellTopics.PressDegrade, SignalValue.FromBool(true), CellContext.NowUnixMs);
                 _toggleCredits = () => _credits?.ToggleInClassList("hidden");
             }
 
             for (int i = 0; i < _faultButtons.Length; i++)
                 Wire(_faultButtons[i].name, _injectHandlers[i], wire);
             Wire("clear-fault", _clearHandler, wire);
+            Wire("degrade-tool", _degradeHandler, wire);
             Wire("credits-button", _toggleCredits, wire);
             Wire("credits-close", _toggleCredits, wire);
         }

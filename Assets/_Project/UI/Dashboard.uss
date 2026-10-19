@@ -258,6 +258,12 @@
     background-color: rgba(255, 255, 255, 0.14);
 }
 
+.fault-subtitle {
+    width: auto;
+    font-size: 12px;
+    margin: 2px 0 6px 0;
+}
+
 .fault-button--key {
     border-color: var(--warning);
     color: var(--warning);
