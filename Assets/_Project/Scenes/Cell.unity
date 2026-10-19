@@ -9756,7 +9756,7 @@ PrefabInstance:
     - target: {fileID: 114497208307164320, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
       propertyPath: realvirtualController
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 700966903}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -22718,6 +22718,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6652547975049344125, guid: 97bc87af3e02fc146944d43ff9eefa28, type: 3}
   m_PrefabInstance: {fileID: 695472577}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &700966903 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1498409059635385976, guid: f88301b6397183a449455ed3110ed39d, type: 3}
+  m_PrefabInstance: {fileID: 2005897827}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d7eb697064db7340ac1022f7f281add, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &704321163
 GameObject:
   m_ObjectHideFlags: 0
@@ -49395,7 +49406,7 @@ PrefabInstance:
     - target: {fileID: 114497208307164320, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
       propertyPath: realvirtualController
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 700966903}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

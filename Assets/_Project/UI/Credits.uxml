@@ -6,7 +6,7 @@
         </ui:VisualElement>
 
         <ui:Label class="credit__name" text="AI4I 2020 Predictive Maintenance Dataset" />
-        <ui:Label class="credit__text" text="S. Matzka, UCI Machine Learning Repository, 2020. doi:10.24432/C5HS5C. Licensed under CC BY 4.0. Replayed as the press's telemetry; values and failure flags are used as published." />
+        <ui:Label class="credit__text" text="S. Matzka, UCI Machine Learning Repository, 2020. doi:10.24432/C5HS5C. Licensed under CC BY 4.0. Replayed as the CNC machining centre's telemetry; values and failure flags are used as published." />
 
         <ui:Label class="credit__name" text="UR5e robot description" />
         <ui:Label class="credit__text" text="From ros-industrial/universal_robot (ur_description), BSD 3-Clause licence. Meshes used without vendor branding." />

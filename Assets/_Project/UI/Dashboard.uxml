@@ -7,7 +7,7 @@
             <ui:VisualElement class="panel__header">
                 <ui:VisualElement>
                     <ui:Label text="PRODUCTION CELL 1" class="eyebrow" />
-                    <ui:Label text="Press &amp; line" class="panel__title" />
+                    <ui:Label text="CNC &amp; line" class="panel__title" />
                 </ui:VisualElement>
                 <ui:Label name="link" text="Broker offline" class="chip link link--down">
                     <Bindings>
@@ -18,7 +18,7 @@
 
             <ui:VisualElement name="press-panel" class="section section--press">
                 <ui:VisualElement class="section__header">
-                    <ui:Label text="Press" class="section__title" />
+                    <ui:Label text="CNC machining centre" class="section__title" />
                     <ui:Label name="press-health" text="—" class="chip health">
                         <Bindings>
                             <ui:DataBinding property="text" data-source-path="PressHealthText" binding-mode="ToTarget" />
@@ -120,7 +120,7 @@
             </ui:VisualElement>
 
             <ui:VisualElement name="fault-panel" class="section section--faults">
-                <ui:Label text="Inject a press failure" class="section__title" />
+                <ui:Label text="Inject a CNC failure" class="section__title" />
                 <ui:VisualElement class="fault-buttons">
                     <ui:Button name="inject-twf" text="Tool wear" class="fault-button fault-button--key" />
                     <ui:Button name="inject-hdf" text="Heat" class="fault-button" />

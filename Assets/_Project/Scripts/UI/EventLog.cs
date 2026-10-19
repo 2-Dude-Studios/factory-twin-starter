@@ -88,13 +88,14 @@ namespace TwoDude.FactoryTwin.UI
         private void LogLineState(CellState from, CellState to, long unixMs)
         {
             if (to == CellState.Held)
-                Add(unixMs, "Line stopped: press fault", LogSeverity.Fault);
+                Add(unixMs, "Line stopped: CNC fault", LogSeverity.Fault);
             else if (to == CellState.Stalled)
                 Add(unixMs, "Line stalled: part not picked", LogSeverity.Warning);
             else if (from == CellState.Held || from == CellState.Stalled)
                 Add(unixMs, "Line running again", LogSeverity.Info);
         }
 
+        // The press station is shown as a CNC machining centre (topics stay cell/press/*).
         // A failure is logged once, when the press's health turns to Fault, naming every mode active at that moment.
         // The dataset's failure rows often carry several flags that come and go row to row, so logging each flag
         // would fill the log while one fault is in progress.
@@ -103,12 +104,12 @@ namespace TwoDude.FactoryTwin.UI
             if (to == MachineHealth.Fault)
             {
                 FaultMode active = ActiveFaults();
-                Add(unixMs, active == FaultMode.None ? "Press failure" : ModeList("Press failure: ", active), LogSeverity.Fault);
+                Add(unixMs, active == FaultMode.None ? "CNC failure" : ModeList("CNC failure: ", active), LogSeverity.Fault);
             }
             else if (to == MachineHealth.Warning)
-                Add(unixMs, "Press warning: failure risk rising", LogSeverity.Warning);
+                Add(unixMs, "CNC warning: failure risk rising", LogSeverity.Warning);
             else if (to == MachineHealth.Ok && from != MachineHealth.Ok)
-                Add(unixMs, "Press healthy again", LogSeverity.Info);
+                Add(unixMs, "CNC healthy again", LogSeverity.Info);
         }
 
         private void LogInjection(FaultMode mode, long unixMs)

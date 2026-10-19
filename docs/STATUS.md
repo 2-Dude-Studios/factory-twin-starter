@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M4 — Dashboard (M3 closed 2026-10-12; plan narrowed to predictive maintenance, M4–M6, on 2026-10-19 — build plan Rev 3)
+**Current milestone:** M5 — Prediction (M4 closed 2026-10-20; plan narrowed to predictive maintenance, M4–M6, on 2026-10-19 — build plan Rev 3)
 **Last updated:** 2026-10-20
 
 ## Done
@@ -59,7 +59,9 @@ Smallest shippable step first:
 - [x] Press geometry: realvirtual Starter's `3DPrefabs/CNC.prefab` (already on the licence register; generic safety stickers, no vendor logos) as `Cell/Press/PressMachine` at (−0.3, 0.37, 3.3), behind the line beside the arm, its door facing the outfeed side. The +0.37 m lift is deliberate: at y 0 the case sits 0.37 m into the floor and the door and control panel are cut off.
 - [x] Health in 3D: `StackLight` (pure `StackLightPattern`, 4 tests) on `Cell/Press/StackLight`, an andon tower built from our own primitives (pole, green/amber/red lamps, cap; colliders disabled) on the machine roof, plus `Cell/Press/StackLightGlow`, a point light in front of the door. Healthy: steady green. Warning (from M5): steady amber with a soft glow. Fault: red flashing at 1.5 Hz with a pulsing red glow on the machine. Lamps are tinted through a MaterialPropertyBlock on `Assets/_Project/Materials/StackLightLamp.mat` (URP Lit, emission on); glow intensity 9, range 4.5. Checked in Play: green when healthy, red flashing and the door face turning red on a tool-wear fault, 0 console errors. 154 EditMode tests pass in the Editor.
 - [x] realvirtual's start-up info box ("Copyright … realvirtual GmbH", about 10 s over the view) is off: `HideInfoBox` = true on the scene's `realvirtualController`. A saved PlayerPrefs value from the realvirtual console command would override it.
-- [ ] Exit run: inject tool wear on camera, check the three readings move together, clear, check recovery.
+- [x] On-screen wording: the press station is shown as a **CNC machining centre** (AI4I models milling). Dashboard title "CNC & line", section "CNC machining centre", "Inject a CNC failure", line chip "Stopped — CNC fault", log lines "CNC failure: …", "CNC healthy again", credits and demo script to match. Topics stay `cell/press/*`; class and component names are unchanged.
+- [x] **M4 exit met (2026-10-20).** Exit run in Play at 1920×1080, frames in `Assets/Screenshots/exit_*.png` (git-ignored): after 2 min 40 s the line is at 510 parts/h, 18 parts out, CNC Healthy, green lamp. Tool wear injected: within about 1 s the CNC chip reads Fault, the line "Stopped — CNC fault", the stack light flashes red and the machine glows red, and the log reads "Fault injected: tool wear", "CNC failure: tool wear", "Line stopped: CNC fault". After 20 s: 2 parts lost (20 s at 510/h), parts/hour dipping to 450. Clear: Healthy and Running again within a second, parts lost holds at 2, and the log adds cleared / healthy again / running again. 0 console errors; 154 EditMode tests pass in the Editor. Parts lost moves a few seconds after the other two by design, since it counts whole parts (one every ~7 s at this rate).
+- Polish noted for M6: after a hold, "Cycle time" shows the gap between two exits including the stop (26.3 s in the exit run); consider leaving held time out of it. The event-log area is mostly empty at 1080p, and the 12 px section titles may be small in the final video.
 
 ## Manual steps pending
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Deletes are blocked for Claude; either delete them in the Hierarchy or add `gameobject_delete_batch` to the UnitySkills allowlist.
@@ -72,7 +74,7 @@ Smallest shippable step first:
 (none)
 
 ## Decisions and risks
-- **The press is shown as a CNC machining centre.** AI4I 2020 models a milling process (spindle rpm, torque, tool wear), so a machining centre matches the data better than a press. Topics stay `cell/press/*`, but the dashboard still says "Press & line" and "Press", and the demo script says "press". Open: relabel the on-screen text and the script to "CNC" / "machining centre" (display only; topic names unchanged).
+- **The press station is shown as a CNC machining centre (decided 2026-10-20).** AI4I 2020 models a milling process (spindle rpm, torque, tool wear), so on-screen text, voiceover and the demo script say CNC. Topics, class names and the build plan keep "press" as the station name.
 - **Warm the line up before injecting on camera.** Parts/hour is measured over the run so far for the first 2 minutes, and parts lost uses the rate just before the hold. Injecting 25 s into Play (before the first part has left) shows 0 parts lost. Let the line run at least 2.5 minutes (about 510 parts/h) before the fault beat.
 - **Credits carry attributions, not full licence texts.** BSD-3 (UR5e description) and Apache-2.0 (URDF-Importer) expect their full notices with a binary distribution. Ship the licence texts with the Windows build in M6 (a LICENSES folder next to the .exe, or a scrollable section in the Credits overlay).
 - **MQTT messages are not retained.** A subscriber that connects mid-run sees a signal only once it next changes; steady ones (drive speed setpoints, `outfeed/running`) stay silent until then. Start the subscriber before Play, or decide on retained publishes plus a last-will on `cell/link/connected` if a late-joining dashboard ever reads from the broker.

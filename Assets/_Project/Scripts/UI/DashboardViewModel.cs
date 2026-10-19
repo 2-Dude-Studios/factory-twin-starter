@@ -194,7 +194,7 @@ namespace TwoDude.FactoryTwin.UI
                 case CellState.Feeding:
                 case CellState.Transferring: return "Running";
                 case CellState.Stalled: return "Stalled";
-                case CellState.Held: return "Stopped — press fault";
+                case CellState.Held: return "Stopped — CNC fault";
                 default: return NoValue;
             }
         }

@@ -49,8 +49,8 @@ Everything in the architecture exists to make that moment real rather than stage
 | M1 Cell loop | Infeed → gate → pick → outfeed, 10-minute soak | Done |
 | M2 Arm | De-branded UR5e, baked pick-and-place | Done |
 | M3 Data spine | Signal bus, MQTT bridge, press telemetry, fault injector | Done 2026-10-12 |
-| M4 Dashboard | Lean UI Toolkit dashboard for the press and the line, fault beat on camera | **Next — nothing built yet** |
-| M5 Prediction | Degradation mode, failure risk, remaining tool life, recommendation, tool change | Not started |
+| M4 Dashboard | Lean UI Toolkit dashboard for the press and the line, fault beat on camera | Done 2026-10-20 |
+| M5 Prediction | Degradation mode, failure risk, remaining tool life, recommendation, tool change | **Next** |
 | M6 Polish and capture | Lighting, VFX, audio, camera path, Windows build, 90-second video | Not started |
 
 ---

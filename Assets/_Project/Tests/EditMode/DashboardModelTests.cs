@@ -83,7 +83,7 @@ namespace TwoDude.FactoryTwin.Tests
             log.Observe(Flag(CellTopics.PressFaults[3], true, 4L));
 
             Assert.AreEqual(1, log.Entries.Count);
-            Assert.AreEqual("Press failure: tool wear, overstrain", log.Entries[0].Text);
+            Assert.AreEqual("CNC failure: tool wear, overstrain", log.Entries[0].Text);
             Assert.AreEqual(LogSeverity.Fault, log.Entries[0].Severity);
             Assert.AreEqual(2L, log.Entries[0].UnixMs);
         }
@@ -95,7 +95,7 @@ namespace TwoDude.FactoryTwin.Tests
             log.Observe(Num(CellTopics.PressHealth, (int)MachineHealth.Ok));
             log.Observe(Num(CellTopics.PressHealth, (int)MachineHealth.Fault, 2L));
 
-            Assert.AreEqual("Press failure", log.Entries[0].Text);
+            Assert.AreEqual("CNC failure", log.Entries[0].Text);
         }
 
         [Test]
@@ -109,7 +109,7 @@ namespace TwoDude.FactoryTwin.Tests
 
             Assert.AreEqual(2, log.Entries.Count);
             Assert.AreEqual("Line running again", log.Entries[0].Text);
-            Assert.AreEqual("Line stopped: press fault", log.Entries[1].Text);
+            Assert.AreEqual("Line stopped: CNC fault", log.Entries[1].Text);
         }
 
         [Test]
@@ -192,7 +192,7 @@ namespace TwoDude.FactoryTwin.Tests
                 bus.Publish(CellTopics.LineState, SignalValue.FromNumber((int)CellState.Held), 1L);
                 bus.Publish(CellTopics.PressHealth, SignalValue.FromNumber((int)MachineHealth.Fault), 1L);
 
-                Assert.AreEqual("Stopped — press fault", model.LineStateText);
+                Assert.AreEqual("Stopped — CNC fault", model.LineStateText);
                 Assert.AreEqual("Fault", model.PressHealthText);
                 Assert.AreEqual(MachineHealth.Fault, model.PressHealth);
                 Assert.AreEqual(2, statusChanges);
