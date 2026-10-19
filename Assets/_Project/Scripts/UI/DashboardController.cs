@@ -39,6 +39,9 @@ namespace TwoDude.FactoryTwin.UI
         private Action[] _injectHandlers;
         private Action _clearHandler;
         private Action _degradeHandler;
+        private Action _changeToolHandler;
+        private Label _toolLife;
+        private Label _toolLifeNote;
         private Action _toggleCredits;
 
         private void OnEnable()
@@ -67,6 +70,8 @@ namespace TwoDude.FactoryTwin.UI
             _lineState = _root.Q<Label>("line-state");
             _link = _root.Q<Label>("link");
             _credits = _root.Q("credits");
+            _toolLife = _root.Q<Label>("tool-life-value");
+            _toolLifeNote = _root.Q<Label>("tool-life-note");
 
             AssignSeries("air-temp-spark", _model.AirTemp);
             AssignSeries("process-temp-spark", _model.ProcessTemp);
@@ -122,6 +127,7 @@ namespace TwoDude.FactoryTwin.UI
                 }
                 _clearHandler = () => faultInjector.Clear();
                 _degradeHandler = () => context.Bus.Publish(CellTopics.PressDegrade, SignalValue.FromBool(true), CellContext.NowUnixMs);
+                _changeToolHandler = () => context.Bus.Publish(CellTopics.PressToolChange, SignalValue.FromBool(true), CellContext.NowUnixMs);
                 _toggleCredits = () => _credits?.ToggleInClassList("hidden");
             }
 
@@ -129,6 +135,7 @@ namespace TwoDude.FactoryTwin.UI
                 Wire(_faultButtons[i].name, _injectHandlers[i], wire);
             Wire("clear-fault", _clearHandler, wire);
             Wire("degrade-tool", _degradeHandler, wire);
+            Wire("change-tool", _changeToolHandler, wire);
             Wire("credits-button", _toggleCredits, wire);
             Wire("credits-close", _toggleCredits, wire);
         }
@@ -157,6 +164,10 @@ namespace TwoDude.FactoryTwin.UI
             _lineState?.EnableInClassList("state--running", state == CellState.Feeding || state == CellState.Transferring);
             _lineState?.EnableInClassList("state--stalled", state == CellState.Stalled);
             _lineState?.EnableInClassList("state--held", state == CellState.Held);
+
+            _toolLife?.EnableInClassList("tool-life--due", _model.MaintenanceDue);
+            if (_toolLifeNote != null)
+                _toolLifeNote.text = _model.MaintenanceDue ? "Change due" : string.Empty;
 
             _link?.EnableInClassList("link--up", _model.LinkUp);
             _link?.EnableInClassList("link--down", !_model.LinkUp);

@@ -37,6 +37,17 @@ namespace TwoDude.FactoryTwin.Twin
             set => faultFilter = value;
         }
 
+        /// <summary>
+        /// Puts a fresh tool in: the replay jumps to the next row with tool wear at most <paramref name="maxWearMin"/>
+        /// and a tool-wear failure filter is removed (a new tool does not fix the other failure modes).
+        /// </summary>
+        public void ChangeTool(double maxWearMin)
+        {
+            faultFilter &= ~FaultMode.ToolWear;
+            if (_replayer != null && !_replayer.SeekFreshTool(maxWearMin))
+                Debug.LogWarning($"[PressStation] No row with tool wear ≤ {maxWearMin} min to restart from.", this);
+        }
+
         /// <summary>Tool wear to publish instead of each row's own; NaN publishes the dataset's value.</summary>
         public double ToolWearOverride
         {
@@ -82,7 +93,8 @@ namespace TwoDude.FactoryTwin.Twin
             finished = _replayer.Finished;
         }
 
-        // A baseline row is calm when its failure risk stays under the warning clear level. While the tool wear is
+        // A baseline row is calm when its failure risk stays under the warning clear level and it is not yet due for
+        // a tool change. While the tool wear is
         // overridden (degradation), the row is judged at that wear and the tool-wear term is left out, so only the
         // scheduled wear drives the risk and no other mode can warn first.
         private bool IsCalm(Ai4iRow row)
@@ -91,10 +103,11 @@ namespace TwoDude.FactoryTwin.Twin
             double wear = overridden ? _toolWearOverride : row.ToolWearMin;
             var reading = new PressReading(row.AirTempK, row.ProcessTempK, row.SpeedRpm, row.TorqueNm, wear, row.Quality);
             RiskAssessment a = FailureRiskModel.Evaluate(reading, riskConfig.Settings);
-            double risk = overridden
-                ? System.Math.Max(a.OverstrainRisk, System.Math.Max(a.PowerRisk, a.HeatRisk))
-                : a.Risk;
-            return risk < riskConfig.WarningClearRisk;
+            if (overridden)
+                return System.Math.Max(a.OverstrainRisk, System.Math.Max(a.PowerRisk, a.HeatRisk)) < riskConfig.WarningClearRisk;
+
+            // Normal running also stays clear of the tool-change lead, so "Tool change due" only appears on demand.
+            return a.Risk < riskConfig.WarningClearRisk && !a.MaintenanceDue;
         }
     }
 }

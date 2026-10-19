@@ -135,6 +135,33 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void ToolChange_IsLoggedEveryTime()
+        {
+            var log = new EventLog(10);
+            log.Observe(Flag(CellTopics.PressToolChange, true, 1L));
+            log.Observe(Flag(CellTopics.PressToolChange, true, 2L));
+            log.Observe(Flag(CellTopics.PressToolChange, false, 3L));
+
+            Assert.AreEqual(2, log.Entries.Count);
+            Assert.AreEqual("Tool changed", log.Entries[0].Text);
+        }
+
+        [TestCase(18, "Tool change due: 18 min of tool life left")]
+        [TestCase(0, "Tool change due now")]
+        [TestCase(45, "Maintenance due")]
+        public void MaintenanceDue_RisingNamesTheToolLifeLeft(double remaining, string expected)
+        {
+            var log = new EventLog(10);
+            log.Observe(Flag(CellTopics.PressMaintenanceDue, false));
+            log.Observe(Num(CellTopics.PressToolRemaining, remaining, 2L));
+            log.Observe(Flag(CellTopics.PressMaintenanceDue, true, 2L));
+
+            Assert.AreEqual(1, log.Entries.Count);
+            Assert.AreEqual(expected, log.Entries[0].Text);
+            Assert.AreEqual(LogSeverity.Warning, log.Entries[0].Severity);
+        }
+
+        [Test]
         public void SteadyTelemetry_IsNeverLogged()
         {
             var log = new EventLog(10);
@@ -213,6 +240,25 @@ namespace TwoDude.FactoryTwin.Tests
 
                 bus.Publish(CellTopics.PressFailureRisk, SignalValue.FromNumber(1.7), 2L);
                 Assert.AreEqual(100f, model.FailureRiskPercent);
+            }
+        }
+
+        [Test]
+        public void ToolLife_ShowsMinutesAndMaintenanceDueRaisesStatusChanged()
+        {
+            var bus = new SignalBus();
+            using (var model = new DashboardViewModel(bus))
+            {
+                int statusChanges = 0;
+                model.StatusChanged += () => statusChanges++;
+
+                bus.Publish(CellTopics.PressToolRemaining, SignalValue.FromNumber(18.4), 1L);
+                bus.Publish(CellTopics.PressMaintenanceDue, SignalValue.FromBool(true), 1L);
+                bus.Publish(CellTopics.PressMaintenanceDue, SignalValue.FromBool(true), 2L);
+
+                Assert.AreEqual("18 min", model.ToolRemainingText);
+                Assert.IsTrue(model.MaintenanceDue);
+                Assert.AreEqual(1, statusChanges);
             }
         }
 

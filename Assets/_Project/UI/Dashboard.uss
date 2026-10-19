@@ -197,6 +197,19 @@
     --spark-color: rgb(143, 199, 219);
 }
 
+.tool-life__note {
+    flex-grow: 1;
+    font-size: 12px;
+    color: var(--warning);
+    -unity-font-style: bold;
+    padding: 0;
+    margin: 0;
+}
+
+.tool-life--due {
+    color: var(--warning);
+}
+
 .spark--key {
     --spark-color: rgb(242, 183, 5);
 }

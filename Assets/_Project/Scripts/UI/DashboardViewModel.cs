@@ -25,7 +25,8 @@ namespace TwoDude.FactoryTwin.UI
             CellTopics.LinkConnected, CellTopics.PressHealth, CellTopics.PressFailureRisk,
             CellTopics.PressAirTemp, CellTopics.PressProcessTemp, CellTopics.PressSpeed, CellTopics.PressTorque,
             CellTopics.PressToolWear, CellTopics.LineState, CellTopics.LinePartsOut, CellTopics.LinePartsPerHour,
-            CellTopics.LinePartsLost, CellTopics.LineCycleTime,
+            CellTopics.LinePartsLost, CellTopics.LineCycleTime, CellTopics.PressToolRemaining,
+            CellTopics.PressMaintenanceDue,
         };
 
         private readonly IDisposable _subscription;
@@ -45,6 +46,7 @@ namespace TwoDude.FactoryTwin.UI
         private string _partsPerHourText = NoValue;
         private string _partsLostText = NoValue;
         private string _cycleTimeText = NoValue;
+        private string _toolRemainingText = NoValue;
 
         public DashboardViewModel(SignalBus bus)
         {
@@ -61,7 +63,7 @@ namespace TwoDude.FactoryTwin.UI
 
         public event EventHandler<BindablePropertyChangedEventArgs> propertyChanged;
 
-        /// <summary>Raised when press health, line state or the broker link changes, for USS class swaps.</summary>
+        /// <summary>Raised when press health, line state, maintenance due or the broker link changes, for USS class swaps.</summary>
         public event Action StatusChanged;
 
         public bool LinkUp { get; private set; }
@@ -92,6 +94,10 @@ namespace TwoDude.FactoryTwin.UI
         [CreateProperty] public string PartsPerHourText => _partsPerHourText;
         [CreateProperty] public string PartsLostText => _partsLostText;
         [CreateProperty] public string CycleTimeText => _cycleTimeText;
+        [CreateProperty] public string ToolRemainingText => _toolRemainingText;
+
+        /// <summary>The risk model says act now: tool change due or a warning. Drives the tool-life row's colour.</summary>
+        public bool MaintenanceDue { get; private set; }
 
         public long GetViewHashCode() => _version;
 
@@ -131,6 +137,10 @@ namespace TwoDude.FactoryTwin.UI
                 Set(ref _partsLostText, v.ToString("0", Invariant), nameof(PartsLostText));
             else if (topic == CellTopics.LineCycleTime)
                 Set(ref _cycleTimeText, v.ToString("0.0", Invariant) + " s", nameof(CycleTimeText));
+            else if (topic == CellTopics.PressToolRemaining)
+                Set(ref _toolRemainingText, v.ToString("0", Invariant) + " min", nameof(ToolRemainingText));
+            else if (topic == CellTopics.PressMaintenanceDue)
+                ApplyMaintenanceDue(v != 0d);
             else if (topic == CellTopics.LinkConnected)
                 ApplyLink(v != 0d);
         }
@@ -164,6 +174,15 @@ namespace TwoDude.FactoryTwin.UI
             Set(ref _lineStateText, LineStateWords(state), nameof(LineStateText));
             if (changed)
                 StatusChanged?.Invoke();
+        }
+
+        private void ApplyMaintenanceDue(bool due)
+        {
+            if (due == MaintenanceDue)
+                return;
+            MaintenanceDue = due;
+            _version++;
+            StatusChanged?.Invoke();
         }
 
         private void ApplyLink(bool up)

@@ -50,8 +50,8 @@ Everything in the architecture exists to make that moment real rather than stage
 | M2 Arm | De-branded UR5e, baked pick-and-place | Done |
 | M3 Data spine | Signal bus, MQTT bridge, press telemetry, fault injector | Done 2026-10-12 |
 | M4 Dashboard | Lean UI Toolkit dashboard for the press and the line, fault beat on camera | Done 2026-10-20 |
-| M5 Prediction | Degradation mode, failure risk, remaining tool life, recommendation, tool change | **Next** |
-| M6 Polish and capture | Lighting, VFX, audio, camera path, Windows build, 90-second video | Not started |
+| M5 Prediction | Degradation mode, failure risk, remaining tool life, recommendation, tool change | Done 2026-10-20 |
+| M6 Polish and capture | Lighting, VFX, audio, camera path, Windows build, 90-second video | **Next** |
 
 ---
 
@@ -106,7 +106,7 @@ Three ideas hold the design together:
 - Subscriptions use MQTT wildcards (`+` one level, `#` everything below); `TopicFilter` implements the matching for the in-process bus.
 - QoS 0, not retained. A client that connects mid-run sees a signal only when it next changes.
 
-### Topic catalogue (44 topics)
+### Topic catalogue (45 topics)
 
 Direction is from the simulation's point of view: **out** is state leaving the cell, **in** is a command the cell obeys. Commands are also visible on the broker, because `TwinSignals` publishes outputs that a station writes directly.
 
@@ -146,6 +146,7 @@ Direction is from the simulation's point of view: **out** is state leaving the c
 | `cell/press/tool_rul_min` | number | out | PressRiskReporter | Tool wear left before the 200 min failure window opens (M5) |
 | `cell/press/maint_due` | bool | out | PressRiskReporter | Risk at warning, or ≤ 20 min tool life left (M5) |
 | `cell/press/degrade` | bool | in | Dashboard / broker / PressDegradation | true starts the tool-wear degradation scenario, false stops it (M5) |
+| `cell/press/tool_change` | bool | in | Dashboard / broker / ToolChanger | true puts a fresh tool in: degradation stops, wear restarts low, a tool-wear failure clears (M5) |
 | `cell/press/inject_fault` | number | in | FaultInjector / broker | `FaultMode` bitmask: 1 TWF, 2 HDF, 4 PWF, 8 OSF, 16 RNF; 0 clears |
 
 The 19 infeed, gate1, arm and outfeed topics each have a realvirtual signal component and are bound in the `TwinSignals` Inspector list on the `Cell` object. The line, link and press topics exist only on the bus. `CellTopics` holds the constants the logic uses; the press topic names are built inside `DatasetReplayer` and must stay identical to `tools/replay/replay.py`.
@@ -183,6 +184,7 @@ The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.F
 | `Cell/Press` | `PressStation` | 0 | Parses `ai4i2020.csv`, hosts `DatasetReplayer`, 2 rows/s, healthy baseline. |
 | `Cell/Press` | `FaultInjector` | 0 | Turns `press/inject_fault` into the press's fault filter. |
 | `Cell/Press` | `PressDegradation` | −10 | Runs `DegradationScenario` on `press/degrade`; overrides published tool wear, then hands over to TWF rows (M5). |
+| `Cell/Press` | `ToolChanger` | 0 | On `press/tool_change`: stops degradation, `PressStation.ChangeTool`, keeps `FaultInjector` consistent (M5). |
 | `Cell/Press` | `PressRiskReporter` | 40 (LateUpdate) | Runs `FailureRiskModel` when new telemetry arrives; publishes risk, tool life left and maintenance due (M5). |
 | `Cell/Press` | `PressHealthReporter` | 50 (LateUpdate) | Publishes `press/health` on change: fault flags, or the risk warning band from `PressRiskConfig`. |
 | `Cell` | `LineMetricsReporter` | 110 | Ticks `LineMetrics` after the sequencer; publishes parts/hour and parts lost. |
@@ -301,7 +303,7 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin | Dashboard view model, sparkline element, controller (M4) |
 | `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | — (Editor only) | `ProjectSettingsGuard` |
 | `TwoDude.FactoryTwin.Robot.Editor` | `Scripts/Robot/Editor/` | URDF-Importer (Editor only) | `ArmImporter` |
-| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 171 tests |
+| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 177 tests |
 
 UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `Credits.uxml`).
 
@@ -329,6 +331,7 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `Twin/PressHealthReporter.cs` | MonoBehaviour | Publishes `press/health` on change: faults (M4), risk warning with hysteresis (M5) |
 | `Twin/DegradationScenario.cs` | class | Tool wear on a schedule, start → failure wear over a fixed time (M5) |
 | `Twin/PressDegradation.cs` | MonoBehaviour | `press/degrade` → scenario → `PressStation.ToolWearOverride`, then TWF rows (M5) |
+| `Twin/ToolChanger.cs` | MonoBehaviour | `press/tool_change` → fresh tool, tool-wear failure cleared (M5) |
 | `Twin/PressRiskConfig.cs` | ScriptableObject | `FailureRiskSettings` and the warning clear level; instance at `Data/PressRiskConfig.asset` (M5) |
 | `Twin/PressRiskReporter.cs` | MonoBehaviour | Telemetry → `FailureRiskModel` → risk topics (M5) |
 | `Twin/FailureRiskModel.cs` | static + types | `PressReading`, `FailureRiskSettings`, `RiskAssessment`; threshold-margin failure risk, remaining tool life, maintenance due (M5) |

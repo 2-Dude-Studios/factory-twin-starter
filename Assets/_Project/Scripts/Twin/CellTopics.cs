@@ -60,6 +60,10 @@ namespace TwoDude.FactoryTwin.Twin
         // Degradation command (M5): true starts wearing the tool out on a schedule until it fails, false stops it.
         public static readonly TopicPath PressDegrade = new TopicPath("press", "degrade");
 
+        // Tool change command (M5): true replaces the tool now. Wear restarts from a fresh tool and a tool-wear
+        // failure clears; other failure modes are not fixed by a new tool.
+        public static readonly TopicPath PressToolChange = new TopicPath("press", "tool_change");
+
         // Broker link, published by the MQTT bridge so the dashboard can show the connection
         public static readonly TopicPath LinkConnected = new TopicPath("link", "connected");
 

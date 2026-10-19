@@ -57282,6 +57282,7 @@ GameObject:
   - component: {fileID: 2108969897}
   - component: {fileID: 2108969898}
   - component: {fileID: 2108969899}
+  - component: {fileID: 2108969900}
   m_Layer: 0
   m_Name: Press
   m_TagString: Untagged
@@ -57399,6 +57400,24 @@ MonoBehaviour:
   running: 0
   elapsedSeconds: 0
   wearMin: 0
+--- !u!114 &2108969900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2108969893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6206ee6aeafb105498b48f384a1c7ef3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.ToolChanger
+  context: {fileID: 1633254721}
+  press: {fileID: 2108969895}
+  faultInjector: {fileID: 2108969896}
+  freshToolMaxWearMin: 5
+  changeNow: 0
+  toolChanges: 0
 --- !u!1 &2112621187
 GameObject:
   m_ObjectHideFlags: 0

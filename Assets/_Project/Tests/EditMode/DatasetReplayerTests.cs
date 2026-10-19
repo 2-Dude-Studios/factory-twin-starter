@@ -148,6 +148,23 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void SeekFreshTool_RestartsFromTheNextLowWearRowWrappingAround()
+        {
+            var bus = new SignalBus();
+            var toolWear = new List<double>();
+            bus.Subscribe("cell/press/tool_wear_min", m => toolWear.Add(m.Value.Number));
+            var replayer = new DatasetReplayer(Ai4iCsv.Parse(Csv), bus) { RowsPerSecond = 10d };
+
+            replayer.Tick(0.1, 0L);                        // row 1, wear 0
+            replayer.Tick(0.1, 1L);                        // row 2, wear 3
+            Assert.IsTrue(replayer.SeekFreshTool(5d));     // rows 3 and 4 are worn; wraps to row 1
+            replayer.Tick(0.1, 2L);
+
+            CollectionAssert.AreEqual(new[] { 0d, 3d, 0d }, toolWear);
+            Assert.IsFalse(replayer.SeekFreshTool(-1d), "no row has negative wear");
+        }
+
+        [Test]
         public void BaselineFilter_SkipsHealthyRowsItRejects()
         {
             var bus = new SignalBus();

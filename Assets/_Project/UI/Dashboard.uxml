@@ -51,6 +51,13 @@
                         <TwoDude.FactoryTwin.UI.Sparkline name="tool-wear-spark" class="spark--key" />
                     </ui:VisualElement>
                     <ui:VisualElement class="telemetry__row">
+                        <ui:Label text="Tool life left" class="metric__name" />
+                        <ui:Label name="tool-life-value" text="—" class="metric__value">
+                            <Bindings><ui:DataBinding property="text" data-source-path="ToolRemainingText" binding-mode="ToTarget" /></Bindings>
+                        </ui:Label>
+                        <ui:Label name="tool-life-note" text="" class="tool-life__note" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="telemetry__row">
                         <ui:Label text="Torque" class="metric__name" />
                         <ui:Label text="—" class="metric__value">
                             <Bindings><ui:DataBinding property="text" data-source-path="TorqueText" binding-mode="ToTarget" /></Bindings>
@@ -123,6 +130,7 @@
                 <ui:Label text="Scenarios" class="section__title" />
                 <ui:VisualElement class="fault-buttons">
                     <ui:Button name="degrade-tool" text="Wear tool out" class="fault-button fault-button--key" />
+                    <ui:Button name="change-tool" text="Change tool" class="fault-button fault-button--clear" />
                 </ui:VisualElement>
                 <ui:Label text="Instant failures" class="metric__name fault-subtitle" />
                 <ui:VisualElement class="fault-buttons">

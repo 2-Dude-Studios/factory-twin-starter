@@ -88,6 +88,25 @@ namespace TwoDude.FactoryTwin.Twin
         public bool Finished { get; private set; }
         public int RowsPublished { get; private set; }
 
+        /// <summary>
+        /// Moves the replay to the next row (wrapping) whose tool wear is at most <paramref name="maxWearMin"/>, as if a
+        /// fresh tool had just gone in; wear then grows again row by row from there. Returns false if no row qualifies.
+        /// </summary>
+        public bool SeekFreshTool(double maxWearMin)
+        {
+            for (int step = 0; step < _rows.Count; step++)
+            {
+                int index = (_cursor + step) % _rows.Count;
+                if (_rows[index].ToolWearMin <= maxWearMin)
+                {
+                    _cursor = index;
+                    Finished = false;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>Advance the replay clock and publish every row that has come due. Returns the rows published this tick.</summary>
         public int Tick(double deltaSeconds, long nowUnixMs)
         {

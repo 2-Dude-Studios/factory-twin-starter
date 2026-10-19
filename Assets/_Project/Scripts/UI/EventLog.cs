@@ -35,6 +35,10 @@ namespace TwoDude.FactoryTwin.UI
     /// </summary>
     public sealed class EventLog
     {
+        // Tool life at or below this reads as tool-change advice rather than a general maintenance warning.
+        // Above the risk model's 20 min change lead, so its due flag always reads as a tool change.
+        private const double ToolChangeAdviceMin = 30d;
+
         private readonly int _capacity;
         private readonly List<LogEntry> _entries = new List<LogEntry>();
         private readonly Dictionary<TopicPath, double> _last = new Dictionary<TopicPath, double>();
@@ -58,6 +62,14 @@ namespace TwoDude.FactoryTwin.UI
         {
             TopicPath topic = message.Topic;
             double value = message.Value.AsNumber;
+
+            // A tool change is a command: every one is news, even two in a row.
+            if (topic == CellTopics.PressToolChange)
+            {
+                if (value != 0d)
+                    Add(message.UnixMs, "Tool changed", LogSeverity.Info);
+                return;
+            }
             bool seen = _last.TryGetValue(topic, out double previous);
             if (seen && previous.Equals(value))
                 return;
@@ -83,6 +95,23 @@ namespace TwoDude.FactoryTwin.UI
                 LogLineState((CellState)(int)previous, (CellState)(int)value, message.UnixMs);
             else if (topic == CellTopics.PressHealth)
                 LogPressHealth((MachineHealth)(int)previous, (MachineHealth)(int)value, message.UnixMs);
+            else if (topic == CellTopics.PressMaintenanceDue && value != 0d)
+                LogMaintenanceDue(message.UnixMs);
+        }
+
+        // The risk reporter publishes tool life before the due flag, so the remaining life here is this reading's.
+        // Near the end of tool life the advice is a tool change; further out, a warning from another mode.
+        private void LogMaintenanceDue(long unixMs)
+        {
+            if (!_last.TryGetValue(CellTopics.PressToolRemaining, out double remaining) || remaining > ToolChangeAdviceMin)
+            {
+                Add(unixMs, "Maintenance due", LogSeverity.Warning);
+                return;
+            }
+            Add(unixMs, remaining <= 0d
+                ? "Tool change due now"
+                : "Tool change due: " + remaining.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " min of tool life left",
+                LogSeverity.Warning);
         }
 
         private void LogLineState(CellState from, CellState to, long unixMs)
