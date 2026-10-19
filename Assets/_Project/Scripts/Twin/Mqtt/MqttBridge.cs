@@ -132,6 +132,8 @@ namespace TwoDude.FactoryTwin.Twin
                 .WithCleanSession()
                 .Build();
 
+            // Failed connects since the last success; only the first of a run is logged.
+            int failedAttempts = 0;
             while (!token.IsCancellationRequested)
             {
                 IMqttClient client = new MqttFactory().CreateMqttClient();
@@ -149,7 +151,9 @@ namespace TwoDude.FactoryTwin.Twin
 
                     _client = client;
                     _connected = true;
-                    Debug.Log($"[MqttBridge] Connected to {config.BrokerHost}:{config.BrokerPort}; subscribed to {subscribeFilter}.");
+                    string after = failedAttempts > 0 ? $" after {failedAttempts} failed attempts" : string.Empty;
+                    Debug.Log($"[MqttBridge] Connected to {config.BrokerHost}:{config.BrokerPort}{after}; subscribed to {subscribeFilter}.");
+                    failedAttempts = 0;
 
                     while (!token.IsCancellationRequested && client.IsConnected)
                         await Task.Delay(250, token);
@@ -160,7 +164,10 @@ namespace TwoDude.FactoryTwin.Twin
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"[MqttBridge] {config.BrokerHost}:{config.BrokerPort} unreachable ({e.Message}); retrying in {config.ReconnectSeconds:0.#} s.");
+                    // Warn once per outage; a broker-less demo would otherwise fill the player log every few seconds.
+                    if (failedAttempts == 0)
+                        Debug.LogWarning($"[MqttBridge] {config.BrokerHost}:{config.BrokerPort} unreachable ({e.Message}); retrying every {config.ReconnectSeconds:0.#} s without further warnings until it connects.");
+                    failedAttempts++;
                 }
 
                 _connected = false;

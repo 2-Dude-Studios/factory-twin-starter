@@ -129,7 +129,7 @@ Direction is from the simulation's point of view: **out** is state leaving the c
 | `cell/line/state` | number | out | CellSequencer | 0 feeding, 1 transferring, 2 stalled, 3 held |
 | `cell/line/stalled` | bool | out | CellSequencer | Convenience flag for state 2 |
 | `cell/line/parts_out` | number | out | CellSequencer | Parts that have left the cell this run |
-| `cell/line/cycle_time_s` | number | out | CellSequencer | Seconds between the last two exits |
+| `cell/line/cycle_time_s` | number | out | CellSequencer | Running seconds between the last two exits; time held for a press fault is left out (M6) |
 | `cell/line/parts_per_hour` | number | out | LineMetricsReporter | Exits per hour over a 120 s rolling window, whole parts (M4) |
 | `cell/line/parts_lost` | number | out | LineMetricsReporter | Parts not made while a press fault held the line, at the pre-hold rate, whole parts (M4) |
 | `cell/link/connected` | bool | out | MqttBridge | Broker link is up |

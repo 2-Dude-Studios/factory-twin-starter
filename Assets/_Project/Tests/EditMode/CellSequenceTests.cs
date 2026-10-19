@@ -191,6 +191,24 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void CycleTime_LeavesOutTimeHeldForAPressFault()
+        {
+            var sequence = new CellSequence();
+            var exit = new CellInputs(false, false, true);
+            var held = new CellInputs(false, false, false, true);
+
+            Run(sequence, exit, 0.5d);
+            Run(sequence, Idle, 2d);
+            Run(sequence, held, 10d);
+            Assert.AreEqual(CellState.Held, sequence.State);
+            Run(sequence, Idle, 1.5d);
+            sequence.Tick(exit, Dt);
+
+            Assert.AreEqual(2, sequence.PartsOut);
+            Assert.AreEqual(4d, sequence.LastCycleSeconds, 0.1d, "2 s + 1.5 s running plus the 0.5 s on the first exit; the 10 s hold is left out");
+        }
+
+        [Test]
         public void Constructor_RejectsInconsistentTimeouts()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new CellSequence(0d, 5d));

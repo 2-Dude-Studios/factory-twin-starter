@@ -63,6 +63,8 @@ namespace TwoDude.FactoryTwin.Twin
         private bool _repulse;
         private bool _lastExit;
         private double _lastExitAt = double.NaN;
+        // Seconds the line was not held for a press fault; cycle time is measured on this clock.
+        private double _runningSeconds;
 
         public CellSequence(double ackTimeoutSeconds = 2d, double transferTimeoutSeconds = 15d)
         {
@@ -83,7 +85,10 @@ namespace TwoDude.FactoryTwin.Twin
         public int PickRetries { get; private set; }
         public int Stalls { get; private set; }
 
-        /// <summary>Seconds between the last two parts leaving the cell; NaN until two parts have left.</summary>
+        /// <summary>
+        /// Running seconds between the last two parts leaving the cell, leaving out any time the line was held for a
+        /// press fault, so a stop does not show up as one very long cycle. NaN until two parts have left.
+        /// </summary>
         public double LastCycleSeconds { get; private set; } = double.NaN;
 
         public void Tick(CellInputs inputs, double deltaSeconds)
@@ -92,6 +97,8 @@ namespace TwoDude.FactoryTwin.Twin
                 throw new ArgumentOutOfRangeException(nameof(deltaSeconds));
 
             ElapsedSeconds += deltaSeconds;
+            if (State != CellState.Held)
+                _runningSeconds += deltaSeconds;
             _stateSeconds += deltaSeconds;
             CountExits(inputs.PartAtExit);
 
@@ -190,8 +197,8 @@ namespace TwoDude.FactoryTwin.Twin
             {
                 PartsOut++;
                 if (!double.IsNaN(_lastExitAt))
-                    LastCycleSeconds = ElapsedSeconds - _lastExitAt;
-                _lastExitAt = ElapsedSeconds;
+                    LastCycleSeconds = _runningSeconds - _lastExitAt;
+                _lastExitAt = _runningSeconds;
             }
             _lastExit = partAtExit;
         }
