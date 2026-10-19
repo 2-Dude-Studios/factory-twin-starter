@@ -2,7 +2,8 @@
     "name": "TwoDude.FactoryTwin.UI",
     "rootNamespace": "TwoDude.FactoryTwin.UI",
     "references": [
-        "TwoDude.FactoryTwin.Twin"
+        "TwoDude.FactoryTwin.Twin",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

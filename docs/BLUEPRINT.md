@@ -106,7 +106,7 @@ Three ideas hold the design together:
 - Subscriptions use MQTT wildcards (`+` one level, `#` everything below); `TopicFilter` implements the matching for the in-process bus.
 - QoS 0, not retained. A client that connects mid-run sees a signal only when it next changes.
 
-### Topic catalogue (45 topics)
+### Topic catalogue (46 topics)
 
 Direction is from the simulation's point of view: **out** is state leaving the cell, **in** is a command the cell obeys. Commands are also visible on the broker, because `TwinSignals` publishes outputs that a station writes directly.
 
@@ -133,6 +133,7 @@ Direction is from the simulation's point of view: **out** is state leaving the c
 | `cell/line/parts_per_hour` | number | out | LineMetricsReporter | Exits per hour over a 120 s rolling window, whole parts (M4) |
 | `cell/line/parts_lost` | number | out | LineMetricsReporter | Parts not made while a press fault held the line, at the pre-hold rate, whole parts (M4) |
 | `cell/link/connected` | bool | out | MqttBridge | Broker link is up |
+| `cell/demo/fresh_take` | bool | in | TakeControls | New capture take: parts lost back to 0, event log emptied (M6) |
 | `cell/press/product_quality` | number | out | DatasetReplayer | `ProductQuality` of the row: 0 L, 1 M, 2 H (sets the overstrain limit). Published first in each row (M5) |
 | `cell/press/air_temp_k` | number | out | DatasetReplayer | AI4I air temperature, K |
 | `cell/press/process_temp_k` | number | out | DatasetReplayer | AI4I process temperature, K |
@@ -193,6 +194,7 @@ The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.F
 | `Arm/…/tool0` | `PartGripper` | 0 | On grip command, fixes the part at the gate to the flange; releases on open. |
 | `Cell/Press/PressMachine` | realvirtual `CNC.prefab` | — | The machine shown for the press station (M4). |
 | `Cell/Press/StackLight` | `StackLight` | 0 | Andon tower on the machine roof plus `Cell/Press/StackLightGlow` (M4). |
+| `Dashboard` | `TakeControls`, `FpsReadout` | 0, 210 | Capture keys (1, 2, 3, 0, F9, F10) and the FPS readout / `-logfps` log (M6). |
 | `Dashboard` | `UIDocument` + `DashboardController` | 200 | `Dashboard.uxml` on `DashboardPanelSettings`; view model bound to the bus; fault buttons call `FaultInjector`. |
 | `PickStation` (prefab instance) | `PartTransfer` | — | M1 placeholder, **disabled**. Same `pick_cmd`/`busy` contract the arm uses. |
 
@@ -300,10 +302,10 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `TwoDude.FactoryTwin.Twin` | `Scripts/Twin/` (incl. `Mqtt/`) | MQTTnet DLL (auto) | Data spine, cell logic, press, MQTT bridge |
 | `TwoDude.FactoryTwin.Robot` | `Scripts/Robot/` | — | Arm program and controller |
 | `TwoDude.FactoryTwin.Twin.Realvirtual` | `Scripts/Twin/Realvirtual/` | Twin, Robot, `realvirtual.base` | The bridge layer |
-| `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin | Dashboard view model, sparkline element, controller (M4) |
+| `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin, Unity.InputSystem | Dashboard view model, sparkline element, controller (M4); take controls and FPS readout (M6) |
 | `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | — (Editor only) | `ProjectSettingsGuard` |
 | `TwoDude.FactoryTwin.Robot.Editor` | `Scripts/Robot/Editor/` | URDF-Importer (Editor only) | `ArmImporter` |
-| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 177 tests |
+| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 183 tests |
 
 UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `Credits.uxml`).
 
@@ -349,6 +351,9 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `UI/EventLog.cs` | class | Readable lines for state transitions, newest first (M4) |
 | `UI/SparkSeries.cs` | class | Fixed-size sample ring with a version counter (M4) |
 | `UI/Sparkline.cs` | VisualElement | `[UxmlElement]` Painter2D line for a `SparkSeries` (M4) |
+| `UI/TakeControls.cs` | MonoBehaviour | Capture keyboard shortcuts and fresh take (M6) |
+| `UI/FpsMeter.cs` | class | Average fps and worst frame per window (M6) |
+| `UI/FpsReadout.cs` | MonoBehaviour | FPS label (F9) and `-logfps` player-log lines (M6) |
 | `UI/DashboardController.cs` | MonoBehaviour | Data source, sparkline series, status classes, fault buttons (M4). On the root `Dashboard` object with its `UIDocument`. |
 | `Robot/ArmProgram.cs` | class | Waypoint player; `ArmWaypoint`, `GripAction` |
 | `Robot/ArmController.cs` | MonoBehaviour | ArticulationBody drive targets and gains |

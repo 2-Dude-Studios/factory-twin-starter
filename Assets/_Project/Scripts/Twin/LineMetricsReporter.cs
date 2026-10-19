@@ -19,6 +19,7 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField] private float partsLost;
 
         private LineMetrics _metrics;
+        private IDisposable _freshTake;
         private SignalBus _bus;
         private bool _published;
         private long _lastRate;
@@ -32,6 +33,23 @@ namespace TwoDude.FactoryTwin.Twin
         private void Start()
         {
             _bus = context.Bus;
+        }
+
+        private void OnEnable()
+        {
+            _freshTake = context.Bus.Subscribe(CellTopics.DemoFreshTake.ToString(), OnFreshTake);
+        }
+
+        private void OnDisable()
+        {
+            _freshTake?.Dispose();
+            _freshTake = null;
+        }
+
+        private void OnFreshTake(SignalMessage message)
+        {
+            if (message.Value.AsNumber != 0d)
+                _metrics.ResetPartsLost();
         }
 
         private void FixedUpdate()

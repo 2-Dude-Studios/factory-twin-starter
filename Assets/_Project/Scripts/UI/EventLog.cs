@@ -58,6 +58,14 @@ namespace TwoDude.FactoryTwin.UI
 
         public event Action Changed;
 
+        /// <summary>Empties the log and forgets every baseline, so the next value of each topic is a new baseline.</summary>
+        public void Clear()
+        {
+            _entries.Clear();
+            _last.Clear();
+            Changed?.Invoke();
+        }
+
         public void Observe(SignalMessage message)
         {
             TopicPath topic = message.Topic;

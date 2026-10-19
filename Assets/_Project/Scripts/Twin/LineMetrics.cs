@@ -35,6 +35,12 @@ namespace TwoDude.FactoryTwin.Twin
         /// <summary>Parts not made while the line was held for a press fault. Fractional; the dashboard rounds it.</summary>
         public double PartsLost { get; private set; }
 
+        /// <summary>Starts counting parts lost from zero again (a new demo take); the running rate is kept.</summary>
+        public void ResetPartsLost()
+        {
+            PartsLost = 0d;
+        }
+
         public void Tick(double deltaSeconds, CellState state, int partsOut)
         {
             if (deltaSeconds < 0d)

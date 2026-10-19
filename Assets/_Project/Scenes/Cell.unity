@@ -9756,7 +9756,7 @@ PrefabInstance:
     - target: {fileID: 114497208307164320, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
       propertyPath: realvirtualController
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1680582830}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -34712,6 +34712,8 @@ GameObject:
   - component: {fileID: 1136391612}
   - component: {fileID: 1136391613}
   - component: {fileID: 1136391614}
+  - component: {fileID: 1136391615}
+  - component: {fileID: 1136391616}
   m_Layer: 0
   m_Name: Dashboard
   m_TagString: Untagged
@@ -34772,6 +34774,36 @@ MonoBehaviour:
   document: {fileID: 1136391613}
   context: {fileID: 1633254721}
   faultInjector: {fileID: 2108969896}
+--- !u!114 &1136391615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1136391611}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aa9420fd5bd8f44191792eab48195e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.UI::TwoDude.FactoryTwin.UI.FpsReadout
+  document: {fileID: 1136391613}
+  visibleOnStart: 0
+--- !u!114 &1136391616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1136391611}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 434b9364c65140b44bfcc2a1bf603f18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.UI::TwoDude.FactoryTwin.UI.TakeControls
+  context: {fileID: 1633254721}
+  faultInjector: {fileID: 2108969896}
+  fpsReadout: {fileID: 1136391615}
+  hideCursorOnStart: 0
 --- !u!1001 &1145792234
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -49340,6 +49372,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8379680450601004621, guid: fe73a4be512f8f44ba8d820023ef1457, type: 3}
   m_PrefabInstance: {fileID: 1673875814}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1680582830 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1498409059635385976, guid: f88301b6397183a449455ed3110ed39d, type: 3}
+  m_PrefabInstance: {fileID: 2005897827}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d7eb697064db7340ac1022f7f281add, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1684290371
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -49395,7 +49438,7 @@ PrefabInstance:
     - target: {fileID: 114497208307164320, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
       propertyPath: realvirtualController
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1680582830}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

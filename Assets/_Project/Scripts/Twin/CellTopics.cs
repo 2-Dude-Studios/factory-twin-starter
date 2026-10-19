@@ -76,5 +76,8 @@ namespace TwoDude.FactoryTwin.Twin
         // Line figures derived by LineMetricsReporter for the dashboard
         public static readonly TopicPath LinePartsPerHour = new TopicPath("line", "parts_per_hour");
         public static readonly TopicPath LinePartsLost = new TopicPath("line", "parts_lost");
+
+        // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
+        public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }
 }

@@ -108,6 +108,12 @@ namespace TwoDude.FactoryTwin.UI
 
         private void Apply(SignalMessage message)
         {
+            if (message.Topic == CellTopics.DemoFreshTake)
+            {
+                if (message.Value.AsNumber != 0d)
+                    Log.Clear();
+                return;
+            }
             Log.Observe(message);
 
             TopicPath topic = message.Topic;

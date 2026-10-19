@@ -331,6 +331,20 @@
     color: var(--ink);
 }
 
+/* FPS readout (F9), top left, for checking the capture's frame rate */
+
+.fps {
+    position: absolute;
+    left: 24px;
+    top: 24px;
+    padding: 4px 8px;
+    background-color: var(--panel);
+    border-radius: 4px;
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: var(--ink);
+}
+
 /* Credits overlay */
 
 .credits-overlay {
