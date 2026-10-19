@@ -31,7 +31,7 @@ Desktop walkthrough first (the website video). A touch/kiosk view and a Quest 3 
 | Robot motion | Baked joint angles | Our code | Starter has no IK. Poses baked offline from the UR's closed-form kinematics (M2). |
 | Live data | MQTTnet 4.3.7, vendored DLL | MIT | Local Mosquitto broker on the studio PC. Map topics → realvirtual Signal components. |
 | Telemetry stand-in | AI4I 2020 Predictive Maintenance Dataset | CC BY 4.0 | 10,000 rows: air/process temp, rpm, torque, tool wear, five failure modes. Replay it through the broker. Cite: UCI ML Repository, doi:10.24432/C5HS5C. |
-| OPC UA (later) | OPCFoundation/UA-.NETStandard | MIT | Now targets .NET Standard 2.1. Only when a prospect asks. |
+| OPC UA (later) | OPCFoundation/UA-.NETStandard | MIT | Now targets .NET Standard 2.1. Not in this build, but the video promises it (decided 2026-10-20), so the first client project that asks gets it. |
 | Lighting | Poly Haven — Industrial Workshop Foundry HDRI | CC0 | |
 | Materials | ambientCG metals / concrete | CC0 | Raw files may live in the repo. |
 | VFX | Unity Particle Pack 3.1 | Asset Store EULA | URP, sparks/steam. |

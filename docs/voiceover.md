@@ -48,7 +48,7 @@ Every line has to be true of what is on screen or of what the studio can deliver
 
 - "knows when": the warning comes 34 s before the failure in the demo (measured); the demo compresses hours of real tool wear into about a minute.
 - "how close every reading is to the machine's failure limits": the risk model is threshold margins to AI4I's published limits (no ML), and the line says exactly that.
-- "MQTT or OPC UA": MQTT is built; OPC UA is a planned client-project option (`OPCFoundation/UA-.NETStandard`, MIT), not in this build. Keep the line only if you are ready to deliver OPC UA on the first project.
+- "MQTT or OPC UA": MQTT is built; OPC UA is a planned client-project option (`OPCFoundation/UA-.NETStandard`, MIT), not in this build. **Kept (decided 2026-10-20):** the studio will deliver OPC UA on the first client project if asked.
 - "set their limits from your maintenance history": how a client version would set the margins; not shown in the demo.
 
 ## Recording tips
