@@ -182,6 +182,8 @@ The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.F
 | `Arm` | `ArmController` | 0 | Reads joint positions, ticks `ArmProgram`, writes drive targets. |
 | `Arm` | `ArmSignalBridge` | 50 | Pick command edge → `RequestPick()`; writes busy, grip command and joint angles to signals. |
 | `Arm/…/tool0` | `PartGripper` | 0 | On grip command, fixes the part at the gate to the flange; releases on open. |
+| `Cell/Press/PressMachine` | realvirtual `CNC.prefab` | — | The machine shown for the press station (M4). |
+| `Cell/Press/StackLight` | `StackLight` | 0 | Andon tower on the machine roof plus `Cell/Press/StackLightGlow` (M4). |
 | `Dashboard` | `UIDocument` + `DashboardController` | 200 | `Dashboard.uxml` on `DashboardPanelSettings`; view model bound to the bus; fault buttons call `FaultInjector`. |
 | `PickStation` (prefab instance) | `PartTransfer` | — | M1 placeholder, **disabled**. Same `pick_cmd`/`busy` contract the arm uses. |
 
@@ -292,7 +294,7 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin | Dashboard view model, sparkline element, controller (M4) |
 | `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | — (Editor only) | `ProjectSettingsGuard` |
 | `TwoDude.FactoryTwin.Robot.Editor` | `Scripts/Robot/Editor/` | URDF-Importer (Editor only) | `ArmImporter` |
-| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 149 tests |
+| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 154 tests |
 
 UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `Credits.uxml`).
 
@@ -318,6 +320,8 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `Twin/FaultInjector.cs` | MonoBehaviour | `inject_fault` command → press fault filter; `Inject()` / `Clear()` API |
 | `Twin/PressHealthRule.cs` | enum + static | `MachineHealth`; `IsFaulted(bus)` (shared with `CellSequencer`) and `Evaluate(faulted, warning)` |
 | `Twin/PressHealthReporter.cs` | MonoBehaviour | Publishes `press/health` on change (M4) |
+| `Twin/StackLightPattern.cs` | static | Lamp and glow levels for a health value; red flashes at 1.5 Hz (M4) |
+| `Twin/StackLight.cs` | MonoBehaviour | Health topic → stack-light lamps (MaterialPropertyBlock) and glow light (M4) |
 | `Twin/LineMetrics.cs` | class | Rolling parts/hour; parts lost while held at the frozen pre-hold rate (M4) |
 | `Twin/LineMetricsReporter.cs` | MonoBehaviour | Hosts `LineMetrics`; publishes parts/hour and parts lost as whole numbers (M4) |
 | `Twin/FrameRateLock.cs` | static | 60 fps and vSync off in player builds (not in the Editor) |
@@ -501,7 +505,7 @@ Found while writing this blueprint:
 
 | # | Finding | Why it matters |
 |---|---|---|
-| 1 | **No press in 3D.** `Cell/Press` has no renderer or children. | Demo beat 4 shows the press turning red. Geometry has to come from somewhere with a known licence before the highlight can be built. |
+| 1 | **No press in 3D.** `Cell/Press` has no renderer or children. | Demo beat 4 shows the press turning red. Geometry has to come from somewhere with a known licence before the highlight can be built. **Resolved 2026-10-20:** realvirtual's CNC.prefab plus a stack light (M4). |
 | 2 | **The demo script names signals that do not exist**: `cell/*/state`, `outfeed/count`, `press/health`. The real ones are `line/state` and `line/parts_out`; there is no health signal. | Update `docs/demo-script.md` or add the signals; either way decide before building the dashboard against them. **Resolved 2026-10-19:** the rewritten demo script uses the real names and marks planned ones with the milestone that adds them; `press/health` is added in M4. |
 | 3 | **OEE and failure risk are undefined.** No reject or quality data exists, and nothing computes risk. | OEE needs availability × performance × quality; quality has no source in this cell. Risk could be derived from tool wear, torque and temperature spread, but it is a design decision, not a wiring task. OEE is parked under Later (Rev 3). The risk definition is the open decision at the start of M5. |
 | 4 | **The arm bake script is not in the repo.** `docs/STATUS.md` points at `scratchpad/ur5e_kin.py`; no such file exists here. | The eight poses cannot be regenerated after a layout change without rewriting it. Worth committing under `tools/`. Needed before the parked layout what-if work, where runtime IK would replace the baked poses. |
