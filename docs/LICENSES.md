@@ -17,6 +17,7 @@ Full tracker with 62 candidates and verdicts: https://claude.ai/artifact/AGRYueG
 | Universal RP | 17.3.0 | Unity registry (built-in) | Unity Companion License | OK | Packages/manifest.json; stock pipeline assets from Unity's URP template in Assets/_Project/Settings | no |
 | Cinemachine | 3.1.7 | Unity registry | Unity Companion License | OK | Packages/manifest.json | no |
 | Input System | 1.19.0 | Unity registry | Unity Companion License | OK | Packages/manifest.json | no |
+| Unity Recorder | 5.1.7 (pulls in com.unity.bindings.openimageio 1.0.2) | Unity registry | Unity Companion License | OK | Packages/manifest.json (Editor only, not in the build; used to record the capture takes) | no |
 | UnitySkills (Editor automation for Claude Code) | v2.8.4 | github.com/Besty0728/Unity-Skills | MIT | OK | Packages/manifest.json (git URL; dev tooling, not part of the demo) | no |
 | Unity Test Framework | 1.6.0 | Unity registry (built-in) | Unity Companion License | OK | Packages/manifest.json (editor-only, not shipped) | no |
 | URDF-Importer | v0.5.2 | github.com/Unity-Technologies/URDF-Importer | Apache-2.0 | OK | Packages/manifest.json (git URL) | notice in Credits |

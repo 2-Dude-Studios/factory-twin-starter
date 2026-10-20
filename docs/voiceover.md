@@ -34,7 +34,7 @@ Read it as written. `/` is a short breath, `//` a full pause (about one second).
 
 ## Capture takes
 
-Record the build at 1920×1080, 60 fps (OBS game capture). Before each take, let the line run at least **2.5 minutes** (parts/hour settles near 510), then press **0** for a fresh take (event log and parts lost reset, line keeps running). F10 hides the cursor.
+**Automated:** in the Editor, Play `Cell.unity` and tick `runNow` on `CaptureRig` → `TakeSequencer`; it warms up, plays takes A, B and C exactly as below and records each to `Builds/Recordings/` with Unity Recorder (1920×1080, 60 fps, audio). **By hand:** record the build at 1920×1080, 60 fps (OBS game capture). Before each take, let the line run at least **2.5 minutes** (parts/hour settles near 510), then press **0** for a fresh take (event log and parts lost reset, line keeps running). F10 hides the cursor.
 
 - **Take A — beats 1–4 (ignore it).** 4 (dolly) → 5 → 6 → press **1** and cut to **7**. "Tool change due" appears at about +28 s, the amber warning at about +42 s, the failure at about +76 s. Stay on 7 for the sparks, then **5** to show both conveyors stop and parts lost climb.
 - **Take B — beat 5 (act on it).** **0** fresh take → **1** → wait on **7** for amber (about +42 s) → **2** Change tool → **5** while parts keep flowing. Parts lost stays 0.

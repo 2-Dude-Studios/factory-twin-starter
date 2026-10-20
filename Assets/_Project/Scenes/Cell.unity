@@ -9823,6 +9823,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1257531437797102, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 217352613}
+    - targetCorrespondingSourceObject: {fileID: 1662754598594610, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 752802680}
   m_SourcePrefab: {fileID: 100100000, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
 --- !u!4 &217352611 stripped
 Transform:
@@ -12397,6 +12400,7 @@ GameObject:
   m_Component:
   - component: {fileID: 289633461}
   - component: {fileID: 289633462}
+  - component: {fileID: 289633463}
   m_Layer: 0
   m_Name: CaptureRig
   m_TagString: Untagged
@@ -12453,6 +12457,27 @@ MonoBehaviour:
   - {fileID: 45962083}
   - {fileID: 45962084}
   shot: -1
+--- !u!114 &289633463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 289633460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ec8339c09425224185b35574f384e9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.UI::TwoDude.FactoryTwin.UI.TakeSequencer
+  context: {fileID: 1633254721}
+  takeControls: {fileID: 1136391616}
+  shotDirector: {fileID: 289633462}
+  takes: ABC
+  warmUpSeconds: 150
+  preRollSeconds: 12
+  runNow: 0
+  phase: idle
+  phaseSeconds: 0
 --- !u!1001 &290601259
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25799,6 +25824,24 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5346453890934283684, guid: e51f745803fcc45499581d2be7f06050, type: 3}
   m_PrefabInstance: {fileID: 748551239}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &752802673 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1662754598594610, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
+  m_PrefabInstance: {fileID: 217352610}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &752802680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 752802673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6eae8228558ba73488c71496fef02fd3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.VisibleLayerCopy
+  visibleLayer: 0
 --- !u!1 &761664319
 GameObject:
   m_ObjectHideFlags: 0
@@ -35423,6 +35466,24 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4d483123b75e06147b8e0b15d3490c34, type: 3}
+--- !u!1 &1132073699 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7636456683456600622, guid: 26fe74d53245f064d8cc2efa3cfb3c8e, type: 3}
+  m_PrefabInstance: {fileID: 1397080349}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1132073704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1132073699}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6eae8228558ba73488c71496fef02fd3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.VisibleLayerCopy
+  visibleLayer: 0
 --- !u!1 &1136391611
 GameObject:
   m_ObjectHideFlags: 0
@@ -43255,7 +43316,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7636456683456600622, guid: 26fe74d53245f064d8cc2efa3cfb3c8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1132073704}
   m_SourcePrefab: {fileID: 100100000, guid: 26fe74d53245f064d8cc2efa3cfb3c8e, type: 3}
 --- !u!4 &1397080350 stripped
 Transform:
@@ -50511,6 +50575,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1257531437797102, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1684290374}
+    - targetCorrespondingSourceObject: {fileID: 1662754598594610, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1746913940}
   m_SourcePrefab: {fileID: 100100000, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
 --- !u!4 &1684290372 stripped
 Transform:
@@ -51360,6 +51427,24 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8379680450601004621, guid: fe73a4be512f8f44ba8d820023ef1457, type: 3}
   m_PrefabInstance: {fileID: 1741264665}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1746913933 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1662754598594610, guid: 2827aa241b48c3647b05479d7526745e, type: 3}
+  m_PrefabInstance: {fileID: 1684290371}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1746913940
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1746913933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6eae8228558ba73488c71496fef02fd3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.VisibleLayerCopy
+  visibleLayer: 0
 --- !u!1001 &1748521213
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -56849,6 +56934,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 32014171, guid: f88301b6397183a449455ed3110ed39d, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -30.000977
+      objectReference: {fileID: 0}
     - target: {fileID: 28996334480789967, guid: f88301b6397183a449455ed3110ed39d, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0

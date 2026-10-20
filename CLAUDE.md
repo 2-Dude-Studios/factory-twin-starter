@@ -12,7 +12,7 @@ One production cell: infeed conveyor → sensor gate → six-axis arm pick-and-p
 - MQTT topic scheme: `cell/<station>/<signal>` — e.g. `cell/infeed/drive_speed`, `cell/gate1/part_present`, `cell/arm/j3_deg`, `cell/press/tool_wear_min`. Payload is plain JSON `{ "v": <value>, "t": <unix_ms> }`.
 - No hard-coded broker addresses or ports. Read from `TwinConfig` (ScriptableObject at `Assets/_Project/Data/TwinConfig.asset`).
 - One MonoBehaviour per responsibility. No God managers.
-- Do not add packages without asking. Current set: com.unity.splines, URDF-Importer (git URL), Input System, Cinemachine, UI Toolkit (built in). MQTT client is MQTTnet 4.3.7, vendored as a DLL under `Assets/ThirdParty/MQTTnet/` (not a package).
+- Do not add packages without asking. Current set: com.unity.splines, URDF-Importer (git URL), Input System, Cinemachine, Unity Recorder (Editor only, for capture), UI Toolkit (built in). MQTT client is MQTTnet 4.3.7, vendored as a DLL under `Assets/ThirdParty/MQTTnet/` (not a package).
 - Any third-party file, model, texture, sound or dataset added to the repo gets a line in `docs/LICENSES.md` in the same commit. If the licence is unknown, do not add the file.
 - Keep vendor branding (UR, KUKA, ABB, FANUC) off any model that will be shown publicly.
 - Frame-rate lock 60 in builds (`Application.targetFrameRate = 60`) — the video pipeline needs it.

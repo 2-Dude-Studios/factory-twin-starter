@@ -196,12 +196,12 @@ The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.F
 | `Cell/Press/FaultFx` | `FaultEffects`; children `Sparks`, `Steam` (Particle Pack instances), `SparkSound` (AudioSource) | 0 | Fault sparks, steam and spark crackle on the CNC (M6). |
 | `Cell/HallAmbience` | `AudioSource` | — | Factory ambience loop, 2D, volume 0.35 (M6). |
 | `Cell/Press/StackLight` | `StackLight` | 0 | Andon tower on the machine roof plus `Cell/Press/StackLightGlow` (M4). |
-| `CaptureRig` | `ShotDirector`; children `CellFocus`, `LineFocus`, `CncFocus`, `PanelFocus`, `HallPath`, `Shot1_HallDolly` … `Shot5_Panel` | 0 | Capture camera shots (M6). `realvirtual/Main Camera` carries the `CinemachineBrain`, disabled until a shot is live. |
+| `CaptureRig` | `ShotDirector`, `TakeSequencer`; children `CellFocus`, `LineFocus`, `CncFocus`, `PanelFocus`, `HallPath`, `Shot1_HallDolly` … `Shot5_Panel` | 0 | Capture camera shots (M6). `realvirtual/Main Camera` carries the `CinemachineBrain`, disabled until a shot is live. `TakeSequencer` plays takes A, B and C on a fixed timeline for Unity Recorder. |
 | `Dashboard` | `TakeControls`, `FpsReadout` | 0, 210 | Capture keys (1, 2, 3, 0, F9, F10) and the FPS readout / `-logfps` log (M6). |
 | `Dashboard` | `UIDocument` + `DashboardController` | 200 | `Dashboard.uxml` on `DashboardPanelSettings`; view model bound to the bus; fault buttons call `FaultInjector`. |
 | `PickStation` (prefab instance) | `PartTransfer` | — | M1 placeholder, **disabled**. Same `pick_cmd`/`busy` contract the arm uses. |
 
-`Cell` also parents seven prefab instances that make up the physical line: `PartSource`, `Infeed`, `Gate1`, `PickStation`, `Outfeed`, `ExitSensor` and `Sink`.
+`Cell` also parents seven prefab instances that make up the physical line: `PartSource`, `Infeed`, `Gate1`, `PickStation`, `Outfeed`, `ExitSensor` and `Sink`. `PartSource/Cube` and both `Conveyor/Conveyor` belt meshes carry `VisibleLayerCopy`: the Factory Training URP renderer (`PC_Renderer_DC`, opaque and transparent masks 767 = layers 0–7 and 9) skips `rvMU` and `rvTransport`, so without the copy the parts and belt surfaces show in the Scene view only.
 
 ### One physics tick
 
@@ -307,6 +307,7 @@ All project code is under `Assets/_Project/`. About 2,400 lines of runtime and e
 | `TwoDude.FactoryTwin.Twin.Realvirtual` | `Scripts/Twin/Realvirtual/` | Twin, Robot, `realvirtual.base` | The bridge layer |
 | `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin, Unity.InputSystem, Unity.Cinemachine, Unity.Splines, Unity.Mathematics | Dashboard view model, sparkline element, controller (M4); take controls and FPS readout (M6) |
 | `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | — (Editor only) | `ProjectSettingsGuard` |
+| `TwoDude.FactoryTwin.UI.Editor` | `Scripts/UI/Editor/` | UI, Unity.Recorder, Unity.Recorder.Base, Unity.Recorder.Editor (Editor only) | `TakeRecorderHook` (M6) |
 | `TwoDude.FactoryTwin.Robot.Editor` | `Scripts/Robot/Editor/` | URDF-Importer (Editor only) | `ArmImporter` |
 | `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 183 tests |
 
@@ -340,6 +341,7 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `Twin/PressRiskConfig.cs` | ScriptableObject | `FailureRiskSettings` and the warning clear level; instance at `Data/PressRiskConfig.asset` (M5) |
 | `Twin/PressRiskReporter.cs` | MonoBehaviour | Telemetry → `FailureRiskModel` → risk topics (M5) |
 | `Twin/FailureRiskModel.cs` | static + types | `PressReading`, `FailureRiskSettings`, `RiskAssessment`; threshold-margin failure risk, remaining tool life, maintenance due (M5) |
+| `Twin/VisibleLayerCopy.cs` | MonoBehaviour | Draws a collider-free copy of a mesh on Default, because the sample's URP renderer skips realvirtual's layers (M6) |
 | `Twin/FaultEffects.cs` | MonoBehaviour | Plays sparks/steam particle systems while press health is Fault (M6) |
 | `Twin/StackLightPattern.cs` | static | Lamp and glow levels for a health value; red flashes at 1.5 Hz (M4) |
 | `Twin/StackLight.cs` | MonoBehaviour | Health topic → stack-light lamps (MaterialPropertyBlock) and glow light (M4) |
@@ -362,6 +364,8 @@ UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `
 | `UI/LicenseTextsView.cs` | MonoBehaviour | Fills Credits → Full licence texts from `Licenses/*.txt` (M6) |
 | `UI/ShotDirector.cs` | MonoBehaviour | Capture keys 4–9: Cinemachine shot priorities, brain on/off, operator navigation off/on (M6) |
 | `UI/DollyMove.cs` | MonoBehaviour | Eased 8 s move along a `CinemachineSplineDolly` path (M6) |
+| `UI/TakeSequencer.cs` | MonoBehaviour | Capture takes A, B, C on a fixed timeline: warm-up, pre-roll with fresh take, timed shots and commands; `TakeStarted`/`TakeEnded` events (M6) |
+| `UI/Editor/TakeRecorderHook.cs` | Editor class | Turns each take into a Unity Recorder MP4: Game View 1920×1080, constant 60 fps, H.264, audio, to `Builds/Recordings/` (M6) |
 | `UI/SplinePath.cs` | MonoBehaviour | Keeps a `SplineContainer` equal to a few Inspector points, auto-smoothed (M6) |
 | `UI/DashboardController.cs` | MonoBehaviour | Data source, sparkline series, status classes, fault buttons (M4). On the root `Dashboard` object with its `UIDocument`. |
 | `Robot/ArmProgram.cs` | class | Waypoint player; `ArmWaypoint`, `GripAction` |
@@ -444,7 +448,7 @@ docker exec factory-twin-broker mosquitto_pub -t cell/press/inject_fault -m '{"v
 | Robot | UR5e from `ros-industrial/universal_robot` | 39ad110 | yes | De-branded; BSD-3; credit owed |
 | Robot import | URDF-Importer | 0.5.2 | manifest | Apache-2.0; notice owed |
 | Telemetry | AI4I 2020 dataset | 2020 | yes | CC BY 4.0; credit owed in app and on the web page |
-| Packages we chose | Splines 2.9.0, Cinemachine 3.1.7, Input System 1.19.0, Test Framework 1.6.0 | | manifest | Cinemachine is 3.x (`Unity.Cinemachine`) |
+| Packages we chose | Splines 2.9.0, Cinemachine 3.1.7, Input System 1.19.0, Recorder 5.1.7 (Editor only), Test Framework 1.6.0 | | manifest | Cinemachine is 3.x (`Unity.Cinemachine`) |
 | Imported, unused so far | Fast IK 1.2, Particle Pack 3.1 | | no | Particle Pack is for M6 |
 | Brought in by the sample | Timeline, uGUI, Post Processing v2, ProGrids, AI Navigation, Burst/Collections/Mathematics, Asset Manager | | manifest | Not chosen; prune once it is clear what the scene needs |
 
