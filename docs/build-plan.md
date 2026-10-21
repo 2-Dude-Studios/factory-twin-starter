@@ -97,6 +97,7 @@ Exit:
 Decide at start: the risk definition (see open questions).
 
 **M6 — Polish and capture (≈4 days).** Foundry HDRI, ambientCG floors, sparks/steam, ambience, a Cinemachine 3 camera path for the video, 60-fps lock, Windows build. Then hand over to the video playbook: voiceover first, capture against it.
+Exit: the walkthrough video is captured from the project and approved. Reworded 2026-10-21 from "captured from the Windows build": the takes are Editor recordings through Unity Recorder, with the same scene and settings and no dropped frames. The Windows build is the live-demo deliverable. **Met 2026-10-21** (v02, 111 s; see `docs/voiceover.md`).
 
 M4–M6 come to roughly 10 days of focused time, which fits the 2–3 weeks of unpaid build time originally budgeted for a sellable demo.
 
@@ -132,6 +133,7 @@ The demo feeds one ~90-second walkthrough per the playbook:
 - **Ask:** book a call.
 
 Voiceover rendered before capture. Naming `2DS_Manufacturing_FactoryTwin_PdM_v01_<date>`.
+As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) was cut to them; the approved video is v02, 111 s, with a digital-twin introduction ahead of the promise.
 
 ## Open questions
 

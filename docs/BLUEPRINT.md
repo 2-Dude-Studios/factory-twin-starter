@@ -31,7 +31,7 @@ Everything in the architecture exists to make that moment real rather than stage
 ### Done when
 
 - The M4 and M5 exit conditions in `docs/build-plan.md` are met.
-- There is a Windows build locked to 60 fps and the 90-second video has been captured from it (M6).
+- There is a Windows build locked to 60 fps, and the walkthrough video has been captured from the project (M6; Editor recordings through Unity Recorder, approved as v02, 111 s, on 2026-10-21).
 - The same build can be driven live in a prospect meeting, with or without a broker on the network.
 
 ### Not in scope
@@ -51,7 +51,7 @@ Everything in the architecture exists to make that moment real rather than stage
 | M3 Data spine | Signal bus, MQTT bridge, press telemetry, fault injector | Done 2026-10-12 |
 | M4 Dashboard | Lean UI Toolkit dashboard for the press and the line, fault beat on camera | Done 2026-10-20 |
 | M5 Prediction | Degradation mode, failure risk, remaining tool life, recommendation, tool change | Done 2026-10-20 |
-| M6 Polish and capture | Lighting, VFX, audio, camera path, Windows build, 90-second video | **Next** |
+| M6 Polish and capture | Lighting, VFX, audio, camera path, Windows build, walkthrough video | Done 2026-10-21 |
 
 ---
 

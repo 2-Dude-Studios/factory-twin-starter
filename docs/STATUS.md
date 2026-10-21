@@ -1,7 +1,7 @@
 # Status
 
-**Current milestone:** M6 — Polish and capture (M5 closed 2026-10-20; M4 closed 2026-10-20; plan narrowed to predictive maintenance, M4–M6, on 2026-10-19 — build plan Rev 3)
-**Last updated:** 2026-10-20
+**Current milestone:** none — build plan Rev 3 is complete (M6 closed 2026-10-21; M5 closed 2026-10-20; M4 closed 2026-10-20; plan narrowed to predictive maintenance, M4–M6, on 2026-10-19 — build plan Rev 3)
+**Last updated:** 2026-10-21
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
@@ -81,7 +81,7 @@ Smallest shippable step first:
 - [x] **M5 exit met (2026-10-20).** Warning 34 s before `press/machine_failure` in the degradation run, with "Tool change due" and "CNC warning" in the event log (02:57:51 run). A tool change at the recommendation avoided the failure and the line never held, 0 parts lost (03:06:26 run). Hit rate on AI4I recorded above.
 - Polish noted for M6 (both done 2026-10-20): cycle time after a hold no longer includes the stop; the fresh take (key 0) clears the log between takes.
 
-## M6 — Polish and capture (exit: the 90-second video is captured from the Windows build)
+## M6 — Polish and capture (exit: the walkthrough video is captured from the project; reworded 2026-10-21 from "from the Windows build", since the takes are Editor recordings through Unity Recorder)
 Smallest shippable step first:
 - [x] **Windows build** (2026-10-20, via UnitySkills `build_player` with the panel switched to Bypass mode for the build; switch it back to Auto afterwards): `Builds/Windows/FactoryTwin.exe` (git-ignored), StandaloneWindows64, Mono, about 16 minutes to build. Ran 90 s windowed at 1280×720 with `-logFile`: realvirtual starts the Cell scene, Direct3D 11, **no exceptions, errors or missing-shader messages**; the only repeated line is "[MqttBridge] 127.0.0.1:1883 unreachable … retrying in 5 s" because no broker was running. Not verified from the log: how the window looks (dashboard, stack light) and the actual frame rate. Check them with your eyes or OBS stats on the first capture take, or add an FPS readout with the take controls.
   - Do not ship `Builds/Windows/factory-twin-starter_BurstDebugInformation_DoNotShip/` when zipping the build.
@@ -108,8 +108,10 @@ Smallest shippable step first:
   - `2DS_FactoryTwin_TakeB_20261020_052722.mp4`: 72.0 s, 4,320 frames: amber at 57 %, Change tool, green 0 %, line keeps running.
   - `2DS_FactoryTwin_TakeC_20261020_053354.mp4`: 28.0 s, 1,680 frames: control-panel close-up, cell, line close; healthy at 510 parts/h.
   - Recorded in the Editor, not from the Windows build: Unity Recorder only runs in the Editor. The frames are the same scene, pipeline and settings, and constant-rate capture means no dropped frames, whatever the Editor's real frame rate. Recording runs slower than real time (take A took about 3.5 minutes). Earlier takes without visible parts are in `Builds/Recordings/superseded_*`.
-- [ ] **Voiceover and edit** (yours; capture done above, OBS no longer needed): record `docs/voiceover.md`, then lay it on the 90-second cut and finish the edit (duck the ambience, logo on the end card). The cut without voiceover is done: `Builds/Recordings/2DS_Manufacturing_FactoryTwin_PdM_v01_20261020_noVO.mp4` (2026-10-20, 90.0 s, 1920×1080, 60 fps, game audio), cut with ffmpeg to the timing sheet from take A 0–28, 56–66 and 91–108, take B 43–58, take C 1–8 and 11–18, and a 6 s text end card.
+- [x] **Voiceover and edit** (2026-10-21, approved by you as v02): `Builds/Recordings/2DS_Manufacturing_FactoryTwin_PdM_v02_20261021.mp4`, 111.0 s, 1920×1080, 60 fps, H.264 + AAC 48 kHz, −14.0 LUFS integrated, −1.0 dBTP, LRA 4.5 LU (ffmpeg ebur128). Voice: Kokoro-82M TTS, `am_michael` (you chose local TTS; no ElevenLabs credits), 233 words with a new digital-twin introduction; 13 key phrases emphasised (slower, +2.5 dB, +3.5 % pitch). Game audio ducked under the voice, sparks lifted in the failure beat. New start card and end card with the studio logo (`2 Dude Logo Big.png`, not in the repo). Cues checked on frames: amber at 46.0 s on "the light turns amber", failure at 59.3 s just after "the tool fails", tool change at 78.0 s on "wear resets". Script, cut map and production notes in `docs/voiceover.md`. v01 (93 s, `…_v01_20261021.mp4`) had no introduction and is superseded. Earlier note, for the record: The cut without voiceover is done: `Builds/Recordings/2DS_Manufacturing_FactoryTwin_PdM_v01_20261020_noVO.mp4` (2026-10-20, 90.0 s, 1920×1080, 60 fps, game audio), cut with ffmpeg to the timing sheet from take A 0–28, 56–66 and 91–108, take B 43–58, take C 1–8 and 11–18, and a 6 s text end card.
   - Voiceover: **no ElevenLabs credits** (2026-10-20). Options, in order: (1) record it yourself with a USB mic and a quiet room; the script is about 200 words, and a real studio voice reads as more credible to prospects. (2) A local open-source TTS that allows commercial use, e.g. Kokoro-82M (Apache-2.0, runs on CPU; confirm the licence of the exact voice on its model card before use) or Piper with a voice whose licence allows commercial use (some Piper voices do not). (3) A cloud TTS free tier whose terms allow commercial video (e.g. Azure Speech). Whichever is chosen gets a line in `docs/LICENSES.md` before the video ships. Avoid tools whose model licence is non-commercial (e.g. Coqui XTTS's CPML).
+- [x] **M6 exit met (2026-10-21).** The walkthrough video is captured from the project and approved (v02 above). You decided the Editor takes recorded with Unity Recorder count: same scene, pipeline and settings as the build, constant 60 fps with no dropped frames. The Windows build (60 fps lock confirmed) remains the live-demo deliverable.
+
 Decide: Player Settings still have Unity's defaults (product "factory-twin-starter", company "DefaultCompany", 1024×768 windowed default). Set "Factory Twin" / "2 Dude Studios" and a 1920×1080 default? That is a ProjectSettings change.
 
 ## Manual steps pending

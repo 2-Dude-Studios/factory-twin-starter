@@ -35,6 +35,7 @@ Full tracker with 62 candidates and verdicts: https://claude.ai/artifact/AGRYueG
 | ProGrids | 3.0.3-preview.6 | Unity (embedded by the Factory Training sample) | Unity Companion License | OK | Packages/com.unity.progrids (editor-only, not shipped) | no |
 | Sonniss #GameAudioGDC | per year | gdc.sonniss.com | Sonniss GDC bundle licence | OK (no redistribution, no AI training) | Assets/_Project/Audio | no |
 | Pixabay SFX | per clip | pixabay.com | Pixabay Content License | OK | Assets/_Project/Audio | no |
+| Kokoro-82M TTS, voice `am_michael` | v1.0 (ONNX export, kokoro-onnx model-files-v1.1) | huggingface.co/hexgrad/Kokoro-82M via github.com/thewh1teagle/kokoro-onnx | Apache-2.0 (weights); kokoro-onnx 0.6.1 MIT; phonemizer/espeak-ng GPL-3 used locally for pronunciation only | OK | Not in repo; the generated voiceover is only in the M6 video (Builds/Recordings, git-ignored). Model card allows real-world deployment; the English voices carry no extra licence terms | no |
 
 Replaced 2026-10-04: M2MqttUnity (bundled Eclipse Paho M2Mqtt, last released Dec 2015, EPL-1.0, MQTT 3.1.1 only) was dropped for MQTTnet. MQTTnet 5.x targets net8.0+ only, which Unity 6000.3 (.NET Standard 2.1, Mono/IL2CPP) cannot load, so 4.3.7 is the newest usable release.
 
