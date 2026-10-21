@@ -52,6 +52,9 @@ crashlytics-build.properties
 tools/test-results.xml
 tools/test.log
 __pycache__/
+tools/video/.venv/
+tools/video/models/
+tools/video/build/
 
 # Claude Code local overrides
 .claude/settings.local.json

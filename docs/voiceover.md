@@ -41,7 +41,7 @@ The approved video is `Builds/Recordings/2DS_Manufacturing_FactoryTwin_PdM_v02_2
 - **Voice:** Kokoro-82M TTS, voice `am_michael` (US male), through `kokoro-onnx` 0.6.1 on CPU. Each phrase is rendered separately, trimmed, and placed on the timeline at its cue. Emphasised phrases are rendered slower (speed 0.88–0.95) and get a rubberband pitch lift of 1.035 with formants preserved, plus 2.5 dB. The voice chain is a 90 Hz high-pass, de-esser and gentle compressor (2.5:1), set to −16 LUFS. Licence line in `docs/LICENSES.md`.
 - **Game audio:** the takes' own audio (factory ambience, spark crackle), brought to about −30 LUFS and ducked under the voice with a sidechain compressor (5:1). It is lifted 5 dB from 58.5 to 72 s so the sparks read in the failure beat. Two-pass loudnorm takes the mix to −14 LUFS and −1 dBTP.
 - **Cards:** built in ffmpeg. The logo is `2 Dude Logo Big.png` from the studio's branding folder (not copied into the repo). Headings are set in Bahnschrift, body text in Segoe UI, and the accent is the logo's yellow.
-- The ffmpeg and Kokoro build scripts lived in the session scratchpad and are not in the repo. Re-rendering means repeating the steps above.
+- Rebuild with `tools/video/` (`tts2.py`, then `build2.py`; see its README). Wording, pace, emphasis and anchors live in `tools/video/script_v2.py`.
 
 ## Capture takes
 
