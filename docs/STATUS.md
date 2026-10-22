@@ -1,7 +1,7 @@
 # Status
 
-**Current milestone:** none — build plan Rev 3 is complete (M6 closed 2026-10-21; M5 closed 2026-10-20; M4 closed 2026-10-20; plan narrowed to predictive maintenance, M4–M6, on 2026-10-19 — build plan Rev 3)
-**Last updated:** 2026-10-21
+**Current milestone:** M7 — Soft PLC link (build plan Rev 4, virtual commissioning, approved 2026-10-22). Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
+**Last updated:** 2026-10-22
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
@@ -113,6 +113,21 @@ Smallest shippable step first:
 - [x] **M6 exit met (2026-10-21).** The walkthrough video is captured from the project and approved (v02 above). You decided the Editor takes recorded with Unity Recorder count: same scene, pipeline and settings as the build, constant 60 fps with no dropped frames. The Windows build (60 fps lock confirmed) remains the live-demo deliverable.
 
 Decide: Player Settings still have Unity's defaults (product "factory-twin-starter", company "DefaultCompany", 1024×768 windowed default). Set "Factory Twin" / "2 Dude Studios" and a 1920×1080 default? That is a ProjectSettings change.
+
+## M7 — Soft PLC link (exit: the cell runs 10 minutes from the soft PLC with `CellSequencer` off, parts per hour within 10% of the M2 rate, 0 stalls; stopping the PLC holds the line within 1 s)
+- [x] Use case chosen and Rev 4 approved (2026-10-22): virtual commissioning, OpenPLC Runtime v4 over Modbus TCP, our own Modbus client. Why, and the options ruled out, are in `docs/build-plan.md` (Rev 4 section).
+- [x] OpenPLC Runtime v4.3.1 Windows installer downloaded (2026-10-22, with your OK) to `C:\Users\user\Downloads\OpenPLC_v4.3.1\`, 229 MB, SHA-256 `963493ac…628db602`, matching the GitHub release digest. Not in the repo. Its `docs/LICENSES.md` line (external tool, MIT) is added once the voiceover session's uncommitted `LICENSES.md` work is committed.
+- [ ] Install and run the runtime; confirm how a program is loaded (plain `.st` upload, or built by the OpenPLC Editor).
+- [ ] `tools/plc/cell.st`: `CellSequence` in Structured Text (four states, handshake, hold) and the Modbus address map.
+- [ ] `PlcLink`: Modbus TCP frame codec (pure, EditMode tests) and socket loop; I/O map ScriptableObject; PLC host and port in `TwinConfig`.
+- [ ] Logic-source switch (`cell/plc/source`): `CellSequencer` stops writing outputs while the PLC owns the line. Heartbeat watchdog (`cell/plc/heartbeat`, `cell/plc/link`) holds the line.
+- [ ] 10-minute soak from the PLC; PLC-stop test.
+
+## M8 — Commissioning suite (exit: the suite passes against both logic sources; the bugged program fails a named test, visible in 3D)
+- [ ] Not started.
+
+## M9 — VC capture (exit: the VC clip is captured from the project and approved)
+- [ ] Not started.
 
 ## Manual steps pending
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Deletes are blocked for Claude; either delete them in the Hierarchy or add `gameobject_delete_batch` to the UnitySkills allowlist.

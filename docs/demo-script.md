@@ -21,3 +21,21 @@ Capture rules: 1920×1080 @ 60 fps, build frame-rate locked, OBS game capture, n
 Suggested shots per beat: 1 → **4** (the dolly lands on the cell shot). 2 → **5**, cut to **6** for the gate and arm. 3 → **7** while the risk climbs and the stack light turns amber. 4 → **7** for the red, then **5** to show both conveyors stop. 5 → **5**. 6 → **8** for the panel close-up, then **5**. 7 → end card in the edit. Let the line run at least 2.5 minutes before beat 4, so parts/hour has settled (about 510) and parts lost has a running rate to count against. How beats 4 and 5 are shown (two takes cut together or a split screen of two runs) is an open question in `docs/build-plan.md`.
 
 Fault types available in the injector (map to AI4I failure modes): TWF tool wear, HDF heat dissipation, PWF power, OSF overstrain, RNF random. The video uses tool wear (TWF), because it builds up gradually and a tool change fixes it, so it is the failure a twin can most convincingly predict.
+
+---
+
+# Virtual commissioning clip — beats (Rev 4, M9)
+
+Same playbook shape. For machine builders and system integrators. Signals marked *(M7)* or *(M8)* are added in that milestone. Timings are a first draft; the voiceover sets them in M9.
+
+| # | Time | Beat | On screen | Signals in play |
+|---|---|---|---|---|
+| 1 | 0–8 s | **Promise.** "Find the bug before the machine ships." | Hall dolly lands on the cell. A caption: "No hardware yet. The PLC program runs the twin." | `plc/source = 1` *(M7)* |
+| 2 | 8–20 s | The real program drives the twin. | The Structured Text beside the cell; the line runs from the soft PLC; the PLC link indicator is green and the heartbeat ticks. | `plc/link` *(M7)*, `plc/heartbeat` *(M7)*, `line/state`, `gate1/part_present` |
+| 3 | 20–40 s | **Proof 1 — the suite fails.** "Run the commissioning tests." | The test panel steps through the scenarios. "Stuck sensor" or "missing part" fails: in 3D parts pile up at the gate because the program is missing an interlock. The event log names the failed test. | `vc/test` *(M8)*, `vc/result` *(M8)*, `gate1/force` *(M8)* |
+| 4 | 40–55 s | **Proof 2 — fix one line.** "One line fixed, every test passes." | The one-line diff in the program; reload; the suite reruns and every row turns green; the cell runs clean. | `vc/result` *(M8)*, `line/parts_out` |
+| 5 | 55–70 s | **Path.** "Your PLC program, your I/O list, the same twin." | The I/O list CSV, the topic list on the broker, the cell. Any savings figure carries "vendor-reported". | |
+| 6 | 70–76 s | **Ask.** Book a call. 2dudestudios.com/manufacturing. | End card, logo, URL. | |
+
+The bug shown is the one seeded in `tools/plc/cell_buggy.st`. How it looks in 3D (parts piling up at the gate, or the arm reaching for a part that moved) is settled in M8, from what the scene actually does.
+
