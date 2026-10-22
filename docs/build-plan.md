@@ -167,6 +167,6 @@ As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) 
 - Failure-risk definition (M5): margins to the AI4I failure thresholds (explainable, and the dataset's failure rules are published) or a small classifier trained offline (reads as more "predictive")? Either ships without an ML package. Suggested: margins first, classifier only if a prospect asks for ML.
 - How the video shows "ignored vs acted on": two takes cut together, or a split screen of two runs with a parts-lost counter on each? Decide before the voiceover.
 - Arm choice for the public page: decided at M2, de-branded UR5e.
-- VC (M7): does OpenPLC Runtime v4 accept a plain `.st` upload, or does the program need the OpenPLC Editor to build? Fallback if the v4 Windows runtime does not hold up: Beremiz, as an external tool.
+- VC (M7): ~~does OpenPLC Runtime v4 accept a plain `.st` upload?~~ Answered 2026-10-22: no; the OpenPLC Editor v4 (GPL-3.0, tool only) compiles and uploads the program. Fallback if the v4 Windows runtime does not hold up: Beremiz, as an external tool.
 - VC (M8): one VC clip, or a VC segment added to the PdM video? Suggested: a separate clip, so each page section has its own.
 - Quest 3 view (later): pass-through tabletop twin or room-scale? Only decide after M6 ships.

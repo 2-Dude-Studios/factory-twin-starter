@@ -77,6 +77,12 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath LinePartsPerHour = new TopicPath("line", "parts_per_hour");
         public static readonly TopicPath LinePartsLost = new TopicPath("line", "parts_lost");
 
+        // Soft PLC link (M7). Which logic runs the line: a LogicSource value (0 the in-Unity CellSequencer, 1 the
+        // soft PLC). Link is true while the PLC answers and its heartbeat moves; heartbeat is the PLC's scan counter.
+        public static readonly TopicPath PlcSource = new TopicPath("plc", "source");
+        public static readonly TopicPath PlcLink = new TopicPath("plc", "link");
+        public static readonly TopicPath PlcHeartbeat = new TopicPath("plc", "heartbeat");
+
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }
