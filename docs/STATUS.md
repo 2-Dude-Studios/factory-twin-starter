@@ -147,7 +147,7 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 
   Recovery times on the PLC: CNC fault held in 0.6 s and ran 0.5 s after clearing; PLC link loss held in 0.5 s and ran 0.1 s after the link came back; arm not ready stalled after 17.2 s (15 s transfer timeout) and ran 0.4 s after the jam was cleared. In 3D the bug shows as parts queued nose-to-tail on the infeed into the pick station, parts out stuck at 1 and parts/h falling (210 → 150).
 - [x] **M8 exit met (2026-10-23).**
-- [ ] The runtime still has `cell_buggy.st` loaded: reopening the Editor project dropped its session, so uploading `cell.st` back needs your runtime login. `main.st` in the Editor project already holds `cell.st` again.
+- [x] `cell.st` is back on the runtime (2026-10-23, after you logged the Editor in again). Checked over Modbus with Unity stopped: with a part at the gate and the arm busy the infeed stays off, and it restarts only once the arm is done, which is `cell.st`'s behaviour, not the seeded bug's.
 - [ ] Noted for M9: OpenPLC's Runtime Status showed a high average latency (about 0.3 s) and many overruns after the PLC was stopped and started; the heartbeat and the suite were unaffected. In the Game view, the dashboard's Scenarios block overlaps the line KPIs at 1920×1080; check before capture. The panel's program label now refreshes when a run starts.
 
 ## M9 — VC capture (exit: the VC clip is captured from the project and approved)
