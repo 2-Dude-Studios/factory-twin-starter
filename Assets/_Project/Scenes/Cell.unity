@@ -12385,6 +12385,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4510561a5941c7f44957abd595286802, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin.Realvirtual::TwoDude.FactoryTwin.Twin.PartGripper
+  context: {fileID: 1633254721}
   pickSensor: {fileID: 1748521216}
   attachPoint: {fileID: 284297858}
   gripCommand: {fileID: 549612116}
@@ -14065,6 +14066,77 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 731240936496484136, guid: 8dfb8d3fb309999439f123987705c22a, type: 3}
   m_PrefabInstance: {fileID: 4679068874560504670}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &345763970
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 345763971}
+  - component: {fileID: 345763972}
+  - component: {fileID: 345763973}
+  m_Layer: 0
+  m_Name: Commissioning
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &345763971
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 345763970}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &345763972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 345763970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: cbb7e341325ec8f4eb76c8ab6e15ce49, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: e9e3419ba314ab54bb2f20739c3d4e05, type: 3}
+  m_SortingOrder: 1
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
+--- !u!114 &345763973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 345763970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85b8825ff3d944f41a8ecee641b19890, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.UI::TwoDude.FactoryTwin.UI.CommissioningPanel
+  document: {fileID: 345763972}
+  context: {fileID: 1633254721}
+  suite: {fileID: 1633254729}
 --- !u!1 &357850842
 GameObject:
   m_ObjectHideFlags: 8
@@ -28591,6 +28663,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin.Realvirtual::TwoDude.FactoryTwin.Twin.ArmSignalBridge
   arm: {fileID: 845437398}
+  context: {fileID: 1633254721}
   pickCommand: {fileID: 1166002431}
   busy: {fileID: 89157544}
   gripCommand: {fileID: 549612116}
@@ -49311,6 +49384,9 @@ GameObject:
   - component: {fileID: 1633254724}
   - component: {fileID: 1633254725}
   - component: {fileID: 1633254726}
+  - component: {fileID: 1633254727}
+  - component: {fileID: 1633254728}
+  - component: {fileID: 1633254729}
   m_Layer: 0
   m_Name: Cell
   m_TagString: Untagged
@@ -49505,6 +49581,52 @@ MonoBehaviour:
   errors: 0
   roundTripMs: 0
   lastError: 
+--- !u!114 &1633254727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1633254719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d467a5483f940a488ad5e67b6af20ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.SimClockReporter
+  context: {fileID: 1633254721}
+  tolerance: 0.1
+  realtimeRatio: 1
+--- !u!114 &1633254728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1633254719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05de1dfc7cfc69d4ab586ad674fa463e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.SignalForcer
+  context: {fileID: 1633254721}
+--- !u!114 &1633254729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1633254719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0dfd208668890c248a3bb35e31a61772, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.CommissioningSuite
+  context: {fileID: 1633254721}
+  programLabel: cell.st
+  settleTimeoutSeconds: 40
+  current: 
+  passed: 0
+  failed: 0
 --- !u!1001 &1633362769
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -51527,7 +51649,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1716740455877600278, guid: f01c8336aca412747874cb1309912a0d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1748521217}
   m_SourcePrefab: {fileID: 100100000, guid: f01c8336aca412747874cb1309912a0d, type: 3}
 --- !u!4 &1748521214 stripped
 Transform:
@@ -51550,6 +51675,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 881d8a02f378ecf4192c21f15580d42d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1748521217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1748521215}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6589d1c28f8727a45bce9b0bf5eeb85c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin.Realvirtual::TwoDude.FactoryTwin.Twin.JamClearer
+  context: {fileID: 1633254721}
+  gateSensor: {fileID: 1748521216}
+  dissolveSeconds: 0.3
 --- !u!1001 &1753608685
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -64256,3 +64396,4 @@ SceneRoots:
   - {fileID: 2005897827}
   - {fileID: 1136391612}
   - {fileID: 289633461}
+  - {fileID: 345763971}

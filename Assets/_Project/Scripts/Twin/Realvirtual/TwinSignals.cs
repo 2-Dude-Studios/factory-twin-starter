@@ -70,6 +70,8 @@ namespace TwoDude.FactoryTwin.Twin
                 Watched watched = _watched[i];
                 if (!TryRead(watched.Signal, out SignalValue value))
                     continue;
+                if (watched.Signal.IsInput())
+                    value = context.Forces.Resolve(watched.Topic, value);
                 if (watched.HasValue && !Changed(watched.Last, value))
                     continue;
 

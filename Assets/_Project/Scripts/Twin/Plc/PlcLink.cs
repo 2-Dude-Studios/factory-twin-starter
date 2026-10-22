@@ -53,6 +53,7 @@ namespace TwoDude.FactoryTwin.Twin
         private int _seenSeq;
 
         private bool _holding;
+        private bool _simulatingLoss;
         private bool _lastLink;
         private bool _linkPublished;
 
@@ -96,6 +97,7 @@ namespace TwoDude.FactoryTwin.Twin
             TwinConfig config = context.Config;
             _poller = new Poller(this, config.PlcHost, config.PlcPort, config.PlcUnitId, config.PlcIoTimeoutMs,
                 Mathf.Max(1, Mathf.RoundToInt(1000f / config.PlcPollHz)));
+            _poller.Paused = _simulatingLoss;
             _watchdog.Reset();
         }
 
@@ -117,6 +119,13 @@ namespace TwoDude.FactoryTwin.Twin
         private void FixedUpdate()
         {
             double now = Time.realtimeSinceStartupAsDouble;
+            bool loss = _bus.TryGetLast(CellTopics.PlcSimulateLoss, out SignalMessage lossMessage) && lossMessage.Value.AsNumber != 0d;
+            if (loss != _simulatingLoss)
+            {
+                _simulatingLoss = loss;
+                if (_poller != null)
+                    _poller.Paused = loss;
+            }
             _image.FillWriteBlock(_writeScratch, _readBus, (ushort)now);
             lock (_gate)
                 Array.Copy(_writeScratch, _writeShared, _writeScratch.Length);
@@ -215,6 +224,15 @@ namespace TwoDude.FactoryTwin.Twin
             private readonly Thread _thread;
             private volatile bool _running = true;
 
+            private volatile bool _paused;
+
+            /// <summary>Commissioning stimulus: while true the thread stops talking to the PLC, as if the link were cut.</summary>
+            public bool Paused
+            {
+                get => _paused;
+                set => _paused = value;
+            }
+
             public Poller(PlcLink owner, string host, int port, byte unitId, int timeoutMs, int periodMs)
             {
                 _owner = owner;
@@ -244,6 +262,11 @@ namespace TwoDude.FactoryTwin.Twin
                 while (_running)
                 {
                     clock.Restart();
+                    if (_paused)
+                    {
+                        Sleep(_periodMs);
+                        continue;
+                    }
                     try
                     {
                         if (!_client.IsConnected)

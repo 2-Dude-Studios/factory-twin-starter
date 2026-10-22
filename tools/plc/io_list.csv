@@ -1,0 +1,14 @@
+tag,iec_address,modbus_area,modbus_address,direction,type,topic,description
+part_at_gate,%MW0,holding register,1024,input (twin → PLC),BOOL,cell/gate1/part_present,Light barrier in front of the pick station
+arm_busy,%MW1,holding register,1025,input (twin → PLC),BOOL,cell/arm/busy,Arm acknowledges the pick and is moving
+part_at_exit,%MW2,holding register,1026,input (twin → PLC),BOOL,cell/outfeed/part_exit,Exit sensor at the end of the outfeed
+press_health,%MW3,holding register,1027,input (twin → PLC),UINT,cell/press/health,"Press health: 0 ok, 1 warning, 2 fault (holds the line)"
+infeed_run,%QX0.0,coil,0,output (PLC → twin),BOOL,cell/infeed/drive_fwd,Infeed conveyor runs forward
+outfeed_run,%QX0.1,coil,1,output (PLC → twin),BOOL,cell/outfeed/drive_fwd,Outfeed conveyor runs forward
+pick_cmd,%QX0.2,coil,2,output (PLC → twin),BOOL,cell/arm/pick_cmd,Pick the part at the gate (rising edge)
+line_stalled,%QX0.3,coil,3,output (PLC → twin),BOOL,cell/line/stalled,A transfer did not finish in time
+line_state,%QW0,holding register,0,output (PLC → twin),UINT,cell/line/state,"0 feeding, 1 transferring, 2 stalled, 3 held"
+plc_heartbeat,%QW1,holding register,1,output (PLC → twin),UINT,cell/plc/heartbeat,Scan counter; the twin holds the line if it stops
+parts_out,%QW2,holding register,2,output (PLC → twin),UINT,cell/line/parts_out,Parts that left the cell
+cycle_time_cs,%QW3,holding register,3,output (PLC → twin),UINT ×0.01,cell/line/cycle_time_s,Seconds between the last two parts out (register in 1/100 s)
+twin_heartbeat,%MW4,holding register,1028,input (twin → PLC),UINT,,Counts up once a second; the PLC holds the line if it stops for 3 s

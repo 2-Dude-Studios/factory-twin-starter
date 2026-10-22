@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M8 — Commissioning suite (build plan Rev 4, virtual commissioning). M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
+**Current milestone:** M9 — VC capture (build plan Rev 4, virtual commissioning). M8 and M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
 **Last updated:** 2026-10-23
 
 ## Done
@@ -128,10 +128,27 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 - [x] **Soak (2026-10-23):** 743.8 s with `cell/plc/source` = 1 and `CellSequencer` standing aside. 109 parts counted (532.7 parts/h; M2: about 516, so +3.2 %), 8–9 parts every minute except one, **0 stalls** (line state only 0 and 1, `line/stalled` never true), PLC heartbeat never quiet for more than 0.27 s, 0 console errors.
 - [x] **PLC-stop test:** Stop PLC in the Editor. The runtime zeroes its outputs, so the outfeed stopped 0.33 s after the click (the infeed was already stopped mid-pick); `PlcLink`'s watchdog set `plc/link` false and the line state to held 0.85 s after the click. Start PLC: link back and line running 0.17 s later. The PLC's `parts_out` restarts from 1 after a stop (its counters are not retained).
 - [x] **M7 exit met (2026-10-23).**
-- [ ] **Open finding for M8:** at 507–516 s into the soak, the gate sensor flickered and the PLC issued 14 picks about 0.5 s apart. The arm answered each with a 0.3–0.5 s busy pulse (grip closes, opens, nothing held), and the exit sensor gave 6 short pulses, so about 4 of the 109 counted parts are probably not real. It cleared by itself after 12 s. It looks like a part sitting badly at the gate, not a link fault, but that is not proven. The M8 suite runs the same scenarios against both logic sources, so it is the place to reproduce it and see whether `CellSequencer` does the same.
+- [x] **Finding from the soak, followed up in M8 (2026-10-23):** at 507–516 s the gate flickered and the PLC issued 14 picks about 0.5 s apart. Every duration in that window (arm busy, grip closed, gate and exit pulses) shrank by the same factor, about 5–10×, which points to simulated time briefly running ahead of wall-clock time (a time-scale change or the frame loop catching up), not to a logic fault; the parts counted were probably real. Not reproduced in a 21-minute rerun (10.5 min on `CellSequencer`: 514 parts/h; 10.5 min on the PLC: 516 parts/h; 0 stalls on either; simulated time within 0.998–1.002 of wall-clock). `cell/sim/realtime_ratio` now shows any repeat, and every suite scenario fails if it leaves ±10 %. The soak's 533 parts/h was inflated by the burst; the clean figure is 516.
 
 ## M8 — Commissioning suite (exit: the suite passes against both logic sources; the bugged program fails a named test, visible in 3D)
-- [ ] Not started.
+- [x] **Simulation clock:** `SimClock` (pure, 4 tests) and `SimClockReporter` on `Cell` publish `cell/sim/time_scale` and `cell/sim/realtime_ratio` (simulated seconds per wall-clock second, once a second), and warn while the PLC runs the line if the ratio leaves ±10 %.
+- [x] **Stimuli:** a force table (`SignalForces` on `CellContext`, applied by `TwinSignals` to inputs, set by `SignalForcer` from `cell/gate1/force`: 0 none, 1 off, 2 on), `cell/arm/inhibit` (`ArmSignalBridge` ignores picks), `cell/arm/drop_part` (`PartGripper` lets go), `cell/gate1/clear` (`JamClearer` on `Cell/Gate1` removes the part in the gate, as an operator clearing a jam), `cell/plc/simulate_loss` (`PlcLink` stops talking to the PLC).
+- [x] **Suite:** `CommissioningScenarios` (six scenarios as data), `ScenarioCheck` (never / within / parts-out checks with a grace time), `ScenarioRun` (pure engine), `CommissioningSuite` on `Cell` (starts on `cell/vc/run` = 1, waits for a running line before each scenario, publishes `cell/vc/test` and `cell/vc/result`, writes `Builds/Commissioning/vc_<source>_<time>.csv`). Every scenario also checks two interlocks (infeed stops for a part at the gate; infeed stops while the arm works) and that the plant ran in real time. 24 new EditMode tests; 225/225 of the project's pass in the Editor.
+- [x] **Commissioning panel:** `Commissioning.uxml`/`.uss` and `CommissioningPanel` on a `Commissioning` UIDocument (same panel settings as the dashboard, sorting order 1): six rows with status chips, logic source, program, summary and a Run tests button. The dashboard and event log now say "Stopped — PLC link lost" / "PLC link lost" / "PLC link back" / which logic source runs the line.
+- [x] **I/O list:** Tools > Factory Twin > Export PLC I-O List writes `tools/plc/io_list.csv` (13 rows: tag, IEC address, Modbus area and address, direction, type, topic, description).
+- [x] **Seeded bug:** `tools/plc/cell_buggy.st` differs from `cell.st` in one line: the infeed restarts once the arm acknowledges the pick. `sync_project.py cell_buggy.st <project>` loads it.
+- [x] **Results (2026-10-23):**
+
+| Logic source | Program | Result |
+|---|---|---|
+| Unity `CellSequencer` | — | 5 passed, PLC link lost n/a |
+| Soft PLC | `cell.st` | 6 of 6 passed |
+| Soft PLC | `cell_buggy.st` | all 6 failed; Normal run fails "Interlock: infeed stops while the arm works" from 1.5 s, and 0 of 6 parts left the cell in 60 s |
+
+  Recovery times on the PLC: CNC fault held in 0.6 s and ran 0.5 s after clearing; PLC link loss held in 0.5 s and ran 0.1 s after the link came back; arm not ready stalled after 17.2 s (15 s transfer timeout) and ran 0.4 s after the jam was cleared. In 3D the bug shows as parts queued nose-to-tail on the infeed into the pick station, parts out stuck at 1 and parts/h falling (210 → 150).
+- [x] **M8 exit met (2026-10-23).**
+- [ ] The runtime still has `cell_buggy.st` loaded: reopening the Editor project dropped its session, so uploading `cell.st` back needs your runtime login. `main.st` in the Editor project already holds `cell.st` again.
+- [ ] Noted for M9: OpenPLC's Runtime Status showed a high average latency (about 0.3 s) and many overruns after the PLC was stopped and started; the heartbeat and the suite were unaffected. In the Game view, the dashboard's Scenarios block overlaps the line KPIs at 1920×1080; check before capture. The panel's program label now refreshes when a run starts.
 
 ## M9 — VC capture (exit: the VC clip is captured from the project and approved)
 - [ ] Not started.

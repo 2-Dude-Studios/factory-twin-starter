@@ -7,12 +7,14 @@ namespace TwoDude.FactoryTwin.Twin
     /// <summary>
     /// Pick station: wires the arm to realvirtual signals, keeping signals the only bridge between the 3D arm
     /// and the data spine. Reads the pick command, reports busy and the six joint angles, and drives the
-    /// gripper's command signal.
+    /// gripper's command signal. While cell/arm/inhibit is set (a commissioning stimulus) the arm ignores pick
+    /// commands, as an arm that is not ready would.
     /// </summary>
     [DefaultExecutionOrder(50)]
     public sealed class ArmSignalBridge : MonoBehaviour
     {
         [SerializeField] private ArmController arm;
+        [SerializeField] private CellContext context;
 
         [Header("Signals")]
         [SerializeField] private PLCOutputBool pickCommand;
@@ -22,10 +24,13 @@ namespace TwoDude.FactoryTwin.Twin
 
         private bool _lastCommand;
 
+        private bool Inhibited() =>
+            context != null && context.Bus.TryGetLast(CellTopics.ArmInhibit, out SignalMessage m) && m.Value.AsNumber != 0d;
+
         private void FixedUpdate()
         {
             bool commanded = pickCommand != null && pickCommand.Value;
-            if (commanded && !_lastCommand)
+            if (commanded && !_lastCommand && !Inhibited())
                 arm.RequestPick();
             _lastCommand = commanded;
 

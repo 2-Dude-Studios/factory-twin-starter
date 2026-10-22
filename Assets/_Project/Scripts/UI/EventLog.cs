@@ -83,6 +83,18 @@ namespace TwoDude.FactoryTwin.UI
                 return;
             _last[topic] = value;
 
+            if (topic == CellTopics.PlcSource)
+            {
+                if (seen || value != 0d)
+                    Add(message.UnixMs, value >= 0.5d ? "Soft PLC runs the line" : "Unity sequencer runs the line", LogSeverity.Info);
+                return;
+            }
+            if (topic == CellTopics.PlcLink)
+            {
+                if (seen && PlcRunsLine())
+                    Add(message.UnixMs, value != 0d ? "PLC link back" : "PLC link lost", value != 0d ? LogSeverity.Info : LogSeverity.Fault);
+                return;
+            }
             if (topic == CellTopics.LinkConnected)
             {
                 Add(message.UnixMs, value != 0d ? "Broker connected" : "Broker disconnected",
@@ -125,12 +137,16 @@ namespace TwoDude.FactoryTwin.UI
         private void LogLineState(CellState from, CellState to, long unixMs)
         {
             if (to == CellState.Held)
-                Add(unixMs, "Line stopped: CNC fault", LogSeverity.Fault);
+                Add(unixMs, PlcRunsLine() && !PlcLinkUp() ? "Line stopped: PLC link lost" : "Line stopped: CNC fault", LogSeverity.Fault);
             else if (to == CellState.Stalled)
                 Add(unixMs, "Line stalled: part not picked", LogSeverity.Warning);
             else if (from == CellState.Held || from == CellState.Stalled)
                 Add(unixMs, "Line running again", LogSeverity.Info);
         }
+
+        private bool PlcRunsLine() => _last.TryGetValue(CellTopics.PlcSource, out double source) && source >= 0.5d;
+
+        private bool PlcLinkUp() => !_last.TryGetValue(CellTopics.PlcLink, out double link) || link != 0d;
 
         // The press station is shown as a CNC machining centre (topics stay cell/press/*).
         // A failure is logged once, when the press's health turns to Fault, naming every mode active at that moment.

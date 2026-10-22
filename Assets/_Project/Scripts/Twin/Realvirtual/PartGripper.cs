@@ -6,10 +6,12 @@ namespace TwoDude.FactoryTwin.Twin
     /// <summary>
     /// Pick station: the arm's gripper. On a closing command it fixes the part standing in the gate sensor to
     /// the tool flange; on opening it releases the part onto whatever is below. Mirrors how a real vacuum
-    /// gripper reacts to a PLC output.
+    /// gripper reacts to a PLC output. A rising edge on cell/arm/drop_part (a commissioning stimulus) makes it let
+    /// go of the part wherever the arm is.
     /// </summary>
     public sealed class PartGripper : MonoBehaviour
     {
+        [SerializeField] private CellContext context;
         [SerializeField] private Sensor pickSensor;
         [SerializeField] private Transform attachPoint;
         [SerializeField] private PLCOutputBool gripCommand;
@@ -18,6 +20,8 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField, Min(0.01f)] private float maxGripDistance = 0.2f;
 
         private MU _part;
+        private bool _lastDrop;
+        private bool _dropped;
 
         /// <summary>True while a part is attached to the flange.</summary>
         public bool IsHolding => _part != null;
@@ -25,6 +29,21 @@ namespace TwoDude.FactoryTwin.Twin
         private void FixedUpdate()
         {
             bool close = gripCommand != null && gripCommand.Value;
+            bool drop = context != null && context.Bus.TryGetLast(CellTopics.ArmDropPart, out SignalMessage m) && m.Value.AsNumber != 0d;
+            if (drop && !_lastDrop && _part != null)
+            {
+                Debug.Log($"[PartGripper] Dropped {_part.name}.", this);
+                Release();
+                _dropped = true;
+            }
+            _lastDrop = drop;
+            // After a drop, wait for the arm to open the gripper before it may grip again.
+            if (_dropped)
+            {
+                if (!close)
+                    _dropped = false;
+                close = false;
+            }
 
             if (close && _part == null)
                 TryGrip();

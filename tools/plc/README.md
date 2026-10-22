@@ -34,3 +34,8 @@ The twin writes only holding registers: Modbus cannot write `%IX` inputs.
 A quick check without Unity: holding registers 0–3 should show the state and a heartbeat that counts up about 50 times a second (20 ms task). With Unity stopped, the state is 3 (held), because the twin's heartbeat is missing.
 
 If the PLC's heartbeat stops for longer than `TwinConfig`'s watchdog time (0.5 s) while it runs the line, the twin stops both conveyors. If the twin's heartbeat stops for 3 s, the PLC holds the line itself.
+
+## Commissioning suite (M8)
+
+In Play, publish `cell/vc/run` = 1 (or press Run tests on the Commissioning panel). The suite runs six scenarios against whichever logic source runs the line and writes `Builds/Commissioning/vc_<source>_<time>.csv`. To show the bug being caught: `python sync_project.py cell_buggy.st <project dir>`, reopen the project in the Editor (it does not always reload `main.st` by itself), Build and upload, run the suite, then put `cell.st` back the same way. The I/O list is `io_list.csv` (Tools > Factory Twin > Export PLC I-O List).
+

@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="Dashboard.uss" />
+    <Style src="Commissioning.uss" />
+    <ui:VisualElement name="commissioning" class="dashboard" picking-mode="Ignore">
+        <ui:VisualElement name="vc-panel" class="panel vc-panel">
+            <ui:VisualElement class="panel__header">
+                <ui:VisualElement>
+                    <ui:Label text="VIRTUAL COMMISSIONING" class="eyebrow" />
+                    <ui:Label text="Acceptance tests" class="panel__title" />
+                </ui:VisualElement>
+                <ui:Label name="vc-source" text="Unity sequencer" class="chip link" />
+            </ui:VisualElement>
+            <ui:Label name="vc-program" text="Program: cell.st" class="footnote vc-program" />
+            <ui:VisualElement name="vc-rows" class="vc-rows" />
+            <ui:VisualElement class="vc-footer">
+                <ui:Label name="vc-summary" text="Not run yet" class="vc-summary" />
+                <ui:Button name="vc-run" text="Run tests" class="fault-button fault-button--key vc-run" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
