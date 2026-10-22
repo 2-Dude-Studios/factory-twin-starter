@@ -78,7 +78,10 @@
 
 /* Sections */
 
+/* Sections keep their content height; only the event log (below) gives way when the panel is short,
+   so on smaller screens the log scrolls instead of the line and scenario blocks overlapping. */
 .section {
+    flex-shrink: 0;
     padding: 12px 14px;
     margin-bottom: 10px;
     background-color: var(--surface);
@@ -293,7 +296,7 @@
 .section--log {
     flex-grow: 1;
     flex-shrink: 1;
-    min-height: 120px;
+    min-height: 60px;
 }
 
 .event-log {

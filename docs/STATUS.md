@@ -151,7 +151,10 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 - [ ] Noted for M9: OpenPLC's Runtime Status showed a high average latency (about 0.3 s) and many overruns after the PLC was stopped and started; the heartbeat and the suite were unaffected. In the Game view, the dashboard's Scenarios block overlaps the line KPIs at 1920×1080; check before capture. The panel's program label now refreshes when a run starts.
 
 ## M9 — VC capture (exit: the VC clip is captured from the project and approved)
-- [ ] Not started.
+- [x] Decided (2026-10-23, you): a separate VC clip of about 76 s; the PdM video (v02, 111 s) stays as it is.
+- [x] `CaptureRig/Shot6_PickStation`: a close-up of the gate's light barrier, the arm and the incoming infeed (looks at `CaptureRig/PickFocus`), registered as `ShotDirector` shot index 5 (no number key; takes and the Inspector cut to it).
+- [x] Dashboard overlap fixed: sections no longer shrink, only the event log gives way, so the line and scenario blocks stay apart on short screens. Checked at 1920×1080 and 1600×900.
+- [ ] Capture must run in real time: the PdM takes used Unity Recorder at a constant 60 fps, which slows simulated time (take A took about 3.5 minutes), and the soft PLC's timers count wall-clock time. VC takes need Recorder's variable frame rate, with `cell/sim/realtime_ratio` checked during each take.
 
 ## Manual steps pending
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Deletes are blocked for Claude; either delete them in the Hierarchy or add `gameobject_delete_batch` to the UnitySkills allowlist.

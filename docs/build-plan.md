@@ -168,5 +168,5 @@ As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) 
 - How the video shows "ignored vs acted on": two takes cut together, or a split screen of two runs with a parts-lost counter on each? Decide before the voiceover.
 - Arm choice for the public page: decided at M2, de-branded UR5e.
 - VC (M7): ~~does OpenPLC Runtime v4 accept a plain `.st` upload?~~ Answered 2026-10-22: no; the OpenPLC Editor v4 (GPL-3.0, tool only) compiles and uploads the program. Fallback if the v4 Windows runtime does not hold up: Beremiz, as an external tool.
-- VC (M8): one VC clip, or a VC segment added to the PdM video? Suggested: a separate clip, so each page section has its own.
+- VC (M9): ~~one VC clip, or a VC segment added to the PdM video?~~ Decided 2026-10-23: a separate clip of about 76 s; the approved 111 s PdM video stays as it is.
 - Quest 3 view (later): pass-through tabletop twin or room-scale? Only decide after M6 ships.
