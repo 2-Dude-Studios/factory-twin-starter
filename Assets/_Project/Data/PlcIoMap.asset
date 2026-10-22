@@ -1,0 +1,112 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 840e93f6749eea04c836425b9e39cab2, type: 3}
+  m_Name: PlcIoMap
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.PlcIoMap
+  twinHeartbeatAddress: 1028
+  points:
+  - topic: cell/gate1/part_present
+    area: 1
+    address: 1024
+    direction: 0
+    isBool: 1
+    scale: 1
+    plcName: part_at_gate
+    description: Light barrier in front of the pick station
+  - topic: cell/arm/busy
+    area: 1
+    address: 1025
+    direction: 0
+    isBool: 1
+    scale: 1
+    plcName: arm_busy
+    description: Arm acknowledges the pick and is moving
+  - topic: cell/outfeed/part_exit
+    area: 1
+    address: 1026
+    direction: 0
+    isBool: 1
+    scale: 1
+    plcName: part_at_exit
+    description: Exit sensor at the end of the outfeed
+  - topic: cell/press/health
+    area: 1
+    address: 1027
+    direction: 0
+    isBool: 0
+    scale: 1
+    plcName: press_health
+    description: 'Press health: 0 ok, 1 warning, 2 fault (holds the line)'
+  - topic: cell/infeed/drive_fwd
+    area: 0
+    address: 0
+    direction: 1
+    isBool: 1
+    scale: 1
+    plcName: infeed_run
+    description: Infeed conveyor runs forward
+  - topic: cell/outfeed/drive_fwd
+    area: 0
+    address: 1
+    direction: 1
+    isBool: 1
+    scale: 1
+    plcName: outfeed_run
+    description: Outfeed conveyor runs forward
+  - topic: cell/arm/pick_cmd
+    area: 0
+    address: 2
+    direction: 1
+    isBool: 1
+    scale: 1
+    plcName: pick_cmd
+    description: Pick the part at the gate (rising edge)
+  - topic: cell/line/stalled
+    area: 0
+    address: 3
+    direction: 1
+    isBool: 1
+    scale: 1
+    plcName: line_stalled
+    description: A transfer did not finish in time
+  - topic: cell/line/state
+    area: 1
+    address: 0
+    direction: 1
+    isBool: 0
+    scale: 1
+    plcName: line_state
+    description: 0 feeding, 1 transferring, 2 stalled, 3 held
+  - topic: cell/plc/heartbeat
+    area: 1
+    address: 1
+    direction: 1
+    isBool: 0
+    scale: 1
+    plcName: plc_heartbeat
+    description: Scan counter; the twin holds the line if it stops
+  - topic: cell/line/parts_out
+    area: 1
+    address: 2
+    direction: 1
+    isBool: 0
+    scale: 1
+    plcName: parts_out
+    description: Parts that left the cell
+  - topic: cell/line/cycle_time_s
+    area: 1
+    address: 3
+    direction: 1
+    isBool: 0
+    scale: 0.01
+    plcName: cycle_time_cs
+    description: Seconds between the last two parts out (register in 1/100 s)

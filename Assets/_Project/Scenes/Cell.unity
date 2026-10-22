@@ -49310,6 +49310,7 @@ GameObject:
   - component: {fileID: 1633254723}
   - component: {fileID: 1633254724}
   - component: {fileID: 1633254725}
+  - component: {fileID: 1633254726}
   m_Layer: 0
   m_Name: Cell
   m_TagString: Untagged
@@ -49439,6 +49440,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.CellSequencer
   context: {fileID: 1633254721}
+  plcLink: {fileID: 1633254726}
   ackTimeoutSeconds: 2
   transferTimeoutSeconds: 15
   state: 0
@@ -49482,6 +49484,27 @@ MonoBehaviour:
   rateWindowSeconds: 120
   partsPerHour: 0
   partsLost: 0
+--- !u!114 &1633254726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1633254719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39091da783abc714d81022e9cd6e43d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.PlcLink
+  context: {fileID: 1633254721}
+  ioMap: {fileID: 11400000, guid: 8965c5b456a73d247aeb26b6b9d181b0, type: 2}
+  startSource: 0
+  source: 0
+  linkUp: 0
+  replies: 0
+  errors: 0
+  roundTripMs: 0
+  lastError: 
 --- !u!1001 &1633362769
 PrefabInstance:
   m_ObjectHideFlags: 0
