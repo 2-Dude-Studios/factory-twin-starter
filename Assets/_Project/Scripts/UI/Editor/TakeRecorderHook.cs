@@ -9,8 +9,10 @@ namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
     /// Capture tools (Editor): records each take the <see cref="TakeSequencer"/> plays to its own MP4 with Unity
-    /// Recorder: Game View at 1920×1080, constant 60 fps (game time follows the frames, so the video is smooth however
-    /// fast the Editor renders), H.264 high quality, with audio. Files go to Builds/Recordings/ (git-ignored).
+    /// Recorder: Game View at 1920×1080, H.264 high quality, with audio. PdM takes record at a constant 60 fps (game
+    /// time follows the frames, so the video is smooth however fast the Editor renders). VC takes record at a variable
+    /// rate capped at 60 fps, so game time follows the wall clock the soft PLC counts in. Files go to
+    /// Builds/Recordings/ (git-ignored).
     /// </summary>
     [InitializeOnLoad]
     internal static class TakeRecorderHook
@@ -74,14 +76,15 @@ namespace TwoDude.FactoryTwin.UI
             settings.AddRecorderSettings(movie);
             settings.SetRecordModeToManual();
             settings.FrameRate = FrameRate;
-            settings.FrameRatePlayback = FrameRatePlayback.Constant;
+            bool realTime = TakeSequencer.IsRealTimeTake(take);
+            settings.FrameRatePlayback = realTime ? FrameRatePlayback.Variable : FrameRatePlayback.Constant;
             settings.CapFrameRate = true;
 
             _controller = new RecorderController(settings);
             _controller.PrepareRecording();
             bool started = _controller.StartRecording();
             Debug.Log(started
-                ? $"[TakeRecorder] Recording take {take} to {_outputFile}.mp4 ({Width}×{Height}, {FrameRate} fps, audio)."
+                ? $"[TakeRecorder] Recording take {take} to {_outputFile}.mp4 ({Width}×{Height}, {(realTime ? "variable, up to " : "")}{FrameRate} fps, audio)."
                 : $"[TakeRecorder] Recorder did not start for take {take}; see the Recorder's errors above.");
         }
 

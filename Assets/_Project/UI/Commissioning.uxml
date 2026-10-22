@@ -11,6 +11,10 @@
                 <ui:Label name="vc-source" text="Unity sequencer" class="chip link" />
             </ui:VisualElement>
             <ui:Label name="vc-program" text="Program: cell.st" class="footnote vc-program" />
+            <ui:VisualElement name="vc-code" class="vc-code hidden">
+                <ui:Label name="vc-code-file" text="cell.st" class="vc-code__file" />
+                <ui:Label name="vc-code-line" text="infeed_run := state = FEEDING;" class="vc-code__line" />
+            </ui:VisualElement>
             <ui:VisualElement name="vc-rows" class="vc-rows" />
             <ui:VisualElement class="vc-footer">
                 <ui:Label name="vc-summary" text="Not run yet" class="vc-summary" />

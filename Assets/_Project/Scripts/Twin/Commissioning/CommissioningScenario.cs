@@ -76,6 +76,30 @@ namespace TwoDude.FactoryTwin.Twin
         public bool IsDone { get; private set; }
         public IReadOnlyList<ScenarioCheck> Checks => _checks;
 
+        /// <summary>True as soon as any check has failed, before the scenario ends.</summary>
+        public bool AnyFailed
+        {
+            get
+            {
+                foreach (ScenarioCheck check in _checks)
+                {
+                    if (check.Outcome == CheckOutcome.Failed)
+                        return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>Ends the scenario now: every pending check is settled as if the scenario had run out of time.</summary>
+        public void FinishNow()
+        {
+            if (IsDone)
+                return;
+            foreach (ScenarioCheck check in _checks)
+                check.Finish(Elapsed);
+            IsDone = true;
+        }
+
         /// <summary>Passed only if every check passed; meaningful once <see cref="IsDone"/>.</summary>
         public bool Passed
         {

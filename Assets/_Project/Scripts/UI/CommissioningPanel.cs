@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using TwoDude.FactoryTwin.Twin;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,8 +9,9 @@ namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
     /// Commissioning: shows the acceptance suite in Commissioning.uxml. One row per scenario with its status, the
-    /// logic source and program under test, a summary line and a Run button. Reads the suite's events and the
-    /// logic source from the bus; it never drives the line itself.
+    /// logic source and program under test, a summary line and a Run button, plus a code card with the program's
+    /// infeed interlock, read from tools/plc/&lt;program&gt; in the Editor. Reads the suite's events and the logic
+    /// source from the bus; it never drives the line itself.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class CommissioningPanel : MonoBehaviour
@@ -25,6 +27,9 @@ namespace TwoDude.FactoryTwin.UI
         private Label _source;
         private Label _summary;
         private Label _program;
+        private VisualElement _code;
+        private Label _codeFile;
+        private Label _codeLine;
         private Button _run;
         private IDisposable _sourceSubscription;
         private int _passed;
@@ -44,11 +49,15 @@ namespace TwoDude.FactoryTwin.UI
             _summary = root.Q<Label>("vc-summary");
             _program = root.Q<Label>("vc-program");
             _run = root.Q<Button>("vc-run");
+            _code = root.Q("vc-code");
+            _codeFile = root.Q<Label>("vc-code-file");
+            _codeLine = root.Q<Label>("vc-code-line");
             _program.text = "Program: " + suite.ProgramLabel;
             BuildRows(root.Q("vc-rows"));
 
             _run.clicked += suite.Run;
             suite.SuiteStarted += OnSuiteStarted;
+            suite.ScenarioStarted += OnScenarioStarted;
             suite.ScenarioFinished += OnScenarioFinished;
             suite.SuiteFinished += OnSuiteFinished;
             _sourceSubscription = context.Bus.Subscribe(CellTopics.PlcSource.ToString(), m => ShowSource(m.Value.AsNumber >= 0.5d));
@@ -62,6 +71,7 @@ namespace TwoDude.FactoryTwin.UI
             if (suite != null)
             {
                 suite.SuiteStarted -= OnSuiteStarted;
+                suite.ScenarioStarted -= OnScenarioStarted;
                 suite.ScenarioFinished -= OnScenarioFinished;
                 suite.SuiteFinished -= OnSuiteFinished;
             }
@@ -96,8 +106,44 @@ namespace TwoDude.FactoryTwin.UI
                 row.Show(0, string.Empty);
             _summary.text = "Running…";
             _run.SetEnabled(false);
-            if (_rows.Count > 0)
-                _rows[0].Show(1, string.Empty);
+        }
+
+        private void OnScenarioStarted(int index)
+        {
+            if (index >= 1 && index <= _rows.Count)
+                _rows[index - 1].Show(1, string.Empty);
+        }
+
+        /// <summary>Shows or hides the code card with the loaded program's infeed interlock line.</summary>
+        public void ShowCode(bool show)
+        {
+            if (_code == null)
+                return;
+            if (show)
+                FillCode();
+            _code.EnableInClassList("hidden", !show);
+        }
+
+        // The card quotes the real file, so what the video shows is what the PLC runs. Only the Editor has tools/.
+        private void FillCode()
+        {
+            string label = suite.ProgramLabel;
+            _program.text = "Program: " + label;
+            string path = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", "tools", "plc", label);
+            _codeFile.text = label;
+            _codeLine.text = "(program file not found)";
+            if (!File.Exists(path))
+                return;
+            string[] lines = File.ReadAllLines(path);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (!line.StartsWith("infeed_run :=", StringComparison.Ordinal))
+                    continue;
+                _codeFile.text = $"{label} · line {i + 1}";
+                _codeLine.text = line;
+                return;
+            }
         }
 
         private void OnScenarioFinished(ScenarioResult result)
@@ -113,13 +159,12 @@ namespace TwoDude.FactoryTwin.UI
                 _passed++;
             else if (status == 3)
                 _failed++;
-            if (i + 1 < _rows.Count)
-                _rows[i + 1].Show(1, string.Empty);
         }
 
         private void OnSuiteFinished(string reportPath)
         {
-            _summary.text = _failed == 0 ? $"All {_passed} passed" : $"{_failed} failed, {_passed} passed";
+            _summary.text = suite.StoppedEarly ? "Failed: stopped at the first failure"
+                : _failed == 0 ? $"All {_passed} passed" : $"{_failed} failed, {_passed} passed";
             _run.SetEnabled(true);
         }
 

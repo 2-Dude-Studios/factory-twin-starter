@@ -137,6 +137,29 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void FinishNow_EndsTheRunAndSettlesPendingChecks()
+        {
+            var scenario = new CommissioningScenario("s", "", 60d, null,
+                new[]
+                {
+                    ScenarioCheck.Never("no hold", 0d, 60d, c => c.State == CellState.Held, 0d),
+                    ScenarioCheck.PartsOut("six parts", 0d, 60d, 6),
+                });
+            var run = new ScenarioRun(scenario);
+            var due = new List<ScenarioAction>();
+            var held = new CellSnapshot(false, false, false, false, false, CellState.Held, 0);
+            run.Tick(0.5d, held, due);
+            run.Tick(0.5d, held, due);
+
+            Assert.IsTrue(run.AnyFailed);
+            Assert.IsFalse(run.IsDone);
+            run.FinishNow();
+            Assert.IsTrue(run.IsDone);
+            Assert.IsFalse(run.Passed);
+            Assert.IsTrue(run.Checks.All(c => c.Outcome != CheckOutcome.Pending));
+        }
+
+        [Test]
         public void TwoRunsOfOneScenario_DoNotShareCheckState()
         {
             var scenario = new CommissioningScenario("s", "", 1d, null,

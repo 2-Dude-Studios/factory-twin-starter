@@ -11131,7 +11131,7 @@ MonoBehaviour:
     m_Value: 0
   OutputChannel: 1
   StandbyUpdate: 2
-  m_StreamingVersion: 0
+  m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   Target:
     TrackingTarget: {fileID: 1215998415}
@@ -12581,6 +12581,10 @@ MonoBehaviour:
   context: {fileID: 1633254721}
   takeControls: {fileID: 1136391616}
   shotDirector: {fileID: 289633462}
+  suite: {fileID: 1633254729}
+  commissioningPanel: {fileID: 345763973}
+  commissioningDocument: {fileID: 345763972}
+  dashboardDocument: {fileID: 1136391613}
   takes: ABC
   warmUpSeconds: 150
   preRollSeconds: 12

@@ -8,7 +8,8 @@ namespace TwoDude.FactoryTwin.Twin
     /// <summary>
     /// Commissioning: runs the acceptance suite against whichever logic source runs the line. Starts on
     /// cell/vc/run = 1 (or <see cref="Run"/>), waits for the line to run before each scenario, plays its stimuli
-    /// on the bus and grades its checks. Publishes the scenario under test on cell/vc/test (1-based, 0 when idle)
+    /// on the bus and grades its checks. cell/vc/run = 2 stops at the first failed check, as an engineer would
+    /// on site, so the failure shows within seconds. Publishes the scenario under test on cell/vc/test (1-based, 0 when idle)
     /// and each outcome on cell/vc/result, and writes a CSV report to Builds/Commissioning.
     /// </summary>
     [DefaultExecutionOrder(150)]
@@ -35,9 +36,13 @@ namespace TwoDude.FactoryTwin.Twin
         private ScenarioRun _run;
         private double _settling = -1d;
         private LogicSource _source;
+        private bool _stopAtFirstFailure;
 
         /// <summary>Raised when a run starts, with its logic source.</summary>
         public event Action<LogicSource> SuiteStarted;
+
+        /// <summary>Raised when a scenario starts playing (after the line has settled), with its 1-based index.</summary>
+        public event Action<int> ScenarioStarted;
 
         /// <summary>Raised as each scenario finishes (passed, failed, not applicable or not run).</summary>
         public event Action<ScenarioResult> ScenarioFinished;
@@ -46,7 +51,15 @@ namespace TwoDude.FactoryTwin.Twin
         public event Action<string> SuiteFinished;
 
         public IReadOnlyList<CommissioningScenario> Scenarios => _scenarios;
-        public string ProgramLabel => programLabel;
+        /// <summary>The PLC program under test, as written in the report; set it when a different program is loaded.</summary>
+        public string ProgramLabel
+        {
+            get => programLabel;
+            set => programLabel = value ?? string.Empty;
+        }
+
+        /// <summary>True if the last run ended at its first failure rather than running every scenario.</summary>
+        public bool StoppedEarly => _stopAtFirstFailure && failed > 0;
         public bool IsRunning => _index >= 0;
 
         private void Awake()
@@ -60,7 +73,7 @@ namespace TwoDude.FactoryTwin.Twin
             _runSubscription = _bus.Subscribe(CellTopics.VcRun.ToString(), m =>
             {
                 if (m.Value.AsNumber != 0d)
-                    Run();
+                    Run(m.Value.AsNumber >= 1.5d);
             });
         }
 
@@ -72,11 +85,15 @@ namespace TwoDude.FactoryTwin.Twin
                 Abort();
         }
 
-        /// <summary>Starts the suite against the current logic source. Ignored while a run is going.</summary>
-        public void Run()
+        /// <summary>Starts the full suite against the current logic source. Ignored while a run is going.</summary>
+        public void Run() => Run(false);
+
+        /// <summary>Starts the suite; with <paramref name="stopAtFirstFailure"/> it ends at the first failed check.</summary>
+        public void Run(bool stopAtFirstFailure)
         {
             if (IsRunning)
                 return;
+            _stopAtFirstFailure = stopAtFirstFailure;
             _results.Clear();
             passed = failed = 0;
             _source = LogicSourceRule.Read(_bus);
@@ -97,6 +114,8 @@ namespace TwoDude.FactoryTwin.Twin
             }
 
             _run.Tick(Time.fixedDeltaTime, cell, _due);
+            if (_stopAtFirstFailure && _run.AnyFailed)
+                _run.FinishNow();
             long now = CellContext.NowUnixMs;
             for (int i = 0; i < _due.Count; i++)
                 _bus.Publish(_due[i].Topic, _due[i].Value, now);
@@ -132,6 +151,7 @@ namespace TwoDude.FactoryTwin.Twin
             if (cell.Running && !cell.PartAtGate && !cell.ArmBusy)
             {
                 _run = new ScenarioRun(_scenarios[_index]);
+                ScenarioStarted?.Invoke(_index + 1);
                 return;
             }
             _settling += Time.fixedDeltaTime;
@@ -152,7 +172,10 @@ namespace TwoDude.FactoryTwin.Twin
             _bus.Publish(CellTopics.VcResult, SignalValue.FromNumber((int)outcome), CellContext.NowUnixMs);
             Debug.Log($"[CommissioningSuite] {result.Index}. {result.Name}: {CommissioningReport.Words(outcome)}{(string.IsNullOrEmpty(detail) ? "" : " — " + detail)}", this);
             ScenarioFinished?.Invoke(result);
-            Begin(_index + 1);
+            if (_stopAtFirstFailure && outcome == ScenarioOutcome.Failed)
+                End();
+            else
+                Begin(_index + 1);
         }
 
         private void End()

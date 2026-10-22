@@ -70,3 +70,29 @@
 .vc-summary {
     -unity-font-style: bold;
 }
+
+/* Code card: the PLC program's infeed interlock, read from the .st file under test. */
+
+.vc-code {
+    margin: 0 0 12px 0;
+    padding: 10px 12px;
+    background-color: rgba(0, 0, 0, 0.35);
+    border-radius: 6px;
+    border-left-width: 3px;
+    border-left-color: var(--warning);
+}
+
+.vc-code__file {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 0;
+    margin: 0 0 4px 0;
+}
+
+.vc-code__line {
+    font-size: 16px;
+    -unity-font-style: bold;
+    white-space: normal;
+    padding: 0;
+    margin: 0;
+}
