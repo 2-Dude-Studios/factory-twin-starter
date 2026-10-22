@@ -25,8 +25,12 @@ The twin writes only holding registers: Modbus cannot write `%IX` inputs.
 
 ## Run it
 
-1. Install the runtime (`OpenPLC_Runtime_4.3.1_Setup.exe`) and start it.
-2. In the OpenPLC Editor: new project, paste `cell.st` into a Structured Text POU, connect to the runtime, enable the Modbus TCP slave (port 502), compile and upload, start the PLC.
-3. In Unity: `TwinConfig` has the PLC host and port. Play, then publish `cell/plc/source` = 1 to hand the line to the PLC (0 hands it back). `cell/plc/link` shows whether the PLC answers.
+1. Install the runtime (`OpenPLC_Runtime_4.3.1_Setup.exe`) and start it ("Start OpenPLC Runtime"). It listens on 8443 for the Editor.
+2. `python sync_project.py` writes `openplc_project/pous/programs/main.st` from `cell.st` (main.st is generated, not committed).
+3. In the OpenPLC Editor: Open `openplc_project/`. Device > Configuration is set to OpenPLC Runtime v4 at 127.0.0.1; press Connect. The first time, the runtime asks you to create its user; that account is yours and stays out of the repo. Servers > `twin_modbus` is the Modbus TCP slave on port 502, already enabled.
+4. Build options > Build and upload. The console ends with "Compilation completed successfully", "PLC started", "Upload complete". The left-rail Stop/Start PLC button stops and starts it.
+5. In Unity, Play. The PLC shadows the line straight away (it reads the sensors and counts parts) but drives nothing. Publish `cell/plc/source` = 1 to hand it the line, 0 to take it back. `cell/plc/link` shows whether the PLC answers.
+
+A quick check without Unity: holding registers 0–3 should show the state and a heartbeat that counts up about 50 times a second (20 ms task). With Unity stopped, the state is 3 (held), because the twin's heartbeat is missing.
 
 If the PLC's heartbeat stops for longer than `TwinConfig`'s watchdog time (0.5 s) while it runs the line, the twin stops both conveyors. If the twin's heartbeat stops for 3 s, the PLC holds the line itself.

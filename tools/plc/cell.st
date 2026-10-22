@@ -155,7 +155,7 @@ END_PROGRAM
 
 CONFIGURATION config
   RESOURCE res ON PLC
-    TASK main_task(INTERVAL := T#10ms, PRIORITY := 0);
+    TASK main_task(INTERVAL := T#20ms, PRIORITY := 0);   (* the Editor project uses task0 at 20 ms *)
     PROGRAM instance0 WITH main_task : cell;
   END_RESOURCE
 END_CONFIGURATION
