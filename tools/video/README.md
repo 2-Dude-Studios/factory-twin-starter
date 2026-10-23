@@ -49,3 +49,22 @@ To find a cue in a new take, step through frames of the dashboard header for the
 ## Emphasis
 
 Kokoro has no emphasis control. Phrases flagged `True` are rendered on their own at a slower speed, then lifted 3.5 % in pitch (rubberband, formants preserved) and raised 2.5 dB. Short pauses before them come from the gaps.
+
+## v03 (`build3.py`)
+
+v03 is v02's cut with five mid screens inserted into the voice gaps. The mid screens are a data-flow screen, three chapter cards and an "ignored vs acted on" comparison, plus a "What we build" screen over the "Your line" beat. v03 also adds burned-in subtitles, kinetic text, highlighters and masked transitions. It runs 126.5 s. `build2.py` is untouched and still rebuilds v02.
+
+1. Run `build2.py` first, as above. `build3.py` reads its `tools/video/build/work/picture.mp4` and `game.wav`, and the phrase WAVs.
+2. Put `bahnschrift.ttf`, `segoeui.ttf` and `seguisb.ttf` in a folder (on Windows `C:/Windows/Fonts` is the default) and pass it as `--fonts`. libass uses it as `fontsdir`.
+3. Run:
+
+```bash
+python tools/video/build3.py --fonts C:/Windows/Fonts --sfx-chapter tools/video/sfx/Whoosh052_AudioPapkin_812689.wav --sfx-reveal tools/video/sfx/Whoosh1_Kinoton_427823.wav Builds/Recordings/2DS_Manufacturing_FactoryTwin_PdM_v03_<date>.mp4
+```
+
+- **Stages** (`--stage`): `clips` renders the blurred mid-screen backgrounds and the comparison crops. `base` cuts and joins with `xfade` custom masks. `overlay` burns `overlays.ass` (highlighters, kinetic text, cards) and `subs.ass`, and adds the lens crop. `audio` builds the game bed with the inserts and whooshes, then runs v02's voice chain and mix (−14 LUFS, −1 dBTP). `mux` writes the MP4. The default is `all`. Intermediates go to `tools/video/build/work3/`.
+- **Timing:** inserts are listed in `INSERTS` as v02 times. Every phrase after an insert moves by its length.
+- **v03 picture cues:** amber 52.5 s, failure 68.3 s, tool change 89.5 s, end card 116.5 s.
+- **Highlighter targets:** measured on real frames and listed at the top of the script. The CNC close-up camera is static; the dashboard is screen-space. Re-measure after re-recording takes.
+- **Older ffmpeg builds** (before 6.1, for example 4.4 on Linux) also work: `-/filter_complex` is swapped for `-filter_complex_script`.
+- **Whooshes:** both are CC0 and listed in `docs/LICENSES.md`. Without `--sfx-*` the cards ride on the factory ambience.

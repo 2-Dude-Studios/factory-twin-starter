@@ -66,3 +66,47 @@ Every line has to be true of what is on screen or of what the studio can deliver
 ## Re-recording with a human voice
 
 USB mic 15–20 cm away, slightly off-axis; a quiet room with soft furnishings; record each phrase group as its own take with a second of room tone before and after; 48 kHz / 24-bit WAV. Land the same cues as the cut map, and stress the bold phrases.
+
+## v03 (2026-10-22): mid screens, subtitles, highlighters
+
+Built by `tools/video/build3.py` from the v02 cut, voice and mix. It runs 126.5 s; Akaash OK'd going past 115 s. v03 keeps every v02 phrase and pace. Phrases after each insert move by its length:
+
+| v02 time | Insert | Length | Content |
+|---|---|---|---|
+| 27.3 s | X1 | 4.0 s | "Every signal, live": Machines → MQTT → Digital twin → Dashboard, with the footnote "Demo telemetry: AI4I 2020 dataset (CC BY 4.0), replayed over MQTT" |
+| 39.5 s | X2 | 2.5 s | Chapter "01 It sees it coming". Its rule travels onto the failure-risk bar. |
+| 55.0 s | X3 | 2.5 s | Chapter "02 Ignore the warning" |
+| 72.0 s | X4 | 2.5 s | Chapter "03 Act on it" |
+| 84.5 s | X5 | 4.0 s | "Same warning. Two outcomes.": real Line-card crops, take A after the failure (Stopped, parts lost 1) beside take B after the tool change (Running, parts lost 0) |
+
+The "Your line" beat (v02 94–101 s) becomes "What we build for manufacturers": Digital twins · Predictive maintenance · Predictive simulations. A line under the tiles reads "Next in this series: virtual commissioning · full monitoring · training & safety".
+
+**Picture cues in v03:** amber 52.5 s, failure 68.3 s, tool change 89.5 s, end card 116.5 s.
+
+**Highlighters**, measured on v02 frames:
+- Stack light lamps at (821, 63 / 108 / 148).
+- Failure-risk bar (1494, 174 – 1863, 195), with the underline in the gap below it.
+- "Change due" (1634, 228 – 1770, 242).
+- Health chip (1790, 111 – 1863, 132).
+- Line state chip (1706, 387 – 1863, 406).
+- Parts lost (1683, 424 – 1760, 462).
+- A lens callout of the CNC row (1475, 100 – 1877, 362), scaled 1.8× from the same frame.
+
+Leader lines run in the gaps between dashboard rows, so no value is covered.
+
+**Claims check for the new on-screen text**, all within the list above:
+- "A live, virtual copy of your line"
+- "One cell. Every part streams live data."
+- "Healthy now. Failing soon."
+- "Change the tool now"
+- "Line still running"
+- "TOOL FAILURE"
+- "Counting every lost part"
+- "Tool changed. Line keeps running."
+- "Zero parts lost"
+- "MQTT today · OPC UA on request" (OPC UA is a planned option)
+- The services tiles and series line, confirmed by Akaash on 21 Oct.
+
+No dashboard number is typed. The comparison panels and the lens are untouched crops.
+
+**Known:** take B has encoder breakup at 57.2–57.8 s (v02 83.2–83.8 s, v03 94.7–95.3 s). It is in the recording and in v02 too.
