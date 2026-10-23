@@ -39,3 +39,20 @@ Same playbook shape. For machine builders and system integrators. Signals marked
 
 The bug shown is the one seeded in `tools/plc/cell_buggy.st`. How it looks in 3D (parts piling up at the gate, or the arm reaching for a part that moved) is settled in M8, from what the scene actually does.
 
+
+---
+
+# Workforce training & safety clip — beats (Rev 5, M13)
+
+Same playbook shape. For EHS, training and plant managers. Signals marked *(M10)* or *(M11)* are added in that milestone. Timings are a first draft; the voiceover sets them in M13. On screen and in the voiceover the zone is a simulated safety function (not safety-rated) and the run is a training demo (not certified training).
+
+| # | Time | Beat | On screen | Signals in play |
+|---|---|---|---|---|
+| 1 | 0–8 s | **Promise.** "Train on the line you actually run." | Hall dolly lands on the cell; a caption: "Same twin, same PLC, same dashboard." | `line/state = 0` |
+| 2 | 8–24 s | **Proof 1 — the zone.** "Step into the robot's zone and it stops." | First-person (desktop or headset) walk toward the arm. Warning zone: the arm slows, the floor marking turns amber. Protective zone: the arm freezes mid-move, the line holds, the dashboard reads "Stopped — person in robot zone". Step back out: nothing restarts until the reset. | `safety/zone_warning` *(M10)*, `safety/arm_zone_occupied` *(M10)*, `safety/protective_stop` *(M10)*, `safety/reset` *(M10)*, `line/state` |
+| 3 | 24–48 s | **Proof 2 — lockout.** "Clear the fault the way the procedure says." | The CNC faults. The step panel walks notify, stop, isolate, lock and tag, try-start, tool change, clear, unlock, restart. One wrong step (try to restart with the lock on): the PLC refuses, the event log says why, the error counter ticks. | `press/isolated` *(M11)*, `press/lockout` *(M11)*, `training/step` *(M11)*, `training/errors` *(M11)*, `press/tool_change` |
+| 4 | 48–58 s | **The record.** "Every step, every mistake, on record." | The training record CSV: trainee, times per step, errors, result. Cut to the same run in the Quest 3. | `training/result` *(M11)* |
+| 5 | 58–70 s | **Path.** "Your cell's twin, your PLC, your procedure. Quest 3 or desktop." | The headset view of the cell, the step panel in the world, the topic list on the broker. Any onboarding or ROI figure carries "vendor-reported". | |
+| 6 | 70–76 s | **Ask.** Book a call. 2dudestudios.com/manufacturing. | End card, logo, URL. | |
+
+The headset shots come from the Quest 3 over Link (M12), recorded from the PC mirror view.

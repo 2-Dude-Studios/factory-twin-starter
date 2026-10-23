@@ -1,8 +1,8 @@
 # Factory Twin — project blueprint
 
-As of 2026-10-12, commit `40aa013` (M3 closed, M4 next). Written from the code, the scene file and the docs in this repo; where the docs and the code disagree, the code is described and the difference is listed in section 12. Objective, milestones and remaining work revised 2026-10-19 for build plan Rev 3 (predictive maintenance only, M4–M6) and 2026-10-22 for Rev 4 (virtual commissioning, M7–M9); the code sections are unchanged.
+As of 2026-10-24, commit `0c3b0fc`. Both use cases are built: predictive maintenance (M4–M6, video approved) and virtual commissioning (M7–M8 closed, M9 waiting on the voiceover). A third, workforce training and safety (Rev 5, M10–M13), was approved on 2026-10-24 and is not built yet. Written from the code, `Cell.unity` and the docs in this repo. Where they disagree, the code is described and the difference is listed in section 13.
 
-Companion documents: `docs/build-plan.md` (why and in what order), `docs/STATUS.md` (running log and decisions), `docs/demo-script.md` (the 90-second video), `docs/LICENSES.md` (what may ship), `CLAUDE.md` (rules for working in the repo).
+Companion documents: `docs/build-plan.md` (why and in what order, Rev 5), `docs/STATUS.md` (running log and decisions), `docs/demo-script.md` (video beats), `docs/voiceover.md` and `docs/voiceover_vc*.md` (scripts and cut plans), `docs/LICENSES.md` (what may ship), `CLAUDE.md` (rules for working in the repo).
 
 ---
 
@@ -10,38 +10,32 @@ Companion documents: `docs/build-plan.md` (why and in what order), `docs/STATUS.
 
 ### What we are creating
 
-A Unity prototype of one working production cell: an infeed conveyor, a sensor gate, a six-axis pick-and-place arm, an outfeed conveyor, and a press reporting machine telemetry. Every drive, sensor and joint publishes its state over MQTT to a live dashboard.
+A Unity prototype of one working production cell: an infeed conveyor, a sensor gate, a six-axis pick-and-place arm, an outfeed conveyor, and a CNC machining centre reporting machine telemetry. Every drive, sensor and joint publishes its state over MQTT to a live dashboard, and the cell can be run either by its own C# sequence or by a soft PLC over Modbus TCP.
 
-It proves two use cases. **Predictive maintenance** (done): the twin sees a press failure coming, shows where it is and what it will cost the line, and recommends a tool change in time. It was chosen as the most-asked-for digital-twin use in manufacturing and the one this build is closest to. **Virtual commissioning** (Rev 4, M7–M9): a soft PLC outside Unity runs the cell from Structured Text, and a commissioning test suite catches a logic bug before any hardware exists. It speaks to machine builders and system integrators. Four other use cases (full monitoring, training and safety, layout what-if, pre-planning) are parked under "Later" in `docs/build-plan.md`.
+It proves two use cases, each with its own video, and is adding a third:
 
-It ships as a Windows build, a walkthrough video for each use case for the Manufacturing page on 2dudestudios.com, and it is run live in front of manufacturing prospects.
+- **Predictive maintenance.** The twin sees a CNC tool failure coming, shows where it is and what it will cost the line, and recommends a tool change in time. Ignored, the machine fails and the line stops; acted on, the line never stops.
+- **Virtual commissioning.** A soft PLC outside Unity runs the cell from Structured Text. A commissioning suite catches a seeded interlock bug, visible in 3D as parts queuing into the pick station, and passes once the one line is fixed.
+- **Workforce training and safety** (Rev 5, planned). A trainee stepping into the arm's protective zone freezes the arm and holds the line until a deliberate reset. A CNC fault is cleared only through the OSHA 1910.147 lockout steps; the soft PLC refuses to start the line while the lock is on, and every step and error is logged as a training record. Desktop first, then Quest 3 over Link. A simulated safety function and a training demo: not safety-rated, not certified training.
+
+It ships as a Windows build for live demos and a walkthrough video per use case for the Manufacturing page on 2dudestudios.com.
 
 ### What it is solving
 
-**For the studio.** 2 Dude Studios is selling factory digital twins ahead of its first manufacturing project. A prospect looking at a studio's reel cannot tell a factory that was rendered from one that is connected to plant data, and the second is what they would be paying for. This demo is the evidence: a twin whose 3D scene and dashboard are driven by the same signals, over the protocol a real plant would use.
+**For the studio.** 2 Dude Studios is selling factory digital twins ahead of its first manufacturing project. A prospect looking at a reel cannot tell a factory that was rendered from one that is connected to plant data and plant logic, and the second is what they would pay for. This build is the evidence: the 3D scene, the dashboard and the PLC all work from the same signals, over the protocols a real plant uses (MQTT, Modbus TCP).
 
-**For the prospect watching it.** It shows what a twin gives a maintenance or plant manager: a failure seen minutes before it happens, on the machine where it will happen, with what it will cost the line if nobody acts. It also shows the route to their own machines: their sensors over MQTT or OPC UA, their failure history, the same twin.
+**For a maintenance or plant manager.** A failure seen about half a minute ahead in the demo (hours of machining compressed into a minute), on the machine where it will happen, with the parts it will cost the line. The route to their own machines: their sensors over MQTT or OPC UA, their failure history, the same twin.
 
-### The moment it has to deliver
+**For a machine builder or system integrator.** The PLC program tested against the twin before any hardware exists: forced sensors, a dropped part, an arm that never answers, a machine fault, a lost PLC link, each graded pass or fail, with an I/O list exported the way commissioning engineers work. A logic bug found on day 1, not in commissioning week on site.
 
-The press's tool wears. The failure risk climbs, the press turns amber and the twin recommends a tool change while the line is still running. Then two outcomes. Ignored, the press fails: it goes red in 3D, the arm finishes its pick, both conveyors stop and the dashboard counts parts lost. Acted on, the tool is changed and the line never stops.
-
-For virtual commissioning (M7–M9): the soft PLC runs the cell. The commissioning suite runs and one test fails; in 3D, parts pile up at the gate because the program is missing an interlock. One line of the program is fixed, the suite reruns and every test passes. Found in the twin, not on site.
-
-Everything in the architecture exists to make those moments real rather than staged. The line stops because a signal says the press failed, and the dashboard shows it because it reads the same signal. The detection half already works (section 5); M5 adds the prediction half.
-
-### Done when
-
-- The M4 and M5 exit conditions in `docs/build-plan.md` are met.
-- There is a Windows build locked to 60 fps, and the walkthrough video has been captured from the project (M6; Editor recordings through Unity Recorder, approved as v02, 111 s, on 2026-10-21).
-- The same build can be driven live in a prospect meeting, with or without a broker on the network.
+**For an EHS or training manager (Rev 5).** New starters practise lockout and robot-zone behaviour on the plant's own cell, driven by its own PLC, with a record of every step and mistake, before they stand next to the real machine.
 
 ### Not in scope
 
 - Client work. This is the studio's own marketing asset; a client project on this codebase needs a Unity Industry seat and a fresh licence pass.
-- A plant connection. The press telemetry is replayed from a public dataset. Until M7 the cell's "PLC" is a state machine in C#; from M7 a soft PLC (OpenPLC Runtime v4, Modbus TCP) can run it instead, but no vendor PLC or fieldbus.
+- A plant connection. CNC telemetry is replayed from a public dataset (AI4I 2020). The PLC is OpenPLC, not a vendor PLC or fieldbus.
 - A whole plant. One cell, built well.
-- The other four use cases, until a prospect asks (build plan, "Later"). Also not in scope: a VR product, and robot or sensor validation of the Unity Simulation Pro kind (Industry licence only).
+- Three other use cases (full monitoring, layout what-if, pre-planning), standalone Quest 3 and the kiosk view, until a prospect asks. See "Later" in `docs/build-plan.md`.
 
 ### Where it stands
 
@@ -49,56 +43,56 @@ Everything in the architecture exists to make those moments real rather than sta
 |---|---|---|
 | M0 Setup | Project, URP, third-party imports, broker | Done |
 | M1 Cell loop | Infeed → gate → pick → outfeed, 10-minute soak | Done |
-| M2 Arm | De-branded UR5e, baked pick-and-place | Done |
-| M3 Data spine | Signal bus, MQTT bridge, press telemetry, fault injector | Done 2026-10-12 |
-| M4 Dashboard | Lean UI Toolkit dashboard for the press and the line, fault beat on camera | Done 2026-10-20 |
-| M5 Prediction | Degradation mode, failure risk, remaining tool life, recommendation, tool change | Done 2026-10-20 |
-| M6 Polish and capture | Lighting, VFX, audio, camera path, Windows build, walkthrough video | Done 2026-10-21 |
-| M7 Soft PLC link | OpenPLC Runtime v4 runs the cell over Modbus TCP; logic-source switch, heartbeat watchdog | Current |
-| M8 Commissioning suite | Sensor forcing, six scenarios against either logic source, I/O list, seeded bug | Planned |
-| M9 VC capture | Virtual commissioning clip | Planned |
+| M2 Arm | De-branded UR5e, baked pick and place | Done |
+| M3 Data spine | Signal bus, MQTT bridge, CNC telemetry, fault injector | Done 2026-10-12 |
+| M4 Dashboard | UI Toolkit dashboard, CNC machine and stack light, fault beat on camera | Done 2026-10-20 |
+| M5 Prediction | Degradation mode, failure risk, tool life, recommendation, tool change | Done 2026-10-20 |
+| M6 Polish and capture | Camera rig, VFX, audio, Windows build, PdM video v02 (111 s, approved) | Done 2026-10-21 |
+| M7 Soft PLC link | OpenPLC Runtime v4 runs the cell over Modbus TCP; logic-source switch; watchdogs | Done 2026-10-23 |
+| M8 Commissioning suite | Six scenarios against either logic source, I/O list, seeded bug caught | Done 2026-10-23 |
+| M9 VC capture | Takes D and E, 76 s picture-only rough cut | **Waiting on your recorded voiceover** |
+| M10 Safety zone | Warning and protective zones, arm freeze, reset, PLC hold, first-person trainee | **Current** (Rev 5) |
+| M11 Lockout procedure | 1910.147 steps on the CNC, PLC refuses start with the lock on, training record | Planned |
+| M12 Quest 3 view | OpenXR + XR Interaction Toolkit over Link, same signals | Planned |
+| M13 Training capture | Training clip | Planned |
 
 ---
 
 ## 2. System at a glance
 
 ```
-                         Unity process (Cell.unity)
- ┌────────────────────────────────────────────────────────────────────────────┐
- │                                                                            │
- │  3D simulation (realvirtual + PhysX)          Logic (our code, no 3D)      │
- │  ┌──────────────────────────────┐             ┌──────────────────────────┐ │
- │  │ Source → Infeed conveyor     │             │ CellSequencer            │ │
- │  │ Gate1 light barrier          │             │   └ CellSequence (PLC)   │ │
- │  │ Arm (6 ArticulationBodies)   │             │ PressStation             │ │
- │  │ Outfeed → ExitSensor → Sink  │             │   └ DatasetReplayer      │ │
- │  └──────────────┬───────────────┘             │ FaultInjector            │ │
- │                 │ realvirtual Signal          │ (M4) Dashboard           │ │
- │                 │ components (19)             └────────────┬─────────────┘ │
- │         ┌───────┴────────┐                                 │               │
- │         │  TwinSignals   │◄────────── SignalBus ──────────►│               │
- │         └────────────────┘      cell/<station>/<signal>                    │
- │                                        ▲                                   │
- │                                        │ SignalPublisher (10 Hz, deadband) │
- │                                  ┌─────┴──────┐                            │
- │                                  │ MqttBridge │  MQTTnet 4.3.7, MQTT 5     │
- │                                  └─────┬──────┘                            │
- └────────────────────────────────────────┼───────────────────────────────────┘
-                                          │ TCP 1883, JSON {"v":…,"t":…}
-                                ┌─────────┴──────────┐
-                                │ Mosquitto 2 broker │  tools/broker (Docker)
-                                └─────────┬──────────┘
-                     ┌────────────────────┼─────────────────────┐
-              mosquitto_sub/pub     tools/replay/replay.py   any other client
-              (inspection, commands) (optional press feed)   (future dashboard,
-                                                              kiosk, headset)
+                               Unity process (Cell.unity)
+ ┌───────────────────────────────────────────────────────────────────────────────────────┐
+ │  3D simulation                    Logic                          Presentation          │
+ │  ┌─────────────────────────┐      ┌──────────────────────────┐   ┌──────────────────┐  │
+ │  │ Source → Infeed         │      │ CellSequencer ─┐ one of   │   │ Dashboard        │  │
+ │  │ Gate1 light barrier     │      │ PlcLink ───────┘ the two  │   │ Commissioning    │  │
+ │  │ Arm (6 ArticulationBody)│      │ PressStation + replayer   │   │ Stack light, VFX │  │
+ │  │ Outfeed → Exit → Sink   │      │ Risk / health reporters   │   │ Capture rig      │  │
+ │  │ CNC machine (prefab)    │      │ CommissioningSuite        │   └────────┬─────────┘  │
+ │  └───────────┬─────────────┘      └────────────┬─────────────┘            │            │
+ │              │ 19 realvirtual signals          │                          │            │
+ │       ┌──────┴──────┐                          │                          │            │
+ │       │ TwinSignals │◄──────────────── SignalBus ─────────────────────────┘            │
+ │       │ + force tbl │            cell/<station>/<signal>, last value kept              │
+ │       └─────────────┘                    │                       │                     │
+ │                                 SignalPublisher            PlcLink poll thread         │
+ │                                  + MqttBridge               (50 Hz, own socket)        │
+ └──────────────────────────────────────────┼───────────────────────┼─────────────────────┘
+                                            │ MQTT 5, TCP 1883       │ Modbus TCP, port 502
+                                  ┌─────────┴─────────┐   ┌──────────┴────────────┐
+                                  │ Mosquitto 2       │   │ OpenPLC Runtime v4    │
+                                  │ (Docker)          │   │ cell.st / cell_buggy  │
+                                  └─────────┬─────────┘   └───────────────────────┘
+                              mosquitto_sub/pub, replay.py,
+                              any other MQTT client
 ```
 
 Three ideas hold the design together:
 
 1. **Signals are the only bridge.** Nothing reads a transform to learn the state of the cell. The simulation exposes realvirtual `Signal` components; `TwinSignals` mirrors them to and from the bus; everything else talks to the bus.
-2. **The bus is the single source of truth inside Unity; the broker is its mirror.** Logic works with no broker running. MQTT adds visibility and remote control, not function.
-3. **Decisions live in plain C# classes, MonoBehaviours only host them.** `CellSequence`, `ArmProgram`, `SignalPublisher`, `DatasetReplayer` and the topic/payload types have no Unity dependency and carry the tests.
+2. **The bus is the single source of truth inside Unity.** The broker mirrors it and the PLC reads and writes a slice of it. Remove the broker and the cell still runs. Remove the PLC and `CellSequencer` takes the line back.
+3. **Decisions live in plain C# classes; MonoBehaviours only host them.** The cell sequence, arm program, risk model, line metrics, Modbus codec, PLC image, watchdog, scenarios and their checks have no Unity dependency and carry the tests.
 
 ---
 
@@ -106,56 +100,82 @@ Three ideas hold the design together:
 
 ### Topic and payload
 
-- Topic: `cell/<station>/<signal>`. Exactly three levels. Segments are lower-case letters, digits and `_` only (`TopicPath` enforces this, so wildcards cannot leak into a concrete topic).
-- Payload: `{"v": <number|true|false>, "t": <unix_ms>}`. No strings, no nesting, no NaN/Infinity. `SignalPayload` is a strict hand-written parser that accepts either key order and JSON whitespace and rejects anything else.
-- Subscriptions use MQTT wildcards (`+` one level, `#` everything below); `TopicFilter` implements the matching for the in-process bus.
+- Topic: `cell/<station>/<signal>`. Exactly three levels. Segments are lower-case letters, digits and `_` only (`TopicPath` enforces this).
+- Payload: `{"v": <number|true|false>, "t": <unix_ms>}`. No strings, no nesting, no NaN or Infinity. `SignalPayload` is a strict hand-written parser.
+- Subscriptions use MQTT wildcards; `TopicFilter` implements them for the in-process bus.
 - QoS 0, not retained. A client that connects mid-run sees a signal only when it next changes.
+- Enumerations travel as numbers: `line/state` 0 feeding, 1 transferring, 2 stalled, 3 held; `press/health` 0 ok, 1 warning, 2 fault; `plc/source` 0 Unity, 1 PLC.
 
-### Topic catalogue (46 topics)
+### Topic catalogue (61 topics)
 
-Direction is from the simulation's point of view: **out** is state leaving the cell, **in** is a command the cell obeys. Commands are also visible on the broker, because `TwinSignals` publishes outputs that a station writes directly.
+**out** is state leaving the cell; **in** is a command or stimulus the cell obeys. Commands are visible on the broker too. The station is called `press` in topics and code; on screen it is a CNC machining centre (AI4I models milling).
+
+**Production cell**, the 19 topics bound to realvirtual signals in `TwinSignals`:
 
 | Topic | Type | Dir | Written by | Meaning |
 |---|---|---|---|---|
-| `cell/infeed/drive_fwd` | bool | in | CellSequencer | Run the infeed belt |
-| `cell/infeed/drive_speed` | number | in | Scene value / broker | Belt speed setpoint, mm/s |
-| `cell/infeed/running` | bool | out | realvirtual drive | Belt is moving |
-| `cell/infeed/speed_mm_s` | number | out | realvirtual drive | Measured belt speed |
-| `cell/gate1/part_present` | bool | out | Gate1 sensor | Part standing in the light barrier |
-| `cell/arm/pick_cmd` | bool | in | CellSequencer | Rising edge starts one pick-and-place |
-| `cell/arm/busy` | bool | out | ArmSignalBridge | Arm is mid-cycle (the pick acknowledgement) |
-| `cell/arm/grip_cmd` | bool | in | ArmSignalBridge | Close the gripper |
-| `cell/arm/holding` | bool | out | PartGripper | A part is attached to the flange |
-| `cell/arm/j1_deg` … `j6_deg` | number | out | ArmSignalBridge | Measured joint angles, base to tool |
-| `cell/outfeed/drive_fwd` | bool | in | CellSequencer | Run the outfeed belt |
-| `cell/outfeed/drive_speed` | number | in | Scene value / broker | Belt speed setpoint, mm/s |
-| `cell/outfeed/running` | bool | out | realvirtual drive | Belt is moving |
-| `cell/outfeed/part_exit` | bool | out | ExitSensor | Part leaving the cell (counted on the rising edge) |
-| `cell/line/state` | number | out | CellSequencer | 0 feeding, 1 transferring, 2 stalled, 3 held |
-| `cell/line/stalled` | bool | out | CellSequencer | Convenience flag for state 2 |
-| `cell/line/parts_out` | number | out | CellSequencer | Parts that have left the cell this run |
-| `cell/line/cycle_time_s` | number | out | CellSequencer | Running seconds between the last two exits; time held for a press fault is left out (M6) |
-| `cell/line/parts_per_hour` | number | out | LineMetricsReporter | Exits per hour over a 120 s rolling window, whole parts (M4) |
-| `cell/line/parts_lost` | number | out | LineMetricsReporter | Parts not made while a press fault held the line, at the pre-hold rate, whole parts (M4) |
-| `cell/link/connected` | bool | out | MqttBridge | Broker link is up |
-| `cell/demo/fresh_take` | bool | in | TakeControls | New capture take: parts lost back to 0, event log emptied (M6) |
-| `cell/press/product_quality` | number | out | DatasetReplayer | `ProductQuality` of the row: 0 L, 1 M, 2 H (sets the overstrain limit). Published first in each row (M5) |
-| `cell/press/air_temp_k` | number | out | DatasetReplayer | AI4I air temperature, K |
-| `cell/press/process_temp_k` | number | out | DatasetReplayer | AI4I process temperature, K |
-| `cell/press/speed_rpm` | number | out | DatasetReplayer | AI4I rotational speed |
-| `cell/press/torque_nm` | number | out | DatasetReplayer | AI4I torque |
-| `cell/press/tool_wear_min` | number | out | DatasetReplayer | AI4I tool wear, minutes |
-| `cell/press/fault_twf` `_hdf` `_pwf` `_osf` `_rnf` | bool | out | DatasetReplayer | Tool wear, heat dissipation, power, overstrain, random failure |
-| `cell/press/machine_failure` | bool | out | DatasetReplayer | The dataset's overall failure flag |
-| `cell/press/health` | number | out | PressHealthReporter | `MachineHealth`: 0 ok, 1 warning (risk ≥ 0.5, clears below 0.4), 2 fault |
-| `cell/press/failure_risk` | number | out | PressRiskReporter | Threshold-margin failure risk, 0–1, three decimals (M5) |
-| `cell/press/tool_rul_min` | number | out | PressRiskReporter | Tool wear left before the 200 min failure window opens (M5) |
-| `cell/press/maint_due` | bool | out | PressRiskReporter | Risk at warning, or ≤ 20 min tool life left (M5) |
-| `cell/press/degrade` | bool | in | Dashboard / broker / PressDegradation | true starts the tool-wear degradation scenario, false stops it (M5) |
-| `cell/press/tool_change` | bool | in | Dashboard / broker / ToolChanger | true puts a fresh tool in: degradation stops, wear restarts low, a tool-wear failure clears (M5) |
-| `cell/press/inject_fault` | number | in | FaultInjector / broker | `FaultMode` bitmask: 1 TWF, 2 HDF, 4 PWF, 8 OSF, 16 RNF; 0 clears |
+| `infeed/drive_fwd` | bool | in | Logic source | Run the infeed belt |
+| `infeed/drive_speed` | number | in | Scene value or broker | Belt speed setpoint, mm/s |
+| `infeed/running`, `infeed/speed_mm_s` | bool, number | out | realvirtual drive | Belt moving; measured speed |
+| `gate1/part_present` | bool | out | Gate1 sensor (or the force table) | Part in the light barrier |
+| `arm/pick_cmd` | bool | in | Logic source | Rising edge starts one pick and place |
+| `arm/busy` | bool | out | ArmSignalBridge | Arm mid-cycle; the pick acknowledgement |
+| `arm/grip_cmd` | bool | in | ArmSignalBridge | Close the gripper |
+| `arm/holding` | bool | out | PartGripper | A part is on the flange |
+| `arm/j1_deg` … `j6_deg` | number | out | ArmSignalBridge | Measured joint angles |
+| `outfeed/drive_fwd` | bool | in | Logic source | Run the outfeed belt |
+| `outfeed/drive_speed` | number | in | Scene value or broker | Belt speed setpoint, mm/s |
+| `outfeed/running` | bool | out | realvirtual drive | Belt moving |
+| `outfeed/part_exit` | bool | out | Exit sensor | Part leaving; counted on the rising edge |
 
-The 19 infeed, gate1, arm and outfeed topics each have a realvirtual signal component and are bound in the `TwinSignals` Inspector list on the `Cell` object. The line, link and press topics exist only on the bus. `CellTopics` holds the constants the logic uses; the press topic names are built inside `DatasetReplayer` and must stay identical to `tools/replay/replay.py`.
+**Line**:
+
+| Topic | Type | Dir | Written by | Meaning |
+|---|---|---|---|---|
+| `line/state` | number | out | Logic source | 0 feeding, 1 transferring, 2 stalled, 3 held |
+| `line/stalled` | bool | out | Logic source | State 2 |
+| `line/parts_out` | number | out | Logic source | Parts that left the cell this run |
+| `line/cycle_time_s` | number | out | Logic source | Seconds between the last two exits, held time left out |
+| `line/parts_per_hour` | number | out | LineMetricsReporter | Exits over a 120 s rolling window |
+| `line/parts_lost` | number | out | LineMetricsReporter | Parts not made while held for a CNC fault, at the pre-hold rate |
+
+**CNC (`press`)**:
+
+| Topic | Type | Dir | Written by | Meaning |
+|---|---|---|---|---|
+| `press/product_quality` | number | out | DatasetReplayer | Row's product type, 0 L, 1 M, 2 H; sets the overstrain limit. Published first in each row |
+| `press/air_temp_k`, `process_temp_k`, `speed_rpm`, `torque_nm`, `tool_wear_min` | number | out | DatasetReplayer | AI4I telemetry |
+| `press/fault_twf`, `_hdf`, `_pwf`, `_osf`, `_rnf` | bool | out | DatasetReplayer | The five AI4I failure modes |
+| `press/machine_failure` | bool | out | DatasetReplayer | The dataset's overall failure flag |
+| `press/failure_risk` | number | out | PressRiskReporter | Threshold-margin risk, 0–1 |
+| `press/tool_rul_min` | number | out | PressRiskReporter | Tool wear left before the 200 min failure window |
+| `press/maint_due` | bool | out | PressRiskReporter | Risk at warning, or ≤ 20 min tool life left |
+| `press/health` | number | out | PressHealthReporter | 0 ok, 1 warning (on at risk 0.5, off below 0.4), 2 fault |
+| `press/degrade` | bool | in | Dashboard, broker, PressDegradation | Start or stop wearing the tool out over about 75 s |
+| `press/tool_change` | bool | in | Dashboard, broker, ToolChanger | Fit a fresh tool |
+| `press/inject_fault` | number | in | Dashboard, broker, FaultInjector | `FaultMode` bitmask 1 TWF, 2 HDF, 4 PWF, 8 OSF, 16 RNF; 0 clears |
+
+**Soft PLC, simulation clock and commissioning**:
+
+| Topic | Type | Dir | Written by | Meaning |
+|---|---|---|---|---|
+| `plc/source` | number | in | PlcLink (start value, and 0 when disabled), TakeSequencer, broker | Who runs the line: 0 `CellSequencer`, 1 soft PLC |
+| `plc/link` | bool | out | PlcLink | PLC answers and its heartbeat moves |
+| `plc/heartbeat` | number | out | PlcLink | PLC scan counter |
+| `plc/simulate_loss` | bool | in | CommissioningSuite | PlcLink stops talking to the PLC |
+| `sim/time_scale` | number | out | SimClockReporter | `Time.timeScale` |
+| `sim/realtime_ratio` | number | out | SimClockReporter | Simulated seconds per wall-clock second, once a second |
+| `gate1/force` | number | in | CommissioningSuite | Force `gate1/part_present`: 0 none, 1 off, 2 on |
+| `gate1/clear` | bool | in | CommissioningSuite | Rising edge: JamClearer lifts the part out of the gate |
+| `arm/inhibit` | bool | in | CommissioningSuite | Arm ignores pick commands |
+| `arm/drop_part` | bool | in | CommissioningSuite | Gripper lets go of its part |
+| `vc/run` | number | in | TakeSequencer, broker | 1 runs the suite; 2 runs it and stops at the first failure. The panel's Run tests button calls the suite directly |
+| `vc/test` | number | out | CommissioningSuite | Scenario under test, 1-based; 0 idle |
+| `vc/result` | number | out | CommissioningSuite | Each finished scenario's outcome |
+
+**Link and capture**: `link/connected` (bool, out, MqttBridge: broker link up) and `demo/fresh_take` (bool, in, TakeControls: parts lost back to 0, event log emptied).
+
+"Logic source" means `CellSequencer` or, while `plc/source` = 1, `PlcLink` publishing what the PLC decided. `CellTopics` holds every constant; the CNC telemetry names are also built in `DatasetReplayer` and must stay identical to `tools/replay/replay.py`.
 
 ---
 
@@ -164,92 +184,115 @@ The 19 infeed, gate1, arm and outfeed topics each have a realvirtual signal comp
 ### Layers and who may talk to whom
 
 ```
- Layer 4  Presentation     (M4) dashboard, 3D fault highlight      reads bus, publishes commands
- Layer 3  Stations/logic   CellSequencer, PressStation,            reads bus, publishes to bus
-                           FaultInjector
- Layer 2  Data spine       SignalBus, SignalPublisher, MqttBridge, the bus and its mirror
-                           TopicPath/TopicFilter/SignalPayload,
-                           TwinConfig, CellContext
- Layer 1  Bridge           TwinSignals, ArmSignalBridge,           the only code that references
-                           PartGripper                             realvirtual types
- Layer 0  Simulation       realvirtual drives/sensors/MUs, PhysX,  third-party, never edited
-                           ArmController on ArticulationBodies
+ Layer 4  Presentation   Dashboard, Commissioning panel, StackLight,     reads the bus; buttons publish commands
+                         FaultEffects, capture rig
+ Layer 3  Logic          CellSequencer or PlcLink, PressStation,         reads the bus, publishes to it
+                         reporters, FaultInjector, PressDegradation,
+                         ToolChanger, CommissioningSuite
+ Layer 2  Data spine     SignalBus, SignalPublisher, MqttBridge,         the bus and its two mirrors
+                         Modbus client, TwinConfig, CellContext
+ Layer 1  Bridge         TwinSignals, ArmSignalBridge, PartGripper,      the only code that references realvirtual
+                         JamClearer
+ Layer 0  Simulation     realvirtual drives, sensors, parts; PhysX;      third-party, never edited
+                         ArmController on ArticulationBodies
 ```
 
-The assembly definitions enforce this: `TwoDude.FactoryTwin.Twin` and `TwoDude.FactoryTwin.Robot` have no reference to realvirtual, so logic cannot reach into the simulation even by accident. Only `TwoDude.FactoryTwin.Twin.Realvirtual` references `realvirtual.base`.
+The assembly definitions enforce it: `TwoDude.FactoryTwin.Twin`, `.Robot` and `.UI` have no reference to realvirtual. Only `TwoDude.FactoryTwin.Twin.Realvirtual` references `realvirtual.base`.
+
+### Who runs the line
+
+```
+                     plc/source = 0                        plc/source = 1
+ ┌───────────────────────────────────────┐  ┌──────────────────────────────────────────────┐
+ │ CellSequencer ticks CellSequence and   │  │ CellSequencer stands aside (PlcLink enabled   │
+ │ publishes drive, pick and line topics. │  │ and source says PLC). PlcLink publishes the   │
+ │ PlcLink still polls: the PLC shadows   │  │ PLC's coils and registers as those topics.    │
+ │ the line and counts parts, drives      │  │ PLC heartbeat quiet > 0.5 s → PlcLink stops   │
+ │ nothing.                               │  │ both belts, drops the pick, line state held.  │
+ └───────────────────────────────────────┘  └──────────────────────────────────────────────┘
+```
+
+Watchdogs run both ways. The twin holds the line if the PLC's heartbeat stops for 0.5 s (`TwinConfig`). `cell.st` holds the line if the twin's heartbeat register stops for 3 s. Disabling `PlcLink` hands the line back to Unity, which starts a fresh sequence.
 
 ### Components in the scene
 
 | Object | Component | Order | Responsibility |
 |---|---|---|---|
-| `Cell` | `CellContext` | −1000 | Owns the `SignalBus` (created lazily) and the `TwinConfig` reference. Every other component gets both through a serialized reference to this. |
-| `Cell` | `MqttBridge` | −200 | Owns the MQTT client and the `SignalPublisher`. Connect/reconnect loop on a background task; inbound messages are queued and replayed onto the bus in `Update`. |
-| `Cell` | `TwinSignals` | −100 | Polls the 19 bound realvirtual signals each `FixedUpdate` and publishes changes; writes PLC outputs when their topic is published. |
-| `Cell` | `CellSequencer` | 100 | Builds `CellInputs` from the bus, ticks `CellSequence`, publishes changed outputs and line status. |
-| `Cell/Signals/*` | realvirtual `PLCInput*` / `PLCOutput*` | — | One GameObject per signal, named `<station>.<signal>`. |
-| `Cell/Press` | `PressStation` | 0 | Parses `ai4i2020.csv`, hosts `DatasetReplayer`, 2 rows/s, healthy baseline. |
-| `Cell/Press` | `FaultInjector` | 0 | Turns `press/inject_fault` into the press's fault filter. |
-| `Cell/Press` | `PressDegradation` | −10 | Runs `DegradationScenario` on `press/degrade`; overrides published tool wear, then hands over to TWF rows (M5). |
-| `Cell/Press` | `ToolChanger` | 0 | On `press/tool_change`: stops degradation, `PressStation.ChangeTool`, keeps `FaultInjector` consistent (M5). |
-| `Cell/Press` | `PressRiskReporter` | 40 (LateUpdate) | Runs `FailureRiskModel` when new telemetry arrives; publishes risk, tool life left and maintenance due (M5). |
-| `Cell/Press` | `PressHealthReporter` | 50 (LateUpdate) | Publishes `press/health` on change: fault flags, or the risk warning band from `PressRiskConfig`. |
-| `Cell` | `LineMetricsReporter` | 110 | Ticks `LineMetrics` after the sequencer; publishes parts/hour and parts lost. |
-| `Arm` | `ArmController` | 0 | Reads joint positions, ticks `ArmProgram`, writes drive targets. |
-| `Arm` | `ArmSignalBridge` | 50 | Pick command edge → `RequestPick()`; writes busy, grip command and joint angles to signals. |
-| `Arm/…/tool0` | `PartGripper` | 0 | On grip command, fixes the part at the gate to the flange; releases on open. |
-| `Cell/Press/PressMachine` | realvirtual `CNC.prefab` | — | The machine shown for the press station (M4). |
-| `Cell/Press/FaultFx` | `FaultEffects`; children `Sparks`, `Steam` (Particle Pack instances), `SparkSound` (AudioSource) | 0 | Fault sparks, steam and spark crackle on the CNC (M6). |
-| `Cell/HallAmbience` | `AudioSource` | — | Factory ambience loop, 2D, volume 0.35 (M6). |
-| `Cell/Press/StackLight` | `StackLight` | 0 | Andon tower on the machine roof plus `Cell/Press/StackLightGlow` (M4). |
-| `CaptureRig` | `ShotDirector`, `TakeSequencer`; children `CellFocus`, `LineFocus`, `CncFocus`, `PanelFocus`, `HallPath`, `Shot1_HallDolly` … `Shot5_Panel` | 0 | Capture camera shots (M6). `realvirtual/Main Camera` carries the `CinemachineBrain`, disabled until a shot is live. `TakeSequencer` plays takes A, B and C on a fixed timeline for Unity Recorder. |
-| `Dashboard` | `TakeControls`, `FpsReadout` | 0, 210 | Capture keys (1, 2, 3, 0, F9, F10) and the FPS readout / `-logfps` log (M6). |
-| `Dashboard` | `UIDocument` + `DashboardController` | 200 | `Dashboard.uxml` on `DashboardPanelSettings`; view model bound to the bus; fault buttons call `FaultInjector`. |
-| `PickStation` (prefab instance) | `PartTransfer` | — | M1 placeholder, **disabled**. Same `pick_cmd`/`busy` contract the arm uses. |
-
-`Cell` also parents seven prefab instances that make up the physical line: `PartSource`, `Infeed`, `Gate1`, `PickStation`, `Outfeed`, `ExitSensor` and `Sink`. `PartSource/Cube` and both `Conveyor/Conveyor` belt meshes carry `VisibleLayerCopy`: the Factory Training URP renderer (`PC_Renderer_DC`, opaque and transparent masks 767 = layers 0–7 and 9) skips `rvMU` and `rvTransport`, so without the copy the parts and belt surfaces show in the Scene view only.
+| `Cell` | `CellContext` | −1000 | Owns the bus, the `TwinConfig` reference and the force table |
+| `Cell` | `MqttBridge` | −200 | MQTT client, reconnect loop, inbound queue replayed on the main thread |
+| `Cell` | `TwinSignals` | −100 | Mirrors the 19 realvirtual signals; applies forced values to inputs |
+| `Cell` | `CellSequencer` | 100 | Ticks `CellSequence` unless the PLC runs the line |
+| `Cell` | `PlcLink` | 100 | Modbus poll thread, PLC outputs onto the bus, heartbeat watchdog |
+| `Cell` | `LineMetricsReporter` | 110 | Parts per hour and parts lost |
+| `Cell` | `CommissioningSuite` | 150 | Plays scenarios, grades checks, writes the CSV report |
+| `Cell` | `SignalForcer` | 0 | `gate1/force` → force table |
+| `Cell` | `SimClockReporter` | 0 | Time scale and real-time ratio, warns while the PLC runs and the ratio drifts |
+| `Cell/Signals/*` | realvirtual `PLCInput*` / `PLCOutput*` | — | One object per signal, named `<station>.<signal>` |
+| `Cell/Press` | `PressStation` | 0 | Parses `ai4i2020.csv`, hosts `DatasetReplayer`, 2 rows/s, calm healthy baseline |
+| `Cell/Press` | `FaultInjector` | 0 | `press/inject_fault` → the CNC's fault filter |
+| `Cell/Press` | `PressDegradation` | −10 | Runs `DegradationScenario`, overrides published tool wear, hands over to real TWF rows |
+| `Cell/Press` | `ToolChanger` | 0 | `press/tool_change` → fresh tool, tool-wear failure cleared |
+| `Cell/Press` | `PressRiskReporter` | 40 | Telemetry → `FailureRiskModel` → risk topics |
+| `Cell/Press` | `PressHealthReporter` | 50 | Faults and risk warning → `press/health` |
+| `Cell/Press/PressMachine` | realvirtual `CNC.prefab` | — | The machine shown for the station, at (−0.3, 0.37, 3.3) |
+| `Cell/Press/StackLight` | `StackLight` | 0 | Green / amber / red flashing at 1.5 Hz, plus a glow light on the door |
+| `Cell/Press/FaultFx` | `FaultEffects` | 0 | Sparks, steam and spark crackle while health is Fault |
+| `Cell/HallAmbience` | `AudioSource` | — | Factory ambience loop |
+| `[Gate1]` | `JamClearer` | 0 | `gate1/clear` → removes the part in the gate |
+| `[PartSource]`, `[Infeed]`, `[Outfeed]` | `VisibleLayerCopy` | 0 | Draws parts and belt surfaces on a layer the sample's renderer shows |
+| `Arm` | `ArmController` | 0 | Joints, baked program, drive gains |
+| `Arm` | `ArmSignalBridge` | 50 | Pick edge → arm (ignored under `arm/inhibit`); busy, grip, joints → signals |
+| `Arm/…/tool0` | `PartGripper` | 0 | Grips the part at the gate; releases on open or `arm/drop_part` |
+| `[PickStation]` | `PartTransfer` | — | M1 placeholder, **disabled** |
+| `Dashboard` | `UIDocument`, `DashboardController` | 200 | `Dashboard.uxml`; CNC and line panels, event log, buttons |
+| `Dashboard` | `TakeControls`, `FpsReadout`, `LicenseTextsView` | 0, 210, 220 | Capture keys, FPS readout and `-logfps`, full licence texts in Credits |
+| `Commissioning` | `UIDocument`, `CommissioningPanel` | 200 | Scenario rows, logic source, program, code card, Run tests |
+| `CaptureRig` | `ShotDirector`, `TakeSequencer`; `HallPath` (`SplinePath`); `Shot1_HallDolly` (`DollyMove`) … `Shot6_PickStation` | 0 | Six Cinemachine 3 shots and scripted takes for Unity Recorder |
 
 ### One physics tick
 
-Execution order gives a fixed read → act → decide sequence every `FixedUpdate`:
+Execution order gives a fixed read → act → decide sequence in every `FixedUpdate`:
 
-1. `TwinSignals` (−100) reads every bound signal and publishes what changed. The bus now holds the simulation state as of the previous tick.
-2. `ArmController` (0) reads joints, advances the program, sets drive targets. `PartGripper` (0) acts on the grip command.
-3. `ArmSignalBridge` (50) passes a pick-command edge to the arm and writes busy / grip / joint angles to their signals.
-4. `CellSequencer` (100) reads the bus, ticks the sequence and publishes changed commands. `TwinSignals`' subscriptions write those straight into the realvirtual outputs, synchronously, inside the publish call.
+1. `TwinSignals` (−100) reads the 19 signals, substitutes forced values, publishes what changed.
+2. `ArmController` and `PartGripper` (0) move the arm and act on the grip command.
+3. `ArmSignalBridge` (50) passes a pick edge to the arm and writes its feedback to signals.
+4. `CellSequencer` or `PlcLink` (100) publishes the logic source's commands. `TwinSignals` writes them into the simulation inside the publish call.
+5. `LineMetricsReporter` (110) and `CommissioningSuite` (150) observe the result.
 
-Consequence: anything the arm bridge writes in step 3 reaches the bus in step 1 of the next tick. One fixed step of latency on arm feedback is by design and the sequence's acknowledgement timeout (2 s) dwarfs it.
+Arm feedback reaches the bus one fixed step late, which the 2 s acknowledgement timeout absorbs. The PLC adds its own latency: one 50 Hz poll plus one 20 ms PLC scan.
 
-`Update` carries the non-physics work: `MqttBridge` drains inbound messages and flushes the publisher; `PressStation` advances the dataset replay.
+### The two links
 
-### The MQTT link
+**MQTT** (`MqttBridge`, `SignalPublisher`). A topic leaves only when it has moved past the deadband and at most 10 times a second; changes inside the window coalesce. While the broker is down the latest value per topic is kept, and the whole cell is resent on reconnect. Inbound uses MQTT 5 no-local, and an inbound message is never echoed back. One warning when the broker is unreachable, then quiet retries.
 
-- Outbound: `SignalPublisher` subscribes to `cell/#` on the bus and decides what leaves. A topic is sent only when it has moved beyond the deadband (booleans: on any change) and at most at `publishRateHz` per topic; changes inside the window are coalesced to the latest value.
-- Link down: nothing is flushed, the publisher keeps the latest value per topic, and on reconnect `ResendAll()` queues the whole cell again (except topics last written by the far side).
-- Inbound: the client subscribes to `cell/#` with MQTT 5 no-local, so the broker does not echo the cell's own publishes. Each inbound message is marked with `ExpectInbound` before it goes on the bus, so it is not sent back out.
-- Messages that do not parse as our topic and payload are counted as dropped and ignored — other traffic on the same broker is harmless.
-- Publishing is fire-and-forget: a slow broker never stalls the simulation.
-- All settings come from `Assets/_Project/Data/TwinConfig.asset`: host `127.0.0.1`, port `1883`, client id `factory-twin-unity`, reconnect 5 s, 10 Hz, deadband 0.001.
+**Modbus TCP** (`PlcLink`, `ModbusClient`, `ModbusTcp`, `PlcImage`). Our own client, no package: a pure frame codec for the four function codes needed, and a blocking socket client on one background thread per enable. Each poll writes the sensor block (holding registers 1024–1028) and reads the command coils 0–3 and status registers 0–3. Values cross to the main thread under a lock. The map lives in `Data/PlcIoMap.asset` and matches the located variables in `cell.st`:
+
+| Tag | Address | Direction | Topic |
+|---|---|---|---|
+| `part_at_gate`, `arm_busy`, `part_at_exit`, `press_health` | `%MW0`–`%MW3`, registers 1024–1027 | twin → PLC | `gate1/part_present`, `arm/busy`, `outfeed/part_exit`, `press/health` |
+| `twin_heartbeat` | `%MW4`, register 1028 | twin → PLC | counts once a second |
+| `infeed_run`, `outfeed_run`, `pick_cmd`, `line_stalled` | `%QX0.0`–`%QX0.3`, coils 0–3 | PLC → twin | `infeed/drive_fwd`, `outfeed/drive_fwd`, `arm/pick_cmd`, `line/stalled` |
+| `line_state`, `plc_heartbeat`, `parts_out`, `cycle_time_cs` | `%QW0`–`%QW3`, registers 0–3 | PLC → twin | `line/state`, `plc/heartbeat`, `line/parts_out`, `line/cycle_time_s` (×0.01) |
+
+The twin writes only holding registers, because Modbus cannot write `%IX` inputs. Host, port, unit id, poll rate (50 Hz), watchdog (0.5 s) and I/O timeout come from `TwinConfig`.
 
 ---
 
 ## 5. Control logic
 
-### Cell sequence (the virtual PLC)
-
-`CellSequence` is a four-state machine ticked with the fixed timestep.
+### Cell sequence (the C# PLC, and the reference for `cell.st`)
 
 ```
                   part at gate                    arm done, gate clear
       ┌─────────┐ ───────────► ┌──────────────┐ ─────────────────────► (Feeding)
       │ Feeding │              │ Transferring │
-      │   (0)   │ ◄─────────── │     (1)      │ ── arm done, part still at gate:
-      └────┬────┘              └──────┬───────┘    retry the pick (PickRetries++)
-           │  ▲                       │
-      hold │  │ hold cleared          │ no completion within 15 s (Stalls++)
+      │   (0)   │ ◄─────────── │     (1)      │ ── arm done, part still at gate: retry
+      └────┬────┘              └──────┬───────┘
+      hold │  ▲ hold cleared          │ no finish within 15 s
            ▼  │                       ▼
       ┌─────────┐              ┌──────────────┐
-      │  Held   │ ◄─────────── │   Stalled    │ ── gate clear and arm idle ──► Feeding
-      │   (3)   │  (if hold)   │     (2)      │
+      │  Held   │ ◄─ if hold ─ │   Stalled    │ ── gate clear and arm idle ──► Feeding
+      │   (3)   │              │     (2)      │
       └─────────┘              └──────────────┘
 ```
 
@@ -260,154 +303,139 @@ Consequence: anything the arm bridge writes in step 3 reaches the bus in step 1 
 | Stalled | stop | run | off |
 | Held | stop | stop | off |
 
-- **Handshake.** `pick_cmd` goes high; the arm answers with `busy`. If no `busy` arrives within 2 s the command is dropped for one tick and raised again so the arm sees a fresh rising edge.
-- **Hold.** Asserted while `press/machine_failure` or any `press/fault_*` is true. A hold never interrupts a transfer: the pick finishes, then the line goes to Held, so the arm never freezes with a part in the gripper.
-- **Counting.** `parts_out` increments on the rising edge of `outfeed/part_exit`; `cycle_time_s` is the time between the last two exits.
+- **Handshake.** No `busy` within 2 s → the command drops for one tick and rises again.
+- **Hold.** While the CNC is faulted (`PressHealthRule.IsFaulted`). A pick under way finishes first.
+- **Counting.** Parts out on the rising edge of `outfeed/part_exit`; cycle time on a running clock that leaves out held time.
+
+`tools/plc/cell.st` is the same machine in Structured Text: four states, handshake with re-pulse, 15 s transfer timeout, hold on `press_health` = 2, plus the twin-heartbeat check. Its key line is `infeed_run := state = FEEDING;` (line 148).
 
 ### Arm program
 
-`ArmProgram` plays eight baked poses: `home → pick_approach → pick (close, dwell 0.25 s) → lift → place_approach → place (open, dwell 0.25 s) → retreat → home_end`. Commanded angles ramp at 110 °/s per joint. A waypoint completes only when the commanded pose has arrived, every measured joint is within 1.5° and the dwell has elapsed — so the gripper acts where the arm actually is, not where it was told to be.
+Eight baked poses (`home → pick_approach → pick (close) → lift → place_approach → place (open) → retreat → home_end`), joints ramped at 110 °/s, each pose done only when the measured joints are within 1.5° and the dwell has passed. Poses were solved offline from the UR5e's closed-form kinematics; there is no runtime IK, so a layout change means re-baking.
 
-The poses were solved offline from the UR5e's closed-form kinematics and stored on the `ArmController` in the scene. There is no runtime IK. Changing the conveyor layout, the part size or the arm base means re-baking them.
-
-`ArmController` also sets the joint drive gains on `Awake` (stiffness 100 000, damping 10 000, force limit 1 000) because the URDF import leaves them at zero.
-
-### Fault injection, end to end
+### Predictive maintenance chain
 
 ```
- trigger                    press                         line
- ───────                    ─────                         ────
- inject_fault = 1  ──►  FaultInjector sets the
- (broker, Inspector,    press's fault filter
-  or Inject() from          │
-  the M4 button)            ▼
-                        next dataset row (≤ 0.5 s) is
-                        a tool-wear failure row:
-                        fault_twf = true,
-                        machine_failure = true  ──►  CellSequencer sees a press fault
-                                                     → Hold. A pick in progress finishes,
-                                                     then line/state = 3, both belts stop.
-
- inject_fault = 0  ──►  filter cleared; healthy
-                        baseline rows resume,
-                        faults drop to false     ──►  Hold released → Feeding.
+ Wear tool out (key 1, button, press/degrade)
+   │
+   ▼
+ PressDegradation: tool wear 160 → 215 min over 75 s; calm rows keep the other modes quiet
+   │
+   ▼
+ PressRiskReporter → FailureRiskModel: margins to AI4I's published limits
+   │   tool wear from 180 min (window opens at 200)   overstrain from 90 % of wear × torque limit
+   │   power below 3800 W or above 8700 W             heat: within 0.5 K and 50 rpm of both limits
+   │   risk = the highest mode; tool life = minutes to 200; maint_due at warning or ≤ 20 min left
+   ▼
+ PressHealthReporter: Warning at risk ≥ 0.5 (clears < 0.4) ──► amber lamp, "Tool change due", "CNC warning"
+   │
+   ├── act: Change tool (key 2) → ToolChanger → fresh tool row, risk 0 → line never stops, 0 parts lost
+   │
+   └── ignore: at 215 min the real TWF failure rows arrive → health Fault → red flashing lamp, sparks
+              → line holds after the current pick → parts lost counts at the pre-hold rate
 ```
 
-The line reacts to the press's fault signals, not to the injector. A fault arriving from the Python replayer or any other client on the broker holds the line in exactly the same way.
+Measured (M5 exit): warning 34 s before the failure; tool change at the recommendation, 0 parts lost. Against all 10,000 AI4I rows (nothing is trained, so every row is held out): all 330 rows labelled TWF, HDF, PWF or OSF are warned; process-margin alarms on 2.4 % of healthy rows. AI4I's failures follow published rules, so margins to those rules catch them; the demo's value is the lead time and acting on it.
 
-Measured in the M3 exit run: fault reported 0.5 s after injection; faults cleared within 0.3 s of the clear command.
+Injected faults (`press/inject_fault`, key 3 clears) still jump straight to failure rows, for the detection beat and the commissioning suite.
+
+### Commissioning suite
+
+`CommissioningSuite` runs six scenarios against whichever logic source runs the line, waiting for a running line before each. Every scenario also checks both conveyor interlocks and that the plant ran in real time, because the PLC's timers count wall-clock time.
+
+| Scenario | Stimulus | Must happen |
+|---|---|---|
+| Normal run (60 s) | none | ≥ 6 parts out, no stall, no hold |
+| Stuck gate sensor (50 s) | gate forced on for 25 s | infeed stays stopped while forced; feeds again within 15 s of release |
+| Part dropped (45 s) | gripper lets go once it holds a part | no stall, no hold, ≥ 3 parts out |
+| Arm not ready (50 s) | arm ignores picks for 30 s, then the jam is cleared | stalls within 28 s; feeds again within 12 s of clearing |
+| CNC fault (30 s) | tool-wear fault for 15 s | holds within 9 s, belts stay stopped, runs within 6 s of clearing |
+| PLC link lost (20 s, PLC only) | twin stops talking to the PLC for 6 s | holds within 1.5 s, belts stay stopped, runs within 4 s of the link returning |
+
+Base checks in every scenario: "Interlock: infeed stops for a part at the gate", "Interlock: infeed stops while the arm works" (both 0.3 s grace), "Plant ran in real time" (ratio within ±10 %).
+
+`vc/run` = 2 stops at the first failed check, as an engineer would on site. Results go to `vc/test`, `vc/result`, the Commissioning panel and `Builds/Commissioning/vc_<source>_<time>.csv`.
+
+**The seeded bug.** `tools/plc/cell_buggy.st` differs from `cell.st` in one line: `infeed_run := state = FEEDING OR (state = TRANSFERRING AND ack_seen);`. The infeed restarts as soon as the arm acknowledges the pick, so the next part rides into the gate under the arm. The suite fails the interlock checks from 1.5 s; in 3D, parts queue nose-to-tail into the pick station and parts out stops climbing.
+
+| Logic source | Program | Result (M8, 2026-10-23) |
+|---|---|---|
+| Unity `CellSequencer` | — | 5 passed, PLC link lost not applicable |
+| Soft PLC | `cell.st` | 6 of 6 passed |
+| Soft PLC | `cell_buggy.st` | all 6 failed; 0 of 6 parts out in the normal run |
 
 ---
 
 ## 6. Code map
 
-All project code is under `Assets/_Project/`. About 2,400 lines of runtime and editor C#, 1,150 lines of tests.
+All project code is under `Assets/_Project/`: about 7,800 lines of runtime and editor C#, 2,700 lines of tests and 700 lines of UXML/USS.
 
 ### Assemblies
 
 | Assembly | Folder | References | Contains |
 |---|---|---|---|
-| `TwoDude.FactoryTwin.Twin` | `Scripts/Twin/` (incl. `Mqtt/`) | MQTTnet DLL (auto) | Data spine, cell logic, press, MQTT bridge |
+| `TwoDude.FactoryTwin.Twin` | `Scripts/Twin/` (with `Mqtt/`, `Plc/`, `Commissioning/`) | MQTTnet DLL | Data spine, cell logic, CNC, risk, PLC link, commissioning |
 | `TwoDude.FactoryTwin.Robot` | `Scripts/Robot/` | — | Arm program and controller |
-| `TwoDude.FactoryTwin.Twin.Realvirtual` | `Scripts/Twin/Realvirtual/` | Twin, Robot, `realvirtual.base` | The bridge layer |
-| `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin, Unity.InputSystem, Unity.Cinemachine, Unity.Splines, Unity.Mathematics | Dashboard view model, sparkline element, controller (M4); take controls and FPS readout (M6) |
-| `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | — (Editor only) | `ProjectSettingsGuard` |
-| `TwoDude.FactoryTwin.UI.Editor` | `Scripts/UI/Editor/` | UI, Unity.Recorder, Unity.Recorder.Base, Unity.Recorder.Editor (Editor only) | `TakeRecorderHook` (M6) |
+| `TwoDude.FactoryTwin.Twin.Realvirtual` | `Scripts/Twin/Realvirtual/` | Twin, Robot, `realvirtual.base` | The bridge |
+| `TwoDude.FactoryTwin.UI` | `Scripts/UI/` | Twin, Input System, Cinemachine, Splines, Mathematics | Dashboard, commissioning panel, capture tools |
+| `TwoDude.FactoryTwin.Twin.Editor` | `Scripts/Twin/Editor/` | Editor only | Settings guard, licence-file copy, I/O list export |
+| `TwoDude.FactoryTwin.UI.Editor` | `Scripts/UI/Editor/` | UI, Unity Recorder (Editor only) | `TakeRecorderHook` |
 | `TwoDude.FactoryTwin.Robot.Editor` | `Scripts/Robot/Editor/` | URDF-Importer (Editor only) | `ArmImporter` |
-| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 183 tests |
+| `TwoDude.FactoryTwin.Tests.EditMode` | `Tests/EditMode/` | Twin, Robot, UI, NUnit | 228 tests |
 
-UXML and USS live in `Assets/_Project/UI/` (`Dashboard.uxml`, `Dashboard.uss`, `Credits.uxml`).
+### Files by area
 
-### Files
+**Data spine** (`Twin/`): `TopicPath`, `TopicFilter`, `SignalValue` (value and message), `SignalPayload` (JSON), `SignalBus` (pub/sub with last value), `SignalPublisher` (rate limit, deadband, resend, no echo), `Mqtt/MqttBridge`, `TwinConfig` (broker and PLC settings), `CellContext`, `CellTopics`, `FrameRateLock`.
 
-| File | Kind | Role |
-|---|---|---|
-| `Twin/TopicPath.cs` | struct | A validated `cell/<station>/<signal>` topic |
-| `Twin/TopicFilter.cs` | static | MQTT wildcard validation and matching |
-| `Twin/SignalValue.cs` | structs | `SignalValue` (number or bool) and `SignalMessage` (topic, value, time) |
-| `Twin/SignalPayload.cs` | static | JSON payload serialise / strict parse |
-| `Twin/SignalBus.cs` | class | In-process pub/sub with last-value cache; main thread only; safe to subscribe or dispose during dispatch |
-| `Twin/SignalPublisher.cs` | class | Rate limit, deadband, coalescing, resend-on-reconnect, no echo of inbound |
-| `Twin/Mqtt/MqttBridge.cs` | MonoBehaviour | MQTT client lifecycle and thread marshalling |
-| `Twin/TwinConfig.cs` | ScriptableObject | Broker and publishing settings |
-| `Twin/CellContext.cs` | MonoBehaviour | Bus and config owner; `NowUnixMs` |
-| `Twin/CellTopics.cs` | static | Topic constants for the cell loop |
-| `Twin/CellSequence.cs` | class | The virtual PLC state machine |
-| `Twin/CellSequencer.cs` | MonoBehaviour | Hosts `CellSequence`; Inspector status mirror |
-| `Twin/Ai4iDataset.cs` | types | `FaultMode`, `Ai4iRow`, `Ai4iCsv` parser (columns found by header name) |
-| `Twin/DatasetReplayer.cs` | class | Rows → bus at N rows/s; loop, fault filter, healthy baseline, backlog cap |
-| `Twin/PressStation.cs` | MonoBehaviour | Hosts `DatasetReplayer`; Inspector controls live in Play mode |
-| `Twin/FaultInjector.cs` | MonoBehaviour | `inject_fault` command → press fault filter; `Inject()` / `Clear()` API |
-| `Twin/PressHealthRule.cs` | enum + static | `MachineHealth`; `IsFaulted(bus)` (shared with `CellSequencer`) and `Evaluate(faulted, warning)` |
-| `Twin/PressHealthReporter.cs` | MonoBehaviour | Publishes `press/health` on change: faults (M4), risk warning with hysteresis (M5) |
-| `Twin/DegradationScenario.cs` | class | Tool wear on a schedule, start → failure wear over a fixed time (M5) |
-| `Twin/PressDegradation.cs` | MonoBehaviour | `press/degrade` → scenario → `PressStation.ToolWearOverride`, then TWF rows (M5) |
-| `Twin/ToolChanger.cs` | MonoBehaviour | `press/tool_change` → fresh tool, tool-wear failure cleared (M5) |
-| `Twin/PressRiskConfig.cs` | ScriptableObject | `FailureRiskSettings` and the warning clear level; instance at `Data/PressRiskConfig.asset` (M5) |
-| `Twin/PressRiskReporter.cs` | MonoBehaviour | Telemetry → `FailureRiskModel` → risk topics (M5) |
-| `Twin/FailureRiskModel.cs` | static + types | `PressReading`, `FailureRiskSettings`, `RiskAssessment`; threshold-margin failure risk, remaining tool life, maintenance due (M5) |
-| `Twin/VisibleLayerCopy.cs` | MonoBehaviour | Draws a collider-free copy of a mesh on Default, because the sample's URP renderer skips realvirtual's layers (M6) |
-| `Twin/FaultEffects.cs` | MonoBehaviour | Plays sparks/steam particle systems while press health is Fault (M6) |
-| `Twin/StackLightPattern.cs` | static | Lamp and glow levels for a health value; red flashes at 1.5 Hz (M4) |
-| `Twin/StackLight.cs` | MonoBehaviour | Health topic → stack-light lamps (MaterialPropertyBlock) and glow light (M4) |
-| `Twin/LineMetrics.cs` | class | Rolling parts/hour; parts lost while held at the frozen pre-hold rate (M4) |
-| `Twin/LineMetricsReporter.cs` | MonoBehaviour | Hosts `LineMetrics`; publishes parts/hour and parts lost as whole numbers (M4) |
-| `Twin/FrameRateLock.cs` | static | 60 fps and vSync off in player builds (not in the Editor) |
-| `Twin/Realvirtual/TwinSignals.cs` | MonoBehaviour | Signal ↔ bus mirror |
-| `Twin/Realvirtual/ArmSignalBridge.cs` | MonoBehaviour | Arm ↔ signals |
-| `Twin/Realvirtual/PartGripper.cs` | MonoBehaviour | Gripper acting on realvirtual `MU` parts |
-| `Twin/Realvirtual/PartTransfer.cs` | MonoBehaviour | M1 placeholder, disabled in the scene |
-| `Twin/Editor/LicenseFilesPostprocessor.cs` | Editor | After a standalone build, copies `Assets/_Project/Licenses/*.txt` to `<build>/Licenses/` (M6) |
-| `Twin/Editor/ProjectSettingsGuard.cs` | Editor | On every reload: Build Settings = `Cell.unity` only, Run In Background on, realvirtual layers present |
-| `UI/DashboardViewModel.cs` | class | Bus → bindable display text, sparkline series and event log (M4) |
-| `UI/EventLog.cs` | class | Readable lines for state transitions, newest first (M4) |
-| `UI/SparkSeries.cs` | class | Fixed-size sample ring with a version counter (M4) |
-| `UI/Sparkline.cs` | VisualElement | `[UxmlElement]` Painter2D line for a `SparkSeries` (M4) |
-| `UI/TakeControls.cs` | MonoBehaviour | Capture keyboard shortcuts and fresh take (M6) |
-| `UI/FpsMeter.cs` | class | Average fps and worst frame per window (M6) |
-| `UI/FpsReadout.cs` | MonoBehaviour | FPS label (F9) and `-logfps` player-log lines (M6) |
-| `UI/LicenseTextsView.cs` | MonoBehaviour | Fills Credits → Full licence texts from `Licenses/*.txt` (M6) |
-| `UI/ShotDirector.cs` | MonoBehaviour | Capture keys 4–9: Cinemachine shot priorities, brain on/off, operator navigation off/on (M6) |
-| `UI/DollyMove.cs` | MonoBehaviour | Eased 8 s move along a `CinemachineSplineDolly` path (M6) |
-| `UI/TakeSequencer.cs` | MonoBehaviour | Capture takes A, B, C on a fixed timeline: warm-up, pre-roll with fresh take, timed shots and commands; `TakeStarted`/`TakeEnded` events (M6) |
-| `UI/Editor/TakeRecorderHook.cs` | Editor class | Turns each take into a Unity Recorder MP4: Game View 1920×1080, constant 60 fps, H.264, audio, to `Builds/Recordings/` (M6) |
-| `UI/SplinePath.cs` | MonoBehaviour | Keeps a `SplineContainer` equal to a few Inspector points, auto-smoothed (M6) |
-| `UI/DashboardController.cs` | MonoBehaviour | Data source, sparkline series, status classes, fault buttons (M4). On the root `Dashboard` object with its `UIDocument`. |
-| `Robot/ArmProgram.cs` | class | Waypoint player; `ArmWaypoint`, `GripAction` |
-| `Robot/ArmController.cs` | MonoBehaviour | ArticulationBody drive targets and gains |
-| `Robot/Editor/ArmImporter.cs` | Editor | `Tools > Factory Twin > Import Cell Arm (UR5e)`; pins the articulation root |
+**Cell** (`Twin/`): `CellSequence` (the C# PLC), `CellSequencer`, `LineMetrics` + `LineMetricsReporter`, `SimClock` + `SimClockReporter`, `VisibleLayerCopy`.
+
+**CNC and prediction** (`Twin/`): `Ai4iDataset` (`FaultMode`, `ProductQuality`, `Ai4iRow`, CSV parser), `DatasetReplayer` (pacing, fault filter, calm baseline, tool-wear override, seek fresh tool), `PressStation`, `FaultInjector`, `DegradationScenario` + `PressDegradation`, `ToolChanger`, `FailureRiskModel` + `PressRiskConfig` + `PressRiskReporter`, `PressHealthRule` + `PressHealthReporter`, `StackLightPattern` + `StackLight`, `FaultEffects`.
+
+**Soft PLC** (`Twin/Plc/`): `ModbusTcp` (pure codec), `ModbusClient` (blocking socket), `PlcImage` (I/O map ↔ Modbus blocks ↔ bus values), `PlcWatchdog`, `PlcIoMap` (ScriptableObject), `PlcIoList` (CSV rows), `LogicSource` + `LogicSourceRule`, `PlcLink`.
+
+**Commissioning** (`Twin/Commissioning/`): `CommissioningScenarios` (the six, as data), `CommissioningScenario` + `ScenarioRun` (pure engine), `ScenarioCheck` (never, within, parts-out), `CellSnapshot`, `CommissioningReport` (CSV), `CommissioningSuite`, `SignalForces` (force table) + `SignalForcer`.
+
+**Bridge** (`Twin/Realvirtual/`): `TwinSignals`, `ArmSignalBridge`, `PartGripper`, `JamClearer`, `PartTransfer` (disabled).
+
+**Robot**: `ArmProgram`, `ArmController`; Editor `ArmImporter`.
+
+**UI** (`UI/`): `DashboardViewModel` (bus → bindable text, series, log), `DashboardController`, `EventLog`, `SparkSeries`, `Sparkline` (Painter2D element), `CommissioningPanel`, `LicenseTextsView`, `TakeControls`, `TakeSequencer`, `ShotDirector`, `DollyMove`, `SplinePath`, `FpsMeter` + `FpsReadout`; Editor `TakeRecorderHook`.
+
+**Editor** (`Twin/Editor/`): `ProjectSettingsGuard` (only `Cell.unity` in the build, Run In Background on, realvirtual layers present), `LicenseFilesPostprocessor` (licence texts next to the .exe), `PlcIoListExporter` (Tools > Factory Twin > Export PLC I-O List).
 
 ### Other project assets
 
 | Path | What |
 |---|---|
-| `Scenes/Cell.unity` | The only scene (2.6 MB). A Save As of the Factory Training hall with the cell built on its keep-clear zone. |
-| `Data/TwinConfig.asset` | The one config instance |
-| `Data/PressRiskConfig.asset` | Risk margins and warning band (M5) |
-| `Data/ai4i2020.csv` | 10,000 rows; 339 failures (TWF 46, HDF 115, PWF 95, OSF 98, RNF 19) |
-| `Robots/ur/` | `cell_arm.urdf`, UR5e visual (`.dae`) and collision (`.stl`) meshes, materials, BSD-3 licence, provenance README |
-| `Settings/` | Stock URP assets, kept as a fallback. The active pipeline asset is the sample's `PC_RPAsset_DC` under `ThirdParty/FactoryTraining`. |
-| `Prefabs/` | Empty. The cell is assembled directly in the scene. |
+| `Scenes/Cell.unity` | The only scene; a Save As of the Factory Training hall with the cell on its keep-clear zone |
+| `UI/` | `Dashboard.uxml/.uss`, `Commissioning.uxml/.uss`, `Credits.uxml`, `DashboardPanelSettings.asset` (1920×1080 reference), `DashboardTheme.tss` |
+| `Data/` | `TwinConfig.asset`, `PressRiskConfig.asset`, `PlcIoMap.asset` (13 points), `ai4i2020.csv` |
+| `Licenses/` | Six notice files shown under Credits and copied next to the build |
+| `Audio/` | Factory ambience and spark crackle (CC0, Freesound) |
+| `Materials/` | `StackLightLamp.mat` |
+| `Robots/ur/` | De-branded UR5e URDF and meshes, BSD-3 licence, provenance README |
+| `Settings/` | Stock URP assets, unused fallback; the live pipeline is the sample's `PC_RPAsset_DC` |
+| `Prefabs/` | Empty |
 
 ---
 
 ## 7. Scene layout
 
-The cell sits on the hall's hatched keep-clear zone at (−5…0.5, −1…3.9). It is L-shaped so the arm swings about 90° between pick and place, each 0.55 m from its base (UR5e reach is 0.85 m). Both belts flow toward −x.
-
 ```
      z
-     ▲
- 1.2 │  Sink ◄ ExitSensor ◄═══ Outfeed ═══ [place] ── Arm base (−2.0, 0.6, 1.2)
-     │                                                    │   on a 0.6 m stand
+     ▲                                   CNC machining centre (−0.3, 0.37, 3.3), stack light on the roof
+     │
+ 1.2 │  Sink ◄ ExitSensor ◄═══ Outfeed ═══ [place] ── Arm base (−2.0, 0.6, 1.2) on a 0.6 m stand
+     │                                                    │
  0.65│                                                 [pick] ◄ Gate1 ◄═══ Infeed ═══ PartSource
-     └──────────────────────────────────────────────────────────────────────────────► x
+     └──────────────────────────────────────────────────────────────────────────────────► x
 ```
 
-- Parts are realvirtual `MU`s spawned by a `Source` every 400 mm of belt travel. A part rests at the gate at x = −1.71 with its centre at 0.575 m (belt top 0.525 m) — measured values the arm poses depend on.
-- `Gate1` is a raycast light barrier. Raycast sensors never fill `CollidingMus`, which is why `PartGripper` falls back to `LastTriggeredBy` with a 0.2 m distance check.
-- `Cell/Press` is an empty GameObject carrying `PressStation` and `FaultInjector`. **There is no press geometry in the scene.**
-- Camera is realvirtual's orbit camera for now; its uGUI runtime toolbar is visible in Play.
+- The cell sits on the hall's hatched keep-clear zone at (−5…0.5, −1…3.9); both belts flow toward −x; the arm swings about 90° between pick and place, each 0.55 m from its base.
+- Parts are realvirtual `MU`s spawned every 400 mm of belt travel. A part rests at the gate at x = −1.71, centre 0.575 m: measured values the arm poses depend on.
+- The Factory Training renderer draws layers 0–7 and 9 only, so realvirtual's part and belt layers are invisible in the Game view; `VisibleLayerCopy` draws a collider-free copy on Default.
+- Capture shots (keys): 4 hall dolly on a spline, 5 cell, 6 line close, 7 CNC with stack light, 8 CNC control panel, 9 back to the operator camera; shot 6 (pick station close-up) is used by the VC takes.
+- realvirtual's runtime toolbar and start-up info box are switched off on its controller.
 
 ---
 
@@ -415,30 +443,16 @@ The cell sits on the hall's hatched keep-clear zone at (−5…0.5, −1…3.9).
 
 | Tool | Path | Purpose |
 |---|---|---|
-| Mosquitto 2 broker | `tools/broker/` | `docker compose up -d` → container `factory-twin-broker`; MQTT on 1883, WebSockets on 9001; anonymous, no persistence. LAN only. |
-| Dataset replayer | `tools/replay/replay.py` | Publishes the same 11 press topics straight to the broker. `--rate`, `--fault TWF…`, `--once`, `--host`. Needs `paho-mqtt>=2.0`. |
-| UnitySkills | package, `localhost:8090` | REST control of the Editor for Claude Code (play, inspect, run tests). Dev tooling, not shipped. |
-| Claude Code commands | `.claude/commands/` | `/milestone`, `/test`, `/licence-check` |
-| Claude Code permissions | `.claude/settings.json` | Writes allowed under `Assets/_Project`, `docs`, `tools`; denied under `ThirdParty`, `realvirtual`, `Library` |
-| Git | `.gitattributes`, `.gitignore` | LFS for meshes, textures, audio, video and DLLs; Unity YAML merge; Asset Store imports and realvirtual ignored |
-
-The in-Unity `PressStation` and `replay.py` write the same topics. Run one or the other, not both.
-
-Inspect the cell:
-
-```bash
-docker exec factory-twin-broker mosquitto_sub -t 'cell/#' -v
-```
-
-Inject and clear a tool-wear fault from outside Unity:
-
-```bash
-docker exec factory-twin-broker mosquitto_pub -t cell/press/inject_fault -m '{"v":1,"t":0}'
-```
-
-```bash
-docker exec factory-twin-broker mosquitto_pub -t cell/press/inject_fault -m '{"v":0,"t":0}'
-```
+| Mosquitto 2 broker | `tools/broker/` | `docker compose up -d`; container `factory-twin-broker`, MQTT 1883, WebSockets 9001, anonymous, LAN only |
+| Dataset replayer | `tools/replay/replay.py` | The CNC topics straight to the broker, including `product_quality`. Don't run it with `PressStation` enabled |
+| OpenPLC Runtime v4.3.1 | studio PC, not in the repo | The soft PLC; Modbus TCP slave on 502, 20 ms task |
+| OpenPLC Editor v4.3.2 | studio PC, not in the repo | Compiles and uploads the program (runtime v4 has no web upload) |
+| PLC project | `tools/plc/` | `cell.st`, `cell_buggy.st`, `openplc_project/`, `sync_project.py` (writes `main.st` from either program), `io_list.csv` |
+| Video, PdM | `tools/video/` | `script_v2.py`, `tts2.py` (Kokoro voice), `build2.py` (v02 cut and mix), `build3.py` (v03: mid screens, subtitles, highlighters, 126.5 s) |
+| Video, VC | `tools/video/vc/build_vc.py` | Cuts takes D and E, time-lapses the passing run, adds the I/O list card; places your voice blocks and mixes to −14 LUFS |
+| Unity Recorder 5.1.7 | package, Editor only | Records the takes `TakeSequencer` plays |
+| UnitySkills | package, `localhost:8090` | Lets Claude Code drive the Editor; dev tooling, not shipped |
+| Claude Code | `.claude/` | `/milestone`, `/test`, `/licence-check`; write permissions limited to `Assets/_Project`, `docs`, `tools` |
 
 ---
 
@@ -446,156 +460,139 @@ docker exec factory-twin-broker mosquitto_pub -t cell/press/inject_fault -m '{"v
 
 | Layer | Item | Version | In git | Notes |
 |---|---|---|---|---|
-| Engine | Unity | 6000.3.19f1 | settings | URP 17.3.0, Linear, Deferred+ via the sample's pipeline asset |
-| Base scene | Factory Training sample | 1.0 | no | `Assets/ThirdParty/FactoryTraining` |
-| Twin logic | realvirtual Starter | 6.0.11 | no | `Assets/realvirtual`, `Assets/Gizmos/realvirtual`; compiled-only distribution |
-| MQTT | MQTTnet | 4.3.7 | yes (LFS) | Vendored netstandard2.1 DLL; 5.x cannot load in Unity |
-| Robot | UR5e from `ros-industrial/universal_robot` | 39ad110 | yes | De-branded; BSD-3; credit owed |
-| Robot import | URDF-Importer | 0.5.2 | manifest | Apache-2.0; notice owed |
-| Telemetry | AI4I 2020 dataset | 2020 | yes | CC BY 4.0; credit owed in app and on the web page |
-| Packages we chose | Splines 2.9.0, Cinemachine 3.1.7, Input System 1.19.0, Recorder 5.1.7 (Editor only), Test Framework 1.6.0 | | manifest | Cinemachine is 3.x (`Unity.Cinemachine`) |
-| Imported, unused so far | Fast IK 1.2, Particle Pack 3.1 | | no | Particle Pack is for M6 |
-| Brought in by the sample | Timeline, uGUI, Post Processing v2, ProGrids, AI Navigation, Burst/Collections/Mathematics, Asset Manager | | manifest | Not chosen; prune once it is clear what the scene needs |
+| Engine | Unity | 6000.3.19f1 | settings | URP 17.3.0, Linear, the sample's Deferred+ pipeline |
+| Base scene | Factory Training sample | 1.0 | no | Ships only inside a build |
+| Twin components | realvirtual Starter | 6.0.11 | no | Compiled-only distribution; CNC prefab used for the station |
+| MQTT | MQTTnet | 4.3.7 | yes, LFS | MIT; 5.x cannot load in Unity |
+| Robot | UR5e `ur_description` | 39ad110 | yes | BSD-3, de-branded |
+| Robot import | URDF-Importer | 0.5.2 | manifest | Apache-2.0 |
+| Telemetry | AI4I 2020 | 10,000 rows | yes | CC BY 4.0, attribution with changes in `Licenses/01` |
+| Soft PLC | OpenPLC Runtime v4.3.1, Editor v4.3.2 | | no | MIT runtime; GPL-3.0 Editor used as a tool only. **Not yet on the licence register** |
+| VFX, audio | Particle Pack 3.1; two Freesound clips; two whooshes in `tools/video/sfx` | | partly | Asset Store EULA; CC0 |
+| Voice | Kokoro-82M, `am_michael` | 1.0 | no | Apache-2.0 weights; PdM video only. The VC clip uses your own voice |
+| Packages chosen | Splines 2.9.0, Cinemachine 3.1.7, Input System 1.19.0, Recorder 5.1.7, Test Framework 1.6.0 | | manifest | Cinemachine is the 3.x API |
+| Imported, unused | Fast IK 1.2 | | no | Runtime IK was never needed |
 
-Obligations that affect the build:
-
-1. Asset Store content ships only inside a built application.
-2. realvirtual source, prefabs and scenes are never shared.
-3. A Credits panel must carry: AI4I 2020 (CC BY 4.0, doi:10.24432/C5HS5C), the UR5e description (BSD-3), URDF-Importer (Apache-2.0), MQTTnet (MIT). Not built yet.
-4. No vendor branding on the arm in anything public.
-5. A client project on this codebase needs a Unity Industry seat and a re-run of the licence list.
+Obligations, all met in the current build: Asset Store content only inside a build; realvirtual never shared; Credits carry AI4I, UR5e, URDF-Importer and MQTTnet, with full licence texts in the app and in `Builds/Windows/Licenses/`; no vendor branding on the arm or the CNC. A client project still needs a Unity Industry seat and a fresh licence pass.
 
 ---
 
 ## 10. Tests and verification
 
-117 EditMode tests in `Assets/_Project/Tests/EditMode/`, all against the pure classes:
+228 EditMode tests (counted from the test attributes; the last recorded Editor run was 225/225 at M8), all against the pure classes:
 
-| File | Tests | Covers |
+| Area | Files | Tests |
 |---|---|---|
-| `TopicTests.cs` | 40 | Topic parsing, segment validation, filter matching |
-| `SignalPayloadTests.cs` | 27 | Serialise, parse, malformed input |
-| `SignalPublisherTests.cs` | 13 | Rate limit, deadband, coalescing, reconnect resend, no echo |
-| `CellSequenceTests.cs` | 11 | Handshake, retries, stall, hold |
-| `DatasetReplayerTests.cs` | 11 | CSV parsing, pacing, loop, fault filter, healthy baseline |
-| `SignalBusTests.cs` | 8 | Dispatch, wildcards, subscribe/dispose during dispatch |
-| `ArmProgramTests.cs` | 7 | Ramp, arrival tolerance, dwell, grip actions |
+| Topics and payload | `TopicTests`, `SignalPayloadTests` | 67 |
+| Bus and publisher | `SignalBusTests`, `SignalPublisherTests` | 21 |
+| Dashboard model | `DashboardModelTests` | 22 |
+| Soft PLC link | `PlcLinkTests` (codec, image, watchdog, loopback socket) | 19 |
+| Commissioning | `CommissioningTests` | 19 |
+| Dataset replayer | `DatasetReplayerTests` | 14 |
+| Cell sequence | `CellSequenceTests` | 12 |
+| Risk and health | `FailureRiskModelTests`, `PressHealthRuleTests`, `DegradationScenarioTests` | 23 |
+| Line, clock, lamp | `LineMetricsTests`, `SimClockTests`, `StackLightPatternTests` | 16 |
+| Capture tools | `TakeToolsTests` | 8 |
+| Arm | `ArmProgramTests` | 7 |
 
-Not covered by automated tests: `MqttBridge`, `TwinSignals`, the arm bridge and gripper, and anything in Play mode. Those are verified by the milestone exit runs recorded in `docs/STATUS.md`:
+One test holds the AI4I hit rate: every labelled TWF/HDF/PWF/OSF row warned, process alarms rare. Not covered by tests: `MqttBridge`, `TwinSignals`, the arm bridge and gripper, and Play mode. Those are proven by the exit runs:
 
 | Run | Result |
 |---|---|
-| M1, 10 min, placeholder pick | 143 parts, 4.58 s cycle (≈771 parts/h), 0 retries, 0 stalls |
-| M2, 5.6 min, arm | 33 parts, 7.0 s cycle (≈516 parts/h), 0 retries, 0 stalls |
-| M3, 80 s, broker attached | 36 topics, ≈2,500 messages, fault held the line for 18 s and recovered |
-
-The arm cycle (7.0 s) is the cell's bottleneck and sets the parts/hour figure the dashboard will show.
-
----
-
-## 11. What is left to build
-
-Exit conditions and day estimates are in `docs/build-plan.md`; the video beats each piece serves are in `docs/demo-script.md`. This section lists what each milestone needs from, or changes in, the code described above.
-
-### M4 — Dashboard (exit: the "inject fault" beat looks good on camera)
-
-Nothing exists yet. Only what the predictive-maintenance story needs:
-
-| Piece | Notes |
-|---|---|
-| UI assembly and folders | `Scripts/UI/` (namespace `TwoDude.FactoryTwin.UI`, references Twin only) and `Assets/_Project/UI/` for UXML/USS. UI Toolkit with runtime data binding; no uGUI. |
-| Bus → view model | A component that subscribes to the bus and exposes bindable values. The dashboard reads the bus, never scene objects. |
-| Press panel | Health, sparklines for the five telemetry topics, and the failure-risk gauge (fed from M5). |
-| Line panel | Line state, parts out, parts/hour, parts lost. Parts/hour and parts lost have to be derived. Parts lost is held time × the running rate. |
-| Event log | `SignalBus.MessagePublished` is there for it. Needs readable text for numeric states. |
-| Fault buttons | Inject (TWF, HDF, PWF, OSF, RNF) and Clear, calling `FaultInjector.Inject()` / `Clear()`. |
-| 3D reaction | The press turning amber then red. Needs press geometry first (gap 1), then a highlighter driven by `cell/press/health`. |
-| Broker link indicator | From `cell/link/connected`. |
-| Credits panel | The four notices in section 9. `/licence-check` already expects `Assets/_Project/UI/Credits.uxml`. |
-| Hide realvirtual's runtime toolbar | It is uGUI and visible in Play. |
-| New signals | `cell/press/health` (0 ok, 1 warning, 2 fault), `cell/line/parts_per_hour`, `cell/line/parts_lost`. |
-
-Dropped from the Rev 2 M4: OEE, health for every station, hover-to-inspect and retained MQTT state. They are now under "Later".
-
-### M5 — Prediction
-
-| Piece | Notes |
-|---|---|
-| Degradation mode | A third press mode beside healthy baseline and fault filter: rows chosen so tool wear and torque climb through a warning band to failure over about a minute. Lives with `DatasetReplayer` / `FaultInjector`; the hold path in section 5 is unchanged. |
-| Risk model | A pure, tested class turning press telemetry into `cell/press/failure_risk` (0–1), `cell/press/tool_rul_min` and `cell/press/maint_due`. Definition is the M5 open decision in the build plan. Parameters in a ScriptableObject, not code. |
-| Tool change | `cell/press/tool_change` (in) switches the replay back to low-tool-wear rows, so acting on the recommendation visibly resets wear and risk. |
-| Press health | `cell/press/health` derived from risk as well as faults; the dashboard's gauge and the 3D amber state read it. |
-
-### M6 — Polish and capture
-
-Foundry HDRI and ambientCG materials (`Assets/_Project/Lighting`, `Materials` — folders not created yet), sparks/steam from the Particle Pack, ambience audio (`Assets/_Project/Audio`), a Cinemachine 3 camera path on Unity Splines, the Windows build (`Builds/` is empty; the 60 fps lock only takes effect in a build), then capture at 1920×1080, 60 fps per the demo script.
-
-Still pending by hand from `docs/STATUS.md`: delete the deactivated training objects in `Cell.unity`, delete `Assets/Screenshots/`, restart the Editor once for the colour-space and input-backend switch.
-
-### M7 — Soft PLC link
-
-| Piece | Notes |
-|---|---|
-| Soft PLC | OpenPLC Runtime v4.3.1 (MIT) on the studio PC, outside Unity and the repo. Modbus TCP slave. |
-| `tools/plc/cell.st` | `CellSequence` (section 5) in Structured Text: the same four states, pick handshake and hold. `CellSequence` stays the reference the PLC is tested against. |
-| I/O map | A ScriptableObject listing each coil, discrete input and register with its bus topic and direction. Source of the M8 I/O list. |
-| `PlcLink` | Our own Modbus TCP client: a pure frame codec (EditMode tests) and a socket loop off the main thread, handing values to the bus on the main thread. Host and port from `TwinConfig`. No package. |
-| Logic-source switch | `cell/plc/source` (0 Unity, 1 PLC). While the PLC owns the line, `CellSequencer` stops writing its outputs, so the drive-ownership issue in section 12 does not apply. |
-| Heartbeat watchdog | The PLC toggles a heartbeat register; if it stops, the line holds through the same path as a press fault. Signals `cell/plc/heartbeat`, `cell/plc/link`. |
-
-### M8 — Commissioning suite
-
-Sensor forcing (`cell/gate1/force`), a dropped part and an arm that stays busy, alongside the existing press faults. Six scenarios (normal run, stuck sensor, missing part, arm not ready, press fault, PLC loss) run against either logic source and write a pass/fail report (dashboard panel and CSV; signals `cell/vc/test`, `cell/vc/result`). I/O list exported from the I/O map as CSV. `tools/plc/cell_buggy.st` carries the seeded missing interlock.
-
-### M9 — VC capture
-
-Beats in `docs/demo-script.md` (virtual commissioning section), takes through `TakeSequencer`, cut with `tools/video`.
-
-### Later (not scheduled)
-
-The four parked use cases and the touch/kiosk and Quest 3 views; see "Later" in `docs/build-plan.md`. Rev 2's code-level notes for them (protective stop that interrupts a pick, runtime IK, scenario runner) are in commit `ee852e9`.
+| M1, 10 min, placeholder pick | 143 parts, 4.58 s cycle, 0 stalls |
+| M2, 5.6 min, arm | 7.0 s cycle, about 516 parts/h, 0 retries, 0 stalls |
+| M3, 80 s, broker | 36 topics live; a fault held the line and it recovered |
+| M4, fault beat at 1080p | CNC red, line stopped, parts lost counted; clear restores all |
+| M5, degradation | warning 34 s ahead; tool change → 0 parts lost |
+| M6, Windows build | 60.0 fps, worst frame 16.7–18.9 ms after warm-up |
+| M7, 12.4 min on the PLC | 0 stalls; PLC stop held the line in 0.85 s; clean rerun 516 parts/h |
+| M8, suite | `cell.st` 6/6, `CellSequencer` 5/5, `cell_buggy.st` caught |
 
 ---
 
-## 12. Gaps, mismatches and risks
+## 11. Deliverables
 
-Found while writing this blueprint:
+| Deliverable | Where | State |
+|---|---|---|
+| Windows build | `Builds/Windows/FactoryTwin.exe` (git-ignored) | Last build recorded in `STATUS.md`: 2026-10-20, with the capture features; 60 fps lock confirmed. That predates the PLC and commissioning work |
+| PdM video v02 | `Builds/Recordings/2DS_Manufacturing_FactoryTwin_PdM_v02_20261021.mp4` | 111 s, approved |
+| PdM video v03 | `tools/video/build3.py` | Script committed (126.5 s cut with mid screens and subtitles); no rendered or approved v03 is recorded in `STATUS.md` |
+| VC takes D and E | `Builds/Recordings/2DS_FactoryTwin_Take{D,E}_20261023_*.mp4` | Bug caught (46 s); fix passes 6/6 (330 s) |
+| VC rough cut | `…_VC_roughcut_picture_20261023.mp4` | 76.1 s, picture only, voice-block guides burned in |
+| VC video v01 | — | Waiting on your six voice blocks |
+
+---
+
+## 12. What is left
+
+**To close M9.** Record `block1.wav` … `block6.wav` from `docs/voiceover_vc_script.md`, then run `tools/video/vc/build_vc.py --voice-dir <folder> --logo "<logo>" <output>` and approve the clip.
+
+**Open items from the status log.**
+- Rebuild the Windows build so the live demo includes the PLC link and the commissioning panel.
+- Player Settings still say "factory-twin-starter" / "DefaultCompany" with a 1024×768 default; decide on "Factory Twin" / "2 Dude Studios" at 1920×1080.
+- OpenPLC showed high latency and many overruns after a stop and start; the suite was unaffected. Restart the runtime before a live demo.
+- Manual cleanup: `Assets/Screenshots/`. (The deactivated training objects are already gone from `Cell.unity`; they went with the M2 commit.)
+
+**Rev 5, workforce training and safety (M10–M13, ≈10 days).** Safety zone, lockout procedure, Quest 3 view over Link, training clip. Exit conditions in `docs/build-plan.md`.
+
+**Later.** Full monitoring (hover, health per station, OEE, retained MQTT), layout what-if (runtime IK), pre-planning, kiosk view, standalone Quest 3, OPC UA on the first client project that asks.
+
+---
+
+## 13. Gaps, mismatches and risks
+
+Open:
 
 | # | Finding | Why it matters |
 |---|---|---|
-| 1 | **No press in 3D.** `Cell/Press` has no renderer or children. | Demo beat 4 shows the press turning red. Geometry has to come from somewhere with a known licence before the highlight can be built. **Resolved 2026-10-20:** realvirtual's CNC.prefab plus a stack light (M4). |
-| 2 | **The demo script names signals that do not exist**: `cell/*/state`, `outfeed/count`, `press/health`. The real ones are `line/state` and `line/parts_out`; there is no health signal. | Update `docs/demo-script.md` or add the signals; either way decide before building the dashboard against them. **Resolved 2026-10-19:** the rewritten demo script uses the real names and marks planned ones with the milestone that adds them; `press/health` is added in M4. |
-| 3 | **OEE and failure risk are undefined.** No reject or quality data exists, and nothing computes risk. | OEE needs availability × performance × quality; quality has no source in this cell. Risk could be derived from tool wear, torque and temperature spread, but it is a design decision, not a wiring task. OEE is parked under Later (Rev 3). The risk definition is the open decision at the start of M5. |
-| 4 | **The arm bake script is not in the repo.** `docs/STATUS.md` points at `scratchpad/ur5e_kin.py`; no such file exists here. | The eight poses cannot be regenerated after a layout change without rewriting it. Worth committing under `tools/`. Needed before the parked layout what-if work, where runtime IK would replace the baked poses. |
-| 5 | **UnitySkills version drift.** The working tree bumps it to v2.9.0 (uncommitted in `Packages/manifest.json` and the lock file); `docs/LICENSES.md` and `docs/STATUS.md` say v2.8.4. | The licence register must match the manifest in the same commit. |
-| 6 | **`/test` command names Editor `6000.3.0f1`**; the project is on `6000.3.19f1`. | The headless command fails as written unless that exact version is installed. |
-| 7 | **Untracked `Assets/Temp.meta` and `Assets/UnitySkillsTests_Temp.meta`.** | Leftovers from UnitySkills' test run; delete or ignore rather than commit. |
-| 8 | **`Prefabs/` is empty** although the convention is sub-areas as prefabs. | Everything lives in a 2.6 MB scene that realvirtual dirties on load. Extracting `Cell`, `Arm` and the press as prefabs would make diffs and reuse easier; not urgent. |
-| 9 | **`PartGripper` reads realvirtual `Sensor` and `MU` directly**, and `ArmSignalBridge` holds signal references of its own, while `.claude/rules/unity-csharp.md` says everything goes through `TwinSignals`. | Contained in the bridge assembly, so the layering holds. The rule text is stricter than the code; reword one or the other. |
+| 1 | **OpenPLC is not on the licence register.** `STATUS.md` says the line would be added; `LICENSES.md` has no OpenPLC row. | The Runtime (MIT) and the GPL-3.0 Editor are part of the VC demo and appear in the video. Add both rows before the clip ships. |
+| 2 | **The demo script's VC section is the pre-M8 draft.** It says "Stuck sensor" or "missing part" fails and parts pile up at the gate. What happens: the seeded bug fails the interlock checks from the normal run onward, and parts queue into the pick station. Its PdM section still marks M5 signals as not existing yet. | The demo script is the reference for anyone re-cutting the videos. `docs/voiceover_vc.md` has the as-built beats. |
+| 3 | **The arm bake script is not in the repo.** `STATUS.md` points at `scratchpad/ur5e_kin.py`. | The poses cannot be regenerated after a layout change; the parked layout what-if work needs it first. |
+| 4 | **Uncommitted settings drift.** UnitySkills is now v2.9.1 in the manifest (register says v2.8.4), and `ProjectSettings/EditorSettings.asset` carries an Editor serialisation upgrade. | Commit or revert both; the register must match the manifest. |
+| 5 | **The last recorded live-demo build predates M7–M9** (2026-10-20). | A prospect meeting on that .exe shows predictive maintenance only. |
+| 6 | **`/test` names Editor 6000.3.0f1**; the project is on 6000.3.19f1. | The headless command fails as written. |
+| 7 | **Stray `Assets/Temp.meta` and `Assets/UnitySkillsTests_Temp.meta`** remain untracked. | Delete or ignore. |
+| 8 | **`Prefabs/` is empty**; everything lives in one scene that realvirtual dirties on load. | Diffs are noisy; extracting the cell, arm and CNC would help reuse. |
+| 9 | **Bridge components read realvirtual directly.** `PartGripper` and now `JamClearer` use `Sensor` and `MU`, while `.claude/rules/unity-csharp.md` says everything goes through `TwinSignals`. | Contained in the bridge assembly, so the layering holds; reword the rule or the code. |
+| 10 | **`docs/build-plan.md`'s repo layout** omits `Scripts/Twin/Plc`, `Commissioning`, `UI/` assets and `tools/video`. | Minor; the plan reads as older than the code. |
 
-Carried over from `docs/STATUS.md` and still open:
+Resolved since the first blueprint: no CNC in 3D (CNC prefab and stack light, M4); demo signals that did not exist (M4–M5 added them); undefined risk (threshold margins, M5); OEE parked under Later.
 
-- MQTT messages are not retained, so a late-joining client misses steady signals. Matters the day a dashboard reads from the broker instead of the bus.
-- The sequencer owns `infeed/drive_fwd` and `outfeed/drive_fwd`; an external write is overwritten within a cycle. External control of the line has to go through a signal the sequence respects, as the hold does.
-- `replay.py` replays the dataset's own failure rows (about 1 in 30), each of which holds the line for one row. It has no healthy-only switch.
-- Re-importing any project-style Asset Store package can overwrite `ProjectSettings/`; diff before committing. `ProjectSettingsGuard` catches the three settings that broke last time, not all of them.
-- realvirtual 6.0.11 reports Unity 6000.3.19f1 as outside its tested range. No problem seen so far.
-- The broker is anonymous and unencrypted, and `TwinConfig` has no credential or TLS fields. Fine for a studio LAN; a prospect's network will need both.
-- One unexplained Play-mode restart during the first M1 soak; not seen since.
+Risks carried from `STATUS.md`:
+
+- **Commissioning only counts in real time.** The PLC's timers run on wall-clock time; a frame-rate hitch can make simulated time race ahead (one burst seen in the M7 soak). Every scenario fails if the ratio leaves ±10 %, and VC takes record at a variable frame rate for that reason.
+- **The PLC's counters are not retained.** After a PLC stop, its parts out restarts from 1.
+- MQTT is not retained, so late-joining clients miss steady signals.
+- The sequencer, or the PLC, owns the drive topics; an outside write is overwritten within a cycle.
+- `replay.py` replays the dataset's own failure rows, each of which holds the line.
+- The broker and the Modbus link are unauthenticated and unencrypted; fine on the studio LAN only.
+- Re-importing a project-style Asset Store package can overwrite `ProjectSettings/`.
+- realvirtual 6.0.11 reports 6000.3.19f1 as outside its tested range; nothing seen so far.
 
 ---
 
-## 13. Running it
+## 14. Running it
 
-1. Start the broker (optional — the cell runs without it):
+**Predictive maintenance.**
+
+1. Optional broker: `docker compose -f tools/broker/docker-compose.yml up -d`.
+2. Open `Cell.unity` in Unity 6000.3.19f1 and press Play. Let the line run about 2.5 minutes, so parts per hour settles near 510 and parts lost has a rate to count against.
+3. Keys: **1** wear the tool out, **2** change the tool, **3** clear faults, **0** fresh take; **4**–**9** camera shots; **F9** FPS readout, **F10** cursor.
+
+**Virtual commissioning.**
+
+1. Start OpenPLC Runtime; `python tools/plc/sync_project.py` (or `sync_project.py cell_buggy.st <project dir>` for the bug); in OpenPLC Editor open `tools/plc/openplc_project/`, Connect, Build and upload.
+2. Play in Unity. The PLC shadows the line at once. Publish `cell/plc/source` = 1 (command below), or set Start Source on `Cell > PlcLink`, to hand it the line.
+3. Press Run tests on the Commissioning panel, or publish `cell/vc/run` = 1 (2 stops at the first failure). The report lands in `Builds/Commissioning/`.
+
+Watch everything on the broker:
 
 ```bash
-docker compose -f tools/broker/docker-compose.yml up -d
+docker exec factory-twin-broker mosquitto_sub -t 'cell/#' -v
 ```
 
-2. Open the project in Unity 6000.3.19f1, open `Assets/_Project/Scenes/Cell.unity`, press Play.
-3. Watch the cell on the broker with the `mosquitto_sub` command in section 8. Start the subscriber before Play, because nothing is retained.
-4. Inject a fault: in Play mode set `Fault` on `Cell/Press > FaultInjector`, or publish to `cell/press/inject_fault`.
-5. Run the EditMode tests from the Unity Test Runner, or `/test` in Claude Code.
+Hand the line to the PLC from outside Unity:
 
-Live status while playing is on the Inspector of `CellSequencer` (state, parts out, cycle time, retries, stalls), `MqttBridge` (connected, published, received, dropped), `PressStation` (rows loaded and published) and `ArmController` (current waypoint, busy, grip, cycles).
+```bash
+docker exec factory-twin-broker mosquitto_pub -t cell/plc/source -m '{"v":1,"t":0}'
+```

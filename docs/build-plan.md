@@ -1,4 +1,4 @@
-# Manufacturing Demo — Factory Digital Twin build plan (Rev 4, 22 Oct 2026)
+# Manufacturing Demo — Factory Digital Twin build plan (Rev 5, 24 Oct 2026)
 
 Source tracker (62 items, licence verdicts, download status): https://claude.ai/artifact/AGRYueGCfv6UwgTbnQcdre
 Video SOP to follow once the build exists: `claude/walkthrough-video-playbook.md`
@@ -6,6 +6,8 @@ Video SOP to follow once the build exists: `claude/walkthrough-video-playbook.md
 Rev 3 narrowed the prototype to one use case, **predictive maintenance**: the most-asked-for digital-twin use in manufacturing, and the one this build is closest to. Rev 2 planned six use cases (M4–M10, commit `ee852e9`). M0–M6 are done; the PdM video (v02) is approved.
 
 Rev 4 adds a second use case, **virtual commissioning** (M7–M9), for machine builders and system integrators. Chosen after a short research pass on 2026-10-22: machine builders know virtual commissioning but rarely use it, customers increasingly ask them for a virtual factory acceptance test, and competitors' demos are either engineering-tool screen recordings or whole-factory showpieces. None tells the story of one logic bug caught before site. The other four use cases stay under "Later".
+
+Rev 5 adds a third use case, **workforce training and safety** (M10–M13), the studio's first Quest 3 content. Chosen after a short research pass on 2026-10-24 (summary under Use case 3 below): lockout/tagout is OSHA's #4 most-cited standard in FY2025, and the VR safety-training vendors (Pixaera, Uptale, Interplay, Transfr, PIXO) sell generic modules. None found runs the training on the plant's own live twin, PLC and dashboard, which is what this one does.
 
 ## What this is
 
@@ -19,7 +21,7 @@ Decisions already made: factory digital twin, Unity, URP, Unity 6.3, predictive 
 
 One production cell in a factory hall. Parts arrive on an infeed conveyor, pass a sensor gate, a six-axis arm picks each one and places it on an outfeed conveyor, parts exit. A press alongside reports machine telemetry (temperatures, speed, torque, tool wear) over MQTT. As the press's tool wears, the twin's failure risk climbs, its remaining tool life counts down, and it recommends a tool change while the line is still running. Ignore it, and the press fails: it turns red in 3D, the line holds and the dashboard counts the parts lost. Act on it, and the line never stops. That contrast is the pitch: the twin is wired to data, and it turns that data into a decision.
 
-Desktop walkthrough first (the website video). A touch/kiosk view and a Quest 3 view are later phases.
+Desktop walkthrough first (the website video). A Quest 3 view over Link comes with the training use case (M12); standalone Quest and a touch/kiosk view stay later.
 
 ## The stack (all free, all verified 22 Sep 2026 — see tracker for links)
 
@@ -36,6 +38,7 @@ Desktop walkthrough first (the website video). A touch/kiosk view and a Quest 3 
 | OPC UA (later) | OPCFoundation/UA-.NETStandard | MIT | The 1.5.378.x line targets .NET Standard 2.1 (2.0.x drops it). Not in this build, but the video promises it (decided 2026-10-20), so the first client project that asks gets it. |
 | Soft PLC (M7) | OpenPLC Runtime v4.3.1 (Autonomy-Logic/openplc-runtime) | MIT | External tool on the studio PC (Windows installer, MSYS2 inside), not in the repo. Runs the cell's Structured Text; Modbus TCP slave. The OpenPLC Editor v4 (GPL-3.0) may be needed to build the program: a tool only, never bundled. |
 | PLC link (M7) | Our own Modbus TCP client | Our code | A few function codes over a socket; no package. NModbus (MIT) is the fallback, and only after asking. |
+| XR (M12) | com.unity.xr.openxr 1.18.0, com.unity.xr.management 4.6.1, com.unity.xr.interaction.toolkit 3.6.1 | Unity Companion License | Approved 2026-10-24, added at M12 only. Quest 3 over Link / Air Link: the Windows build renders on the PC. XRI pulls in com.unity.ugui as a dependency; our UI stays UI Toolkit. Not the Meta XR Core SDK (Meta's own SDK licence). |
 | Lighting | Poly Haven — Industrial Workshop Foundry HDRI | CC0 | |
 | Materials | ambientCG metals / concrete | CC0 | Raw files may live in the repo. |
 | VFX | Unity Particle Pack 3.1 | Asset Store EULA | URP, sparks/steam. |
@@ -123,15 +126,47 @@ Exit: the clip is captured from the project and approved.
 
 M7–M9 come to roughly 6 days of focused time.
 
+### Use case 3 — Workforce training & safety (Rev 5)
+
+The beat that is the whole pitch: a trainee walks toward the running cell. In the warning zone the arm slows; in the protective zone it freezes mid-move and the line holds. Then the CNC faults, and the trainee clears it through the lockout steps. Starting the line with the lock still on is refused by the same soft PLC that runs production, and the twin logs every step and every error. "Train on the line you actually run."
+
+Why it sells (sources labelled: [R] regulator, [P/A] practitioner/academic/analyst, [V] vendor):
+- Lockout/tagout (1910.147) is OSHA's #4 most-cited standard in FY2025, 2,562 citations, up from #5; plastics makers and machine shops are cited most. [R]
+- A 2024 *Safety Science* meta-analysis of 52 studies: VR beats conventional training on knowledge and retention, though only about a third measured long-term retention. A 2021 chemical-plant study found VR equal to video or slides for complex safety tasks. [P/A]
+- Deloitte and the Manufacturing Institute: up to 1.9 M US manufacturing jobs could go unfilled by 2033, so onboarding speed matters. [P/A]
+- Onboarding and ROI figures (Forrester for Meta: about 25% shorter onboarding; PwC/Talespin "4x faster") are vendor-reported and carry that label. [V]
+
+Standards the demo follows, and how far:
+- **Lockout/tagout, OSHA 29 CFR 1910.147.** Notify (c)(9); prepare (d)(1), shut down (d)(2), isolate (d)(3), apply lock and tag (d)(4), release stored energy (d)(5), verify isolation with a try-start (d)(6). Release: inspect (e)(1), people clear and notified (e)(2), remove the device (e)(3). The training record follows (c)(7): who, when, steps, errors.
+- **Robot zone, ISO 10218-1/-2:2025** (which absorbs most of ISO/TS 15066), with ISO 13855 for the zone size. The cell is a guarded, non-collaborative application, so a warning zone slows the arm, the protective zone stops it (IEC 60204-1 category 2: controlled stop, drives held), and restarting needs a deliberate reset from outside the zone. A collaborative "monitored standstill" may resume on its own; that is not what this cell shows.
+- On screen and in the voiceover it is a **simulated safety function, not safety-rated**, and a demo of training, not certified training.
+
+Platform: Quest 3 over Link or Air Link first. The PC renders the existing Windows build, and the broker and the soft PLC stay on localhost. Standalone Quest does not fit the hall as it stands (316 draw calls plus 116 shadow casters, 1.49 M triangles in view, Deferred+ with SSAO and about 50 realtime point lights, against Meta's Quest 3 guide of 400–600 draw calls and 1.3–1.8 M triangles); it needs a forward, fully baked scene variant and an Android build, about 3–4 more days, and stays under "Later". Meta stopped selling Quest for Business in Feb 2026; business buyers now run consumer Quest 3 headsets under ArborXR or ManageXR.
+
+**M10 — Safety zone (≈2.5 days).** A warning zone and a protective zone around the arm (sensor volumes, like a safety laser scanner), dressed with the Factory Training fence and cone props. The warning zone slows the arm; the protective zone freezes it where it is, on the tick the signal changes (not after the current pick, unlike the CNC-fault hold), and holds the line. Leaving the zone does not restart anything; a reset from outside the zone does. `cell.st` gets a safety input and the reset logic, mirrored in `CellSequence`. A desktop first-person trainee (Input System) walks the hall. Two commissioning scenarios check it: zone entry stops the arm and holds the line; leaving without a reset does not restart it. New signals: `cell/safety/zone_warning`, `cell/safety/arm_zone_occupied`, `cell/safety/protective_stop`, `cell/safety/reset` (in).
+Exit: entering the zone stops the arm within one physics tick of the signal, and the dashboard shows why. Leaving the zone does not restart the line; the reset does. The suite passes against both logic sources.
+
+**M11 — Lockout procedure (≈3 days).** The 1910.147 steps on the CNC as a pure, tested procedure model: notify, stop the line, isolate (the CNC's main isolator), apply lock and tag, verify with a try-start, change the tool (resets tool wear), clear and notify, remove the lock, restart. Interactable points on the CNC drive the steps through signals only. Out-of-order steps are flagged and counted. A step panel on the dashboard; each run writes a training record (CSV: trainee, start, steps with times, errors, result). The PLC refuses to start the line while the lock is on, and the refusal is logged. New signals: `cell/press/isolated`, `cell/press/lockout`, `cell/training/step`, `cell/training/errors`, `cell/training/result`.
+Exit: the procedure runs end to end and the line restarts. Starting the line with the lock on is refused by the PLC and logged. A wrong-order run records its errors in the training record.
+Decide at start: the trainee's name in the record (fixed demo name or typed in).
+
+**M12 — Quest 3 view over Link (≈3 days).** The three approved XR packages. An XR rig beside the desktop trainee (one or the other is active), teleport and snap turn, ray and grab on the same lockout points, the dashboard's step panel as a world-space panel. Nothing new on the signal side: the headset drives the same signals. Desktop stays the default; a launch switch turns VR on.
+Exit: both beats (zone stop, lockout) run in the Quest 3 over Link at 72 fps or better, with no new signals, and the training record matches a desktop run.
+Decide at start: whether world-space UI Toolkit with XRI covers the panel, or the panel is rendered to a texture.
+
+**M13 — Training capture (≈1.5 days).** Demo-script beats for the training clip, voiceover, takes from the desktop trainee and from the headset (mirror view), cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_Safety_v01_<date>`.
+Exit: the clip is captured from the project and approved.
+
+M10–M13 come to roughly 10 days of focused time.
+
 ## Later (not scheduled)
 
-Planned in Rev 2 (commit `ee852e9` has the full exit conditions). Virtual commissioning moved into Rev 4 as M7–M9. Each builds on the same signal contract and can be picked up when a prospect asks for it:
+Planned in Rev 2 (commit `ee852e9` has the full exit conditions). Virtual commissioning moved into Rev 4 as M7–M9, workforce training and safety into Rev 5 as M10–M13. Each builds on the same signal contract and can be picked up when a prospect asks for it:
 
 - **Real-time monitoring, full version** — hover any machine to read its signal, health for every station, OEE, retained MQTT state for clients that join mid-run.
-- **Workforce training & safety** — a protective zone that freezes the arm, and a guided lockout procedure for clearing a press fault (natural first Quest 3 content).
 - **Factory layout & what-if** — runtime UR5e IK in C# so stations can move, layout variants, faster-than-real-time comparison. Commit the arm bake script first (blueprint gap 4).
 - **Pre-planning** — a scenario runner that sweeps layouts and speeds against a production target, using M5's maintenance windows.
-- **Views** — touch/kiosk view, Quest 3 view.
+- **Views** — touch/kiosk view, standalone Quest 3 (a forward, fully baked scene variant and an Android build; ≈3–4 days).
 
 ## Claude Code kickoff prompt (paste into the project)
 
@@ -159,6 +194,12 @@ The VC clip (M9) follows the same shape:
 - **Path:** your PLC program, your I/O list, the same twin.
 - **Ask:** book a call.
 
+The training clip (M13):
+- **Promise:** train on the line you actually run.
+- **Proof:** step into the zone and the arm freezes; clear a CNC fault with the lockout steps, and the line refuses to start while the lock is on.
+- **Path:** your cell's twin, your PLC, your procedure; Quest 3 or desktop.
+- **Ask:** book a call.
+
 Voiceover rendered before capture. Naming `2DS_Manufacturing_FactoryTwin_PdM_v01_<date>`.
 As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) was cut to them; the approved video is v02, 111 s, with a digital-twin introduction ahead of the promise.
 
@@ -169,4 +210,4 @@ As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) 
 - Arm choice for the public page: decided at M2, de-branded UR5e.
 - VC (M7): ~~does OpenPLC Runtime v4 accept a plain `.st` upload?~~ Answered 2026-10-22: no; the OpenPLC Editor v4 (GPL-3.0, tool only) compiles and uploads the program. Fallback if the v4 Windows runtime does not hold up: Beremiz, as an external tool.
 - VC (M9): ~~one VC clip, or a VC segment added to the PdM video?~~ Decided 2026-10-23: a separate clip of about 76 s; the approved 111 s PdM video stays as it is.
-- Quest 3 view (later): pass-through tabletop twin or room-scale? Only decide after M6 ships.
+- Quest 3 view: ~~pass-through tabletop twin or room-scale?~~ Decided 2026-10-24: room-scale in the hall, over Link first (M12); standalone later.

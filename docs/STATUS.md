@@ -1,7 +1,7 @@
 # Status
 
-**Current milestone:** M9 — VC capture (build plan Rev 4, virtual commissioning). M8 and M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
-**Last updated:** 2026-10-23
+**Current milestone:** M10 — Safety zone (build plan Rev 5, workforce training and safety; approved 2026-10-24). M9 — VC capture runs alongside and waits on your voiceover. M8 and M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
+**Last updated:** 2026-10-24
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
@@ -161,8 +161,18 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 - [x] **Picture-only rough cut (2026-10-23):** `Builds/Recordings/2DS_Manufacturing_FactoryTwin_VC_roughcut_picture_20261023.mp4`, 76.1 s, 1920×1080, 60 fps, game audio at −20 LUFS. Burned-in timecode (top right) and the voice block that belongs at each moment (red label, bottom). Built by `tools/video/vc/build_vc.py --guides` (takes D and E, the take E test run time-lapsed from 271 s to 11 s with a caption, I/O list card from `tools/plc/io_list.csv`, end card with the studio logo).
 - [ ] Your voiceover: `block1.wav` … `block6.wav`, one per numbered block of `docs/voiceover_vc_script.md`, in one folder. Then `python tools/video/vc/build_vc.py --voice-dir <folder> --logo "<logo>" Builds/Recordings/2DS_Manufacturing_FactoryTwin_VC_v01_<date>.mp4` places them at their block times, ducks the game audio and mixes to −14 LUFS. Not yet run with a real voice.
 
+## M10 — Safety zone (exit: entering the zone stops the arm within one physics tick of the signal and the dashboard shows why; leaving the zone does not restart the line, the reset does; the suite passes against both logic sources)
+- [x] Rev 5 approved (2026-10-24, you): M10 safety zone, M11 lockout procedure, M12 Quest 3 view over Link, M13 training capture, about 10 days. Quest 3 over Link first; standalone stays under "Later".
+- [x] Packages approved for M12 only: com.unity.xr.openxr 1.18.0, com.unity.xr.management 4.6.1, com.unity.xr.interaction.toolkit 3.6.1 (Unity Companion License). Not added yet.
+- [ ] Safety signals and topics: `safety/zone_warning`, `safety/arm_zone_occupied`, `safety/protective_stop`, `safety/reset`.
+- [ ] Safety logic (pure, tested): warning slows, protective zone latches a stop, reset only with the zone clear.
+- [ ] Arm freezes on the protective stop (not after the pick) and slows in the warning zone.
+- [ ] `CellSequence` and `cell.st` hold the line on the protective stop.
+- [ ] Zone volumes with fence and cone props; desktop first-person trainee.
+- [ ] Dashboard reason and event log lines; two commissioning scenarios.
+
 ## Manual steps pending
-- **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Deletes are blocked for Claude; either delete them in the Hierarchy or add `gameobject_delete_batch` to the UnitySkills allowlist.
+- **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Done: none of them are in `Cell.unity` any more (checked 2026-10-24; they went with the M2 commit).
 - Delete `Assets/Screenshots/` (UnitySkills capture output; git-ignored).
 - Play mode restarted itself once during the first soak attempt (~375 s in; no compile, refresh or skill call in the log). Did not recur in the 10-minute rerun. If it happens again, check the realvirtual runtime toolbar's restart/reset controls.
 - Restart the Editor once so the Linear colour space and Input System backend switch fully apply (Unity may prompt for this itself).
@@ -172,6 +182,9 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 (none)
 
 ## Decisions and risks
+- **Training and safety claims (Rev 5, 2026-10-24).** The zone is a simulated safety function, not safety-rated; the lockout run is a training demo, not certified training. The cell is a guarded, non-collaborative application, so the protective stop needs a deliberate reset from outside the zone (a collaborative monitored standstill would resume on its own; we do not show that). Vendor ROI or onboarding figures carry "vendor-reported".
+- **Quest 3 over Link, not standalone (2026-10-24).** The hall in Editor: 316 draw calls, 116 shadow casters, 1.49 M triangles in view, Deferred+ with SSAO and about 50 realtime point lights. Meta's Quest 3 guide: 400–600 draw calls, 1.3–1.8 M triangles; standalone needs a forward, fully baked variant (≈3–4 days, "Later").
+- **The Factory Training sample's training code is not reused.** `ImmersiveTraining` is uGUI with a singleton state manager for its motorbike assembly; only its props (barrier, cornerFence, koneSmall) are useful. It has no worker model, so the trainee is a first-person camera.
 - **The press station is shown as a CNC machining centre (decided 2026-10-20).** AI4I 2020 models a milling process (spindle rpm, torque, tool wear), so on-screen text, voiceover and the demo script say CNC. Topics, class names and the build plan keep "press" as the station name.
 - **Warm the line up before injecting on camera.** Parts/hour is measured over the run so far for the first 2 minutes, and parts lost uses the rate just before the hold. Injecting 25 s into Play (before the first part has left) shows 0 parts lost. Let the line run at least 2.5 minutes (about 510 parts/h) before the fault beat.
 - **Credits carry attributions, not full licence texts.** BSD-3 (UR5e description) and Apache-2.0 (URDF-Importer) expect their full notices with a binary distribution. Ship the licence texts with the Windows build in M6 (a LICENSES folder next to the .exe, or a scrollable section in the Credits overlay).
