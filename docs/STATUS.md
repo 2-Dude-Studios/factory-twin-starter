@@ -154,6 +154,7 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 - [x] Decided (2026-10-23, you): a separate VC clip of about 76 s; the PdM video (v02, 111 s) stays as it is.
 - [x] `CaptureRig/Shot6_PickStation`: a close-up of the gate's light barrier, the arm and the incoming infeed (looks at `CaptureRig/PickFocus`), registered as `ShotDirector` shot index 5 (no number key; takes and the Inspector cut to it).
 - [x] Dashboard overlap fixed: sections no longer shrink, only the event log gives way, so the line and scenario blocks stay apart on short screens. Checked at 1920×1080 and 1600×900.
+- [x] Voiceover: you record it yourself (decided 2026-10-23). Reading script: `docs/voiceover_vc_script.md`; words with picture, claims check and take plan: `docs/voiceover_vc.md`.
 - [ ] Capture must run in real time: the PdM takes used Unity Recorder at a constant 60 fps, which slows simulated time (take A took about 3.5 minutes), and the soft PLC's timers count wall-clock time. VC takes need Recorder's variable frame rate, with `cell/sim/realtime_ratio` checked during each take.
 
 ## Manual steps pending
