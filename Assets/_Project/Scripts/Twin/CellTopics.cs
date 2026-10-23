@@ -113,6 +113,10 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath SafetyReset = new TopicPath("safety", "reset");
         public static readonly TopicPath SafetyState = new TopicPath("safety", "state");
 
+        // Commissioning stimulus (M10): a ForceMode on both zone sensors, standing in for a person. On puts a person in
+        // the protective zone (and so in the warning zone too); Off blinds both sensors; None hands them back.
+        public static readonly TopicPath SafetyZoneForce = new TopicPath("safety", "zone_force");
+
         // The arm's speed as a fraction of full speed (0–1), written by the safety zone and read by the arm through
         // its realvirtual signal: 1 normal, reduced in the warning zone, 0 on a protective stop.
         public static readonly TopicPath ArmSpeedScale = new TopicPath("arm", "speed_scale");

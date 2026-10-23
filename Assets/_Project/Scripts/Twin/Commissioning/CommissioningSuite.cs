@@ -205,6 +205,11 @@ namespace TwoDude.FactoryTwin.Twin
             _bus.Publish(CellTopics.GateClear, SignalValue.FromBool(false), now);
             _bus.Publish(CellTopics.PlcSimulateLoss, SignalValue.FromBool(false), now);
             _bus.Publish(CellTopics.PressInjectFault, SignalValue.FromNumber((int)FaultMode.None), now);
+            _bus.Publish(CellTopics.SafetyZoneForce, SignalValue.FromNumber((int)ForceMode.None), now);
+            // One reset press, taken on the next tick once the zone reads clear, so a stop left latched by a scenario
+            // that ended early cannot keep the next one from starting.
+            _bus.Publish(CellTopics.SafetyReset, SignalValue.FromBool(true), now);
+            _bus.Publish(CellTopics.SafetyReset, SignalValue.FromBool(false), now);
         }
 
         private string WriteReport()

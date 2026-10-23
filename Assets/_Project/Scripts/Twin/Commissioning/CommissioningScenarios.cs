@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace TwoDude.FactoryTwin.Twin
 {
     /// <summary>
-    /// Commissioning: the cell's acceptance suite. Six scenarios, each with the stimuli a commissioning engineer
+    /// Commissioning: the cell's acceptance suite. Eight scenarios (six from M8, two for the safety zone from M10), each with the stimuli a commissioning engineer
     /// would apply on site and the behaviour the line must show. Every scenario also checks the two conveyor
     /// interlocks and that the plant ran in real time, since the soft PLC's timers count wall-clock time.
     /// </summary>
@@ -77,8 +77,41 @@ namespace TwoDude.FactoryTwin.Twin
                         ScenarioCheck.Never("Conveyors stay stopped without the PLC", 1.5d, 6d, c => c.InfeedRun || c.OutfeedRun, 0.3d),
                         ScenarioCheck.Within("Line runs again with the PLC back", 6d, 4d, c => c.PlcLink && c.Running),
                     }),
+
+                // Safety zone (M10). The force stands in for a person; the arm's stop is the safety zone's own
+                // function, the line's stop is the logic source's.
+                Scenario("Person in the robot zone", "A person steps into the protective zone while the arm works; the arm must stop on the next physics tick, the line must stop, and a reset from outside must restart it.", 35d,
+                    new[]
+                    {
+                        Act(2d, CellTopics.SafetyZoneForce, SignalValue.FromNumber((int)ForceMode.On), c => c.ArmBusy),
+                        Act(12d, CellTopics.SafetyZoneForce, SignalValue.FromNumber((int)ForceMode.None)),
+                        Act(16d, CellTopics.SafetyReset, SignalValue.FromBool(true)),
+                        Act(16.5d, CellTopics.SafetyReset, SignalValue.FromBool(false)),
+                    },
+                    ScenarioCheck.Within("Protective stop on entry", 2d, 6d, c => c.ProtectiveStop),
+                    ScenarioCheck.Never("Arm stops within one physics tick", 0d, 35d, c => c.ZoneOccupied && c.ArmSpeedScale > 0d, OnePhysicsTick),
+                    ScenarioCheck.Never("Conveyors stop while the person is inside", 0d, 35d, c => c.ZoneOccupied && (c.InfeedRun || c.OutfeedRun), 0.1d),
+                    ScenarioCheck.Within("Line runs again after the reset", 16d, 6d, c => c.Running && c.ArmSpeedScale >= 1d),
+                    ScenarioCheck.PartsOut("Parts flow after the reset", 16d, 35d, 1)),
+
+                Scenario("Zone left without a reset", "The person leaves the protective zone; nothing may restart until a reset is pressed from outside, and a reset pressed while they are still inside is refused.", 30d,
+                    new[]
+                    {
+                        Act(2d, CellTopics.SafetyZoneForce, SignalValue.FromNumber((int)ForceMode.On)),
+                        Act(4d, CellTopics.SafetyReset, SignalValue.FromBool(true)),
+                        Act(4.5d, CellTopics.SafetyReset, SignalValue.FromBool(false)),
+                        Act(6d, CellTopics.SafetyZoneForce, SignalValue.FromNumber((int)ForceMode.None)),
+                        Act(20d, CellTopics.SafetyReset, SignalValue.FromBool(true)),
+                        Act(20.5d, CellTopics.SafetyReset, SignalValue.FromBool(false)),
+                    },
+                    ScenarioCheck.Never("Reset refused while the person is inside", 2.5d, 6d, c => !c.ProtectiveStop, 0d),
+                    ScenarioCheck.Never("No restart without a reset", 6.5d, 20d, c => c.Running || c.InfeedRun || c.OutfeedRun || c.ArmSpeedScale > 0d, 0.1d),
+                    ScenarioCheck.Within("Line runs again after the reset", 20d, 5d, c => c.Running && c.ArmSpeedScale >= 1d)),
             };
         }
+
+        // One fixed timestep (0.02 s), and a little: a stop seen on the tick after the sensor still passes.
+        private const double OnePhysicsTick = 0.021d;
 
         private static ScenarioAction Act(double at, TopicPath topic, SignalValue value, Func<CellSnapshot, bool> when = null)
             => new ScenarioAction(at, topic, value, when);

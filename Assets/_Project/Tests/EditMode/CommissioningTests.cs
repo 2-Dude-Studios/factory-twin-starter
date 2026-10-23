@@ -185,10 +185,10 @@ namespace TwoDude.FactoryTwin.Tests
     public sealed class CommissioningScenariosTests
     {
         [Test]
-        public void DefaultSuite_HasSixScenarios_OnlyThePlcLossOneNeedsThePlc()
+        public void DefaultSuite_HasEightScenarios_OnlyThePlcLossOneNeedsThePlc()
         {
             IReadOnlyList<CommissioningScenario> suite = CommissioningScenarios.Default();
-            Assert.AreEqual(6, suite.Count);
+            Assert.AreEqual(8, suite.Count);
             CollectionAssert.AreEqual(new[] { "PLC link lost" }, suite.Where(s => s.PlcOnly).Select(s => s.Name).ToArray());
         }
 

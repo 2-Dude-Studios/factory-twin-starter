@@ -31,6 +31,19 @@ namespace TwoDude.FactoryTwin.Twin
         private const float WarningHalfSize = 2.2f;
         private const float ZoneHeight = 2.2f;
 
+        // Floor outlines: emissive strips on the default layer (the hall renderer does not draw the zone layer).
+        private const string StripMaterialPath = "Assets/_Project/Materials/StackLightLamp.mat";
+        private const float StripWidth = 0.08f;
+        private const float StripThickness = 0.006f;
+        private static readonly Color Amber = new Color(1f, 0.68f, 0.05f);
+        private static readonly Color Red = new Color(1f, 0.12f, 0.08f);
+
+        // Props from the Factory Training sample (placed, never edited). The conveyors cross the protective zone's
+        // east and west edges, so the fence closes the north edge (the CNC side) and the south edge, the trainee's
+        // side, stays open with a cone at each end: the opening the zone sensor guards.
+        private const string FencePrefabPath = "Assets/ThirdParty/FactoryTraining/Prefabs/env/walkway_Fence_prefab.prefab";
+        private const string ConePrefabPath = "Assets/ThirdParty/FactoryTraining/Prefabs/env/koneSmall_prefab.prefab";
+
         private static readonly Vector3 TraineeStart = new Vector3(-2.0f, 0f, -2.6f);
         private const float EyeHeight = 1.65f;
 
@@ -68,6 +81,11 @@ namespace TwoDude.FactoryTwin.Twin
 
             var controller = GetOrAdd<SafetyZoneController>(safety.gameObject);
             SetReference(controller, "context", context);
+
+            var stripMaterial = AssetDatabase.LoadAssetAtPath<Material>(StripMaterialPath);
+            Marking(safety, "WarningMarking", WarningHalfSize, ZoneRole.Warning, Amber, stripMaterial, context);
+            Marking(safety, "ProtectiveMarking", ProtectiveHalfSize, ZoneRole.Protective, Red, stripMaterial, context);
+            Props(safety);
 
             Bind(twinSignals, CellTopics.SafetyZoneWarning, warningSignal);
             Bind(twinSignals, CellTopics.SafetyArmZoneOccupied, protectiveSignal);
@@ -143,6 +161,127 @@ namespace TwoDude.FactoryTwin.Twin
             sensor.DisplayStatus = false;
             sensor.LimitSensorToTag = "";
             sensor.SensorOccupied = signal;
+        }
+
+        private static void Marking(Transform parent, string name, float halfSize, ZoneRole role, Color color, Material material,
+            CellContext context)
+        {
+            Transform marking = Child(parent, name);
+            marking.position = new Vector3(ArmBase.x, StripThickness / 2f + 0.001f, ArmBase.z);
+            marking.rotation = Quaternion.identity;
+
+            float length = halfSize * 2f + StripWidth;
+            var strips = new[]
+            {
+                Strip(marking, "North", new Vector3(0f, 0f, halfSize), new Vector3(length, StripThickness, StripWidth), material),
+                Strip(marking, "South", new Vector3(0f, 0f, -halfSize), new Vector3(length, StripThickness, StripWidth), material),
+                Strip(marking, "East", new Vector3(halfSize, 0f, 0f), new Vector3(StripWidth, StripThickness, length), material),
+                Strip(marking, "West", new Vector3(-halfSize, 0f, 0f), new Vector3(StripWidth, StripThickness, length), material),
+            };
+
+            var zoneMarking = GetOrAdd<ZoneMarking>(marking.gameObject);
+            var so = new SerializedObject(zoneMarking);
+            so.FindProperty("context").objectReferenceValue = context;
+            so.FindProperty("role").enumValueIndex = (int)role;
+            so.FindProperty("color").colorValue = color;
+            // Lower than the stack light's lamps: a long strip blooms to white at that level and loses its colour.
+            so.FindProperty("litEmission").floatValue = 1.2f;
+            SerializedProperty list = so.FindProperty("strips");
+            list.arraySize = strips.Length;
+            for (int i = 0; i < strips.Length; i++)
+                list.GetArrayElementAtIndex(i).objectReferenceValue = strips[i];
+            so.ApplyModifiedProperties();
+        }
+
+        private static Renderer Strip(Transform parent, string name, Vector3 localPosition, Vector3 size, Material material)
+        {
+            Transform existing = parent.Find(name);
+            GameObject strip;
+            if (existing != null)
+            {
+                strip = existing.gameObject;
+            }
+            else
+            {
+                strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                strip.name = name;
+                Object.DestroyImmediate(strip.GetComponent<BoxCollider>());
+                Undo.RegisterCreatedObjectUndo(strip, "Build Safety Zone");
+                strip.transform.SetParent(parent, false);
+            }
+            strip.layer = 0;
+            strip.transform.localPosition = localPosition;
+            strip.transform.localRotation = Quaternion.identity;
+            strip.transform.localScale = size;
+            var renderer = strip.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            return renderer;
+        }
+
+        private static void Props(Transform parent)
+        {
+            Transform props = Child(parent, "Props");
+            for (int i = props.childCount - 1; i >= 0; i--)
+                Undo.DestroyObjectImmediate(props.GetChild(i).gameObject);
+
+            var fence = AssetDatabase.LoadAssetAtPath<GameObject>(FencePrefabPath);
+            var cone = AssetDatabase.LoadAssetAtPath<GameObject>(ConePrefabPath);
+            if (fence == null || cone == null)
+            {
+                Debug.LogWarning("[SafetyZoneSetup] Factory Training fence or cone prefab not found; props skipped.");
+                return;
+            }
+
+            // Measure one fence piece, lay its long side along x, and tile it across the north edge.
+            GameObject probe = Place(fence, props, Vector3.zero, 0f);
+            Bounds size = WorldBounds(probe);
+            bool alongZ = size.size.z > size.size.x;
+            float pieceLength = Mathf.Max(size.size.x, size.size.z);
+            Undo.DestroyObjectImmediate(probe);
+
+            float edge = ProtectiveHalfSize * 2f;
+            int pieces = Mathf.Max(1, Mathf.RoundToInt(edge / pieceLength));
+            float step = edge / pieces;
+            float northZ = ArmBase.z + ProtectiveHalfSize + 0.1f;
+            for (int i = 0; i < pieces; i++)
+            {
+                float x = ArmBase.x - ProtectiveHalfSize + step * (i + 0.5f);
+                GameObject piece = Place(fence, props, new Vector3(x, 0f, northZ), alongZ ? 90f : 0f);
+                // Stretch or shrink along the rail so the pieces end at the zone's corners.
+                Vector3 scale = piece.transform.localScale;
+                if (alongZ)
+                    scale.z *= step / pieceLength;
+                else
+                    scale.x *= step / pieceLength;
+                piece.transform.localScale = scale;
+                // Centre the piece on its slot whatever its pivot.
+                Vector3 offset = new Vector3(x, 0f, northZ) - WorldBounds(piece).center;
+                piece.transform.position += new Vector3(offset.x, 0f, offset.z);
+            }
+
+            float southZ = ArmBase.z - ProtectiveHalfSize - 0.15f;
+            Place(cone, props, new Vector3(ArmBase.x - ProtectiveHalfSize - 0.15f, 0f, southZ), 0f);
+            Place(cone, props, new Vector3(ArmBase.x + ProtectiveHalfSize + 0.15f, 0f, southZ), 0f);
+        }
+
+        private static GameObject Place(GameObject prefab, Transform parent, Vector3 position, float yaw)
+        {
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+            Undo.RegisterCreatedObjectUndo(go, "Build Safety Zone");
+            go.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+            return go;
+        }
+
+        private static Bounds WorldBounds(GameObject go)
+        {
+            Renderer[] renderers = go.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0)
+                return new Bounds(go.transform.position, Vector3.one);
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+                bounds.Encapsulate(renderers[i].bounds);
+            return bounds;
         }
 
         private static CinemachineCamera Trainee(Transform rig)

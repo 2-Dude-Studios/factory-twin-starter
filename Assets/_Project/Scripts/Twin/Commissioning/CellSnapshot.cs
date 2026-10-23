@@ -13,9 +13,22 @@ namespace TwoDude.FactoryTwin.Twin
         public bool PlcLink { get; }
         public double RealtimeRatio { get; }
 
+        /// <summary>The protective zone sensor (cell/safety/arm_zone_occupied, forced or real).</summary>
+        public bool ZoneOccupied { get; }
+
+        /// <summary>The safety zone's latched stop (cell/safety/protective_stop).</summary>
+        public bool ProtectiveStop { get; }
+
+        /// <summary>The arm's speed scale (cell/arm/speed_scale): 0 stopped, 1 full speed.</summary>
+        public double ArmSpeedScale { get; }
+
         public CellSnapshot(bool infeedRun, bool outfeedRun, bool armBusy, bool armHolding, bool partAtGate,
-            CellState state, int partsOut, bool plcLink = true, double realtimeRatio = 1d)
+            CellState state, int partsOut, bool plcLink = true, double realtimeRatio = 1d,
+            bool zoneOccupied = false, bool protectiveStop = false, double armSpeedScale = 1d)
         {
+            ZoneOccupied = zoneOccupied;
+            ProtectiveStop = protectiveStop;
+            ArmSpeedScale = armSpeedScale;
             InfeedRun = infeedRun;
             OutfeedRun = outfeedRun;
             ArmBusy = armBusy;
@@ -42,7 +55,10 @@ namespace TwoDude.FactoryTwin.Twin
                 (CellState)(int)Number(bus, CellTopics.LineState, 0d),
                 (int)Number(bus, CellTopics.LinePartsOut, 0d),
                 Bool(bus, CellTopics.PlcLink),
-                Number(bus, CellTopics.SimRealtimeRatio, 1d));
+                Number(bus, CellTopics.SimRealtimeRatio, 1d),
+                Bool(bus, CellTopics.SafetyArmZoneOccupied),
+                Bool(bus, CellTopics.SafetyProtectiveStop),
+                Number(bus, CellTopics.ArmSpeedScale, 1d));
         }
 
         private static bool Bool(SignalBus bus, TopicPath topic) =>

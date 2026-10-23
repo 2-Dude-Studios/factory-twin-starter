@@ -134,6 +134,27 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void Marking_WarningOutlineLightsWhileSomeoneIsInEitherZone()
+        {
+            Assert.AreEqual(0f, ZoneMarkingPattern.Level(ZoneRole.Warning, SafetyState.Normal, 0d));
+            Assert.AreEqual(1f, ZoneMarkingPattern.Level(ZoneRole.Warning, SafetyState.Reduced, 0d));
+            Assert.AreEqual(1f, ZoneMarkingPattern.Level(ZoneRole.Warning, SafetyState.Stopped, 0d));
+            Assert.AreEqual(0f, ZoneMarkingPattern.Level(ZoneRole.Warning, SafetyState.AwaitingReset, 0d));
+        }
+
+        [Test]
+        public void Marking_ProtectiveOutlineLightsOnTheStopAndFlashesUntilTheReset()
+        {
+            Assert.AreEqual(0f, ZoneMarkingPattern.Level(ZoneRole.Protective, SafetyState.Normal, 0d));
+            Assert.AreEqual(0f, ZoneMarkingPattern.Level(ZoneRole.Protective, SafetyState.Reduced, 0d));
+            Assert.AreEqual(1f, ZoneMarkingPattern.Level(ZoneRole.Protective, SafetyState.Stopped, 0.5d));
+
+            double period = 1d / ZoneMarkingPattern.FlashHz;
+            Assert.AreEqual(1f, ZoneMarkingPattern.Level(ZoneRole.Protective, SafetyState.AwaitingReset, period * 0.25d));
+            Assert.AreEqual(0f, ZoneMarkingPattern.Level(ZoneRole.Protective, SafetyState.AwaitingReset, period * 0.75d));
+        }
+
+        [Test]
         public void ReducedSpeedScale_OutOfRange_Throws()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new SafetyZone(0d));

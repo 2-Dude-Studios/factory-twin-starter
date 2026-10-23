@@ -183,8 +183,26 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - Reset outside: line resumed the same transfer, 0 stalls, parts flowing.
   - 0 console errors. 251/251 EditMode tests.
 - [ ] `cell.st` and the PLC I/O map: the protective stop as a PLC input, so the line also stops when the soft PLC runs it. Needs an OpenPLC Editor upload (your login).
-- [ ] Two commissioning scenarios: zone entry stops the arm within one tick and holds the line; leaving without a reset does not restart it. Needs a force on `safety/arm_zone_occupied`.
-- [ ] Floor markings for the two zones (amber, red) and the Factory Training fence and cone props, so the zones read on camera.
+- [x] Force and scenarios:
+  - Force command `safety/zone_force` (a `ForceMode`) on both zone sensors, standing in for a person; `SignalForcer` handles it.
+  - `CellSnapshot` gains zone occupied, protective stop and arm speed scale.
+  - The suite's stimulus reset clears the force and presses reset once, so a latched stop cannot block the next scenario.
+- [x] Scenario 7 **Person in the robot zone** (35 s):
+  - Force on while the arm works, off at 12 s, reset at 16 s.
+  - Checks: protective stop on entry; the arm stops within one physics tick (0.021 s grace); conveyors stop while the person is inside; the line runs again after the reset; parts flow after it.
+- [x] Scenario 8 **Zone left without a reset** (30 s):
+  - Force on at 2 s, reset pressed inside at 4 s, force off at 6 s, reset at 20 s.
+  - Checks: reset refused inside; no restart without a reset (line, conveyors and arm all still from 6.5 to 20 s); the line runs again after the reset.
+- [x] **Suite on the Unity sequencer (2026-10-24):** 7 passed, 0 failed, PLC link lost n/a (`Builds/Commissioning/vc_unity_20261024_050632.csv`). Both safety scenarios pass every check. On the PLC, scenario 7's "Conveyors stop while the person is inside" will fail until `cell.st` has the safety input; the arm's own stop does not depend on the PLC.
+- [x] Floor markings: `ZoneMarking` (with a pure `ZoneMarkingPattern`, 2 tests) tints four emissive strips per zone from `safety/state`, using the stack light's lamp material.
+  - Warning outline: amber, lit while someone is in either zone.
+  - Protective outline: red, lit during the stop, flashing at 1.5 Hz while waiting for the reset.
+  - Emission is 1.2: at the stack light's level the strips bloomed to white.
+- [x] Props from the Factory Training sample, placed by the setup tool:
+  - a walkway fence along the protective zone's CNC side, scaled to end at its corners;
+  - a cone at each end of the open side, where the trainee enters.
+  - The conveyors cross the other two sides.
+- [x] Checked in the Game view (cell shot): outlines read when idle; with the trainee inside, both outlines light up, the line badge reads "Stopped — person in robot zone" and the event log shows the stop. 253/253 EditMode tests.
 
 ## Manual steps pending
 - **UnitySkills does not start by itself after an Editor restart** (seen 2026-10-24): start it from its toolbar button, or Claude Code cannot reach the Editor.
