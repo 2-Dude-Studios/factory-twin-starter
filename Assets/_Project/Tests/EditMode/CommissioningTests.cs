@@ -142,8 +142,9 @@ namespace TwoDude.FactoryTwin.Tests
             var scenario = new CommissioningScenario("s", "", 60d, null,
                 new[]
                 {
-                    ScenarioCheck.Never("no hold", 0d, 60d, c => c.State == CellState.Held, 0d),
+                    // Listed first, but it only fails because FinishNow cuts the run short.
                     ScenarioCheck.PartsOut("six parts", 0d, 60d, 6),
+                    ScenarioCheck.Never("no hold", 0d, 60d, c => c.State == CellState.Held, 0d),
                 });
             var run = new ScenarioRun(scenario);
             var due = new List<ScenarioAction>();
@@ -157,6 +158,7 @@ namespace TwoDude.FactoryTwin.Tests
             Assert.IsTrue(run.IsDone);
             Assert.IsFalse(run.Passed);
             Assert.IsTrue(run.Checks.All(c => c.Outcome != CheckOutcome.Pending));
+            StringAssert.StartsWith("no hold:", run.FirstFailure(), "the check cut short by FinishNow must not be reported first");
         }
 
         [Test]

@@ -62,6 +62,7 @@ namespace TwoDude.FactoryTwin.Twin
         private readonly CommissioningScenario _scenario;
         private readonly List<ScenarioCheck> _checks = new List<ScenarioCheck>();
         private readonly bool[] _fired;
+        private ScenarioCheck _firstFailed;
 
         public ScenarioRun(CommissioningScenario scenario)
         {
@@ -134,7 +135,11 @@ namespace TwoDude.FactoryTwin.Twin
             }
 
             foreach (ScenarioCheck check in _checks)
+            {
                 check.Observe(Elapsed, cell);
+                if (_firstFailed == null && check.Outcome == CheckOutcome.Failed)
+                    _firstFailed = check;
+            }
 
             if (Elapsed >= _scenario.DurationSeconds)
             {
@@ -144,9 +149,15 @@ namespace TwoDude.FactoryTwin.Twin
             }
         }
 
-        /// <summary>The first failed check's name and detail, for a one-line report; empty if all passed.</summary>
+        /// <summary>
+        /// The check that failed first while the scenario ran (or else the first failed one at the end), with its
+        /// detail, for a one-line report; empty if all passed. Checks failed only because the run was cut short
+        /// never take this place.
+        /// </summary>
         public string FirstFailure()
         {
+            if (_firstFailed != null)
+                return $"{_firstFailed.Name}: {_firstFailed.Detail}";
             foreach (ScenarioCheck check in _checks)
             {
                 if (check.Outcome == CheckOutcome.Failed)
