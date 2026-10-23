@@ -1,9 +1,11 @@
-# Manufacturing Demo — Factory Digital Twin build plan (Rev 3, 19 Oct 2026)
+# Manufacturing Demo — Factory Digital Twin build plan (Rev 4, 22 Oct 2026)
 
 Source tracker (62 items, licence verdicts, download status): https://claude.ai/artifact/AGRYueGCfv6UwgTbnQcdre
 Video SOP to follow once the build exists: `claude/walkthrough-video-playbook.md`
 
-Rev 3 narrows the prototype to one use case, **predictive maintenance**: the most-asked-for digital-twin use in manufacturing, and the one this build is closest to. Rev 2 planned six use cases (M4–M10, commit `ee852e9`); the other five are now listed under "Later" below. M0–M3 are done and unchanged.
+Rev 3 narrowed the prototype to one use case, **predictive maintenance**: the most-asked-for digital-twin use in manufacturing, and the one this build is closest to. Rev 2 planned six use cases (M4–M10, commit `ee852e9`). M0–M6 are done; the PdM video (v02) is approved.
+
+Rev 4 adds a second use case, **virtual commissioning** (M7–M9), for machine builders and system integrators. Chosen after a short research pass on 2026-10-22: machine builders know virtual commissioning but rarely use it, customers increasingly ask them for a virtual factory acceptance test, and competitors' demos are either engineering-tool screen recordings or whole-factory showpieces. None tells the story of one logic bug caught before site. The other four use cases stay under "Later".
 
 ## What this is
 
@@ -31,7 +33,9 @@ Desktop walkthrough first (the website video). A touch/kiosk view and a Quest 3 
 | Robot motion | Baked joint angles | Our code | Starter has no IK. Poses baked offline from the UR's closed-form kinematics (M2). |
 | Live data | MQTTnet 4.3.7, vendored DLL | MIT | Local Mosquitto broker on the studio PC. Map topics → realvirtual Signal components. |
 | Telemetry stand-in | AI4I 2020 Predictive Maintenance Dataset | CC BY 4.0 | 10,000 rows: air/process temp, rpm, torque, tool wear, five failure modes. Replay it through the broker. Cite: UCI ML Repository, doi:10.24432/C5HS5C. |
-| OPC UA (later) | OPCFoundation/UA-.NETStandard | MIT | Now targets .NET Standard 2.1. Not in this build, but the video promises it (decided 2026-10-20), so the first client project that asks gets it. |
+| OPC UA (later) | OPCFoundation/UA-.NETStandard | MIT | The 1.5.378.x line targets .NET Standard 2.1 (2.0.x drops it). Not in this build, but the video promises it (decided 2026-10-20), so the first client project that asks gets it. |
+| Soft PLC (M7) | OpenPLC Runtime v4.3.1 (Autonomy-Logic/openplc-runtime) | MIT | External tool on the studio PC (Windows installer, MSYS2 inside), not in the repo. Runs the cell's Structured Text; Modbus TCP slave. The OpenPLC Editor v4 (GPL-3.0) may be needed to build the program: a tool only, never bundled. |
+| PLC link (M7) | Our own Modbus TCP client | Our code | A few function codes over a socket; no package. NModbus (MIT) is the fallback, and only after asking. |
 | Lighting | Poly Haven — Industrial Workshop Foundry HDRI | CC0 | |
 | Materials | ambientCG metals / concrete | CC0 | Raw files may live in the repo. |
 | VFX | Unity Particle Pack 3.1 | Asset Store EULA | URP, sparks/steam. |
@@ -56,6 +60,7 @@ factory-twin/
   tools/
     broker/              # mosquitto.conf, docker-compose
     replay/              # python: csv → MQTT at N rows/sec with fault flags
+    plc/                 # Structured Text for the soft PLC (M7), I/O list
   docs/
     LICENSES.md          # one line per third-party item, copied from tracker
     demo-script.md       # the 90-second walkthrough beats
@@ -96,16 +101,32 @@ Exit:
 
 Decide at start: the risk definition (see open questions).
 
-**M6 — Polish and capture (≈4 days).** Foundry HDRI, ambientCG floors, sparks/steam, ambience, a Cinemachine 3 camera path for the video, 60-fps lock, Windows build. Then hand over to the video playbook: voiceover first, capture against it.
+**M6 — Polish and capture (≈4 days). Done.** Foundry HDRI, ambientCG floors, sparks/steam, ambience, a Cinemachine 3 camera path for the video, 60-fps lock, Windows build. Then hand over to the video playbook: voiceover first, capture against it.
 Exit: the walkthrough video is captured from the project and approved. Reworded 2026-10-21 from "captured from the Windows build": the takes are Editor recordings through Unity Recorder, with the same scene and settings and no dropped frames. The Windows build is the live-demo deliverable. **Met 2026-10-21** (v02, 111 s; see `docs/voiceover.md`).
 
-M4–M6 come to roughly 10 days of focused time, which fits the 2–3 weeks of unpaid build time originally budgeted for a sellable demo.
+M4–M6 came to roughly 10 days of focused time, which fits the 2–3 weeks of unpaid build time originally budgeted for a sellable demo.
+
+### Use case 2 — Virtual commissioning (Rev 4)
+
+The beat that is the whole pitch: a soft PLC runs the cell from Structured Text. The commissioning test suite runs and one test fails; in 3D, parts pile up at the gate because the program is missing an interlock. One line of the program is fixed, the suite reruns and every test passes. "Found in the twin on day 1, not on site in commissioning week."
+
+Soft PLC: OpenPLC Runtime v4 (MIT), outside Unity and outside the repo. Link: Modbus TCP, with our own client. realvirtual Professional is not needed, because Unity writes the Signals itself. CODESYS (2-hour demo mode), TwinCAT and PLCSIM Advanced (trial licences, and realvirtual Professional's interfaces) were ruled out. Commissioning savings figures (25–70%) are all vendor-reported; any on screen carry that label.
+
+**M7 — Soft PLC link (≈2 days).** OpenPLC Runtime v4 running on the studio PC. `CellSequence` ported to Structured Text (`tools/plc/cell.st`), the same four states, handshake and hold. `PlcLink`: our own Modbus TCP client (a pure, tested frame codec plus a socket loop) with an I/O map ScriptableObject that maps coils and registers to bus topics; the PLC host and port live in `TwinConfig`. A logic-source switch hands the line to the PLC (the in-Unity `CellSequencer` stops writing its outputs), and a heartbeat watchdog holds the line if the PLC goes silent. New signals: `cell/plc/source` (0 Unity, 1 PLC), `cell/plc/heartbeat`, `cell/plc/link`.
+Exit: the cell runs 10 minutes from the soft PLC with `CellSequencer` off. Parts per hour stay within 10% of the M2 rate, with 0 stalls. Stopping the PLC holds the line within 1 s.
+
+**M8 — Commissioning suite (≈2.5 days).** Fault forcing extends to the cell: force the gate sensor on or off, drop a part, keep the arm busy. Six scenarios (normal run, stuck sensor, missing part, arm not ready, press fault, PLC loss) run against either logic source and write a pass/fail report, shown on a dashboard panel and saved as CSV. An I/O list is exported from the I/O map as CSV, because that is what commissioning engineers work from. A copy of the program with a seeded bug (`tools/plc/cell_buggy.st`, the missing interlock). New signals: `cell/gate1/force` (0 off, 1 forced false, 2 forced true), `cell/vc/test`, `cell/vc/result`.
+Exit: the suite passes against both logic sources. The bugged program fails a named test, and the failure is visible in 3D.
+
+**M9 — VC capture (≈1.5 days).** Demo-script beats for VC, voiceover, takes through `TakeSequencer`, cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_VC_v01_<date>`.
+Exit: the clip is captured from the project and approved.
+
+M7–M9 come to roughly 6 days of focused time.
 
 ## Later (not scheduled)
 
-Planned in Rev 2 (commit `ee852e9` has the full exit conditions). Each builds on the same signal contract and can be picked up when a prospect asks for it:
+Planned in Rev 2 (commit `ee852e9` has the full exit conditions). Virtual commissioning moved into Rev 4 as M7–M9. Each builds on the same signal contract and can be picked up when a prospect asks for it:
 
-- **Virtual commissioning** — the strongest second choice, for machine builders and system integrators. The cell runs from Structured Text in a soft PLC outside Unity, with a scripted test suite that catches a seeded logic bug. Needs a soft-PLC choice (CODESYS Control Win, OpenPLC or PLCSIM Advanced) and possibly OPC UA.
 - **Real-time monitoring, full version** — hover any machine to read its signal, health for every station, OEE, retained MQTT state for clients that join mid-run.
 - **Workforce training & safety** — a protective zone that freezes the arm, and a guided lockout procedure for clearing a press fault (natural first Quest 3 content).
 - **Factory layout & what-if** — runtime UR5e IK in C# so stations can move, layout variants, faster-than-real-time comparison. Commit the arm bake script first (blueprint gap 4).
@@ -132,6 +153,12 @@ The demo feeds one ~90-second walkthrough per the playbook:
 - **Path:** your machines' sensors over MQTT or OPC UA, your failure history, the same twin.
 - **Ask:** book a call.
 
+The VC clip (M9) follows the same shape:
+- **Promise:** find the bug before the machine ships.
+- **Proof:** the suite fails on a missing interlock, parts pile up in 3D; one line fixed, every test passes.
+- **Path:** your PLC program, your I/O list, the same twin.
+- **Ask:** book a call.
+
 Voiceover rendered before capture. Naming `2DS_Manufacturing_FactoryTwin_PdM_v01_<date>`.
 As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) was cut to them; the approved video is v02, 111 s, with a digital-twin introduction ahead of the promise.
 
@@ -140,4 +167,6 @@ As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) 
 - Failure-risk definition (M5): margins to the AI4I failure thresholds (explainable, and the dataset's failure rules are published) or a small classifier trained offline (reads as more "predictive")? Either ships without an ML package. Suggested: margins first, classifier only if a prospect asks for ML.
 - How the video shows "ignored vs acted on": two takes cut together, or a split screen of two runs with a parts-lost counter on each? Decide before the voiceover.
 - Arm choice for the public page: decided at M2, de-branded UR5e.
+- VC (M7): ~~does OpenPLC Runtime v4 accept a plain `.st` upload?~~ Answered 2026-10-22: no; the OpenPLC Editor v4 (GPL-3.0, tool only) compiles and uploads the program. Fallback if the v4 Windows runtime does not hold up: Beremiz, as an external tool.
+- VC (M9): ~~one VC clip, or a VC segment added to the PdM video?~~ Decided 2026-10-23: a separate clip of about 76 s; the approved 111 s PdM video stays as it is.
 - Quest 3 view (later): pass-through tabletop twin or room-scale? Only decide after M6 ships.

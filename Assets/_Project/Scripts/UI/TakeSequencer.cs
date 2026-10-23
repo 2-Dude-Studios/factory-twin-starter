@@ -1,6 +1,7 @@
 using System;
 using TwoDude.FactoryTwin.Twin;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace TwoDude.FactoryTwin.UI
 {
@@ -10,6 +11,10 @@ namespace TwoDude.FactoryTwin.UI
         Shot,
         WearToolOut,
         ChangeTool,
+        RunSuite,
+        RunSuiteStopAtFailure,
+        ShowCode,
+        HideCode,
     }
 
     /// <summary>Capture tools: one timed action in a take, <see cref="At"/> seconds of game time after the take starts.</summary>
@@ -33,6 +38,11 @@ namespace TwoDude.FactoryTwin.UI
     /// cuts to the take's opening shot, and the take itself runs its steps. <see cref="TakeStarted"/> and
     /// <see cref="TakeEnded"/> mark the recorded part; an Editor hook turns them into Unity Recorder MP4s.
     /// Takes follow docs/voiceover.md: A beats 1–4 (ignore it), B beat 5 (act on it), C beat 6 inserts.
+    /// Virtual commissioning takes (docs/demo-script.md, VC clip): D runs the suite against the seeded-bug program
+    /// and stops at its first failure; E runs the whole suite against the fixed program. Load the matching program
+    /// into the soft PLC before each (tools/plc/README.md). VC takes hand the line to the PLC, hide the CNC
+    /// dashboard and show the commissioning panel; PdM takes do the opposite. VC takes are recorded in real time,
+    /// because the PLC's timers count wall-clock time.
     /// </summary>
     public sealed class TakeSequencer : MonoBehaviour
     {
@@ -59,14 +69,46 @@ namespace TwoDude.FactoryTwin.UI
             new TakeStep(10f, TakeAction.Shot, 1),
             new TakeStep(20f, TakeAction.Shot, 2),
         };
+        // Shot 5 is the pick-station close-up.
+        private static readonly TakeStep[] TakeD =
+        {
+            new TakeStep(0f, TakeAction.Shot, 0),
+            new TakeStep(8f, TakeAction.Shot, 1),
+            new TakeStep(12f, TakeAction.ShowCode),
+            new TakeStep(17f, TakeAction.Shot, 5),
+            new TakeStep(18f, TakeAction.RunSuiteStopAtFailure),
+            new TakeStep(36f, TakeAction.Shot, 1),
+        };
+
+        private static readonly TakeStep[] TakeE =
+        {
+            new TakeStep(0f, TakeAction.Shot, 1),
+            new TakeStep(0f, TakeAction.ShowCode),
+            new TakeStep(4f, TakeAction.RunSuite),
+            new TakeStep(10f, TakeAction.Shot, 5),
+            new TakeStep(40f, TakeAction.Shot, 1),
+            new TakeStep(100f, TakeAction.Shot, 2),
+            new TakeStep(140f, TakeAction.Shot, 1),
+            new TakeStep(200f, TakeAction.Shot, 5),
+            new TakeStep(230f, TakeAction.Shot, 1),
+        };
+
         private const float LengthA = 114f;
         private const float LengthB = 72f;
         private const float LengthC = 28f;
+        private const float LengthD = 46f;
+        private const float LengthE = 330f;
 
         [SerializeField] private CellContext context;
         [SerializeField] private TakeControls takeControls;
         [SerializeField] private ShotDirector shotDirector;
-        [Tooltip("Takes to run, in order, as letters: A, B, C.")]
+
+        [Header("Virtual commissioning takes")]
+        [SerializeField] private CommissioningSuite suite;
+        [SerializeField] private CommissioningPanel commissioningPanel;
+        [SerializeField] private UIDocument commissioningDocument;
+        [SerializeField] private UIDocument dashboardDocument;
+        [Tooltip("Takes to run, in order, as letters: A, B, C (PdM), D, E (VC).")]
         [SerializeField] private string takes = "ABC";
         [Tooltip("Running time before the first take so parts/hour settles (not recorded).")]
         [SerializeField, Min(0f)] private float warmUpSeconds = 150f;
@@ -160,6 +202,7 @@ namespace TwoDude.FactoryTwin.UI
             }
             Enter(Phase.PreRoll);
             takeControls.FreshTake();
+            PrepareFor(CurrentLetter());
             shotDirector.Apply(_steps[0].Shot);
         }
 
@@ -197,6 +240,17 @@ namespace TwoDude.FactoryTwin.UI
                 case TakeAction.ChangeTool:
                     Send(CellTopics.PressToolChange);
                     break;
+                case TakeAction.RunSuite:
+                    Publish(CellTopics.VcRun, 1);
+                    break;
+                case TakeAction.RunSuiteStopAtFailure:
+                    Publish(CellTopics.VcRun, 2);
+                    break;
+                case TakeAction.ShowCode:
+                case TakeAction.HideCode:
+                    if (commissioningPanel != null)
+                        commissioningPanel.ShowCode(step.Action == TakeAction.ShowCode);
+                    break;
             }
         }
 
@@ -204,6 +258,40 @@ namespace TwoDude.FactoryTwin.UI
         {
             context.Bus.Publish(command, SignalValue.FromBool(true), CellContext.NowUnixMs);
         }
+
+        private void Publish(TopicPath topic, double value)
+        {
+            context.Bus.Publish(topic, SignalValue.FromNumber(value), CellContext.NowUnixMs);
+        }
+
+        // PdM takes show the CNC dashboard; VC takes show the commissioning panel, run on the soft PLC and name
+        // the program under test.
+        private void PrepareFor(string letter)
+        {
+            bool vc = IsRealTimeTake(letter);
+            SetVisible(dashboardDocument, !vc);
+            SetVisible(commissioningDocument, vc);
+            if (!vc)
+                return;
+            Publish(CellTopics.PlcSource, (int)LogicSource.Plc);
+            if (suite != null)
+                suite.ProgramLabel = ProgramFor(letter);
+            if (commissioningPanel != null)
+                commissioningPanel.ShowCode(false);
+        }
+
+        private static void SetVisible(UIDocument document, bool visible)
+        {
+            if (document != null && document.rootVisualElement != null)
+                document.rootVisualElement.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        /// <summary>VC takes (D, E) run against the soft PLC, so they must be recorded in real time.</summary>
+        public static bool IsRealTimeTake(string letter) => letter == "D" || letter == "E";
+
+        /// <summary>The PLC program a VC take expects in the soft PLC; empty for PdM takes.</summary>
+        public static string ProgramFor(string letter) =>
+            letter == "D" ? "cell_buggy.st" : letter == "E" ? "cell.st" : string.Empty;
 
         private void Enter(Phase next)
         {
@@ -217,7 +305,7 @@ namespace TwoDude.FactoryTwin.UI
             return _takeIndex < takes.Length ? takes[_takeIndex].ToString().ToUpperInvariant() : string.Empty;
         }
 
-        /// <summary>The steps and length of take A, B or C.</summary>
+        /// <summary>The steps and length of take A, B, C, D or E.</summary>
         public static bool TryGetTake(string letter, out TakeStep[] steps, out float length)
         {
             switch (letter)
@@ -225,6 +313,8 @@ namespace TwoDude.FactoryTwin.UI
                 case "A": steps = TakeA; length = LengthA; return true;
                 case "B": steps = TakeB; length = LengthB; return true;
                 case "C": steps = TakeC; length = LengthC; return true;
+                case "D": steps = TakeD; length = LengthD; return true;
+                case "E": steps = TakeE; length = LengthE; return true;
                 default: steps = null; length = 0f; return false;
             }
         }

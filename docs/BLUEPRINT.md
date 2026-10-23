@@ -1,6 +1,6 @@
 # Factory Twin — project blueprint
 
-As of 2026-10-12, commit `40aa013` (M3 closed, M4 next). Written from the code, the scene file and the docs in this repo; where the docs and the code disagree, the code is described and the difference is listed in section 12. Objective, milestones and remaining work revised 2026-10-19 for build plan Rev 3 (predictive maintenance only, M4–M6); the code sections are unchanged.
+As of 2026-10-12, commit `40aa013` (M3 closed, M4 next). Written from the code, the scene file and the docs in this repo; where the docs and the code disagree, the code is described and the difference is listed in section 12. Objective, milestones and remaining work revised 2026-10-19 for build plan Rev 3 (predictive maintenance only, M4–M6) and 2026-10-22 for Rev 4 (virtual commissioning, M7–M9); the code sections are unchanged.
 
 Companion documents: `docs/build-plan.md` (why and in what order), `docs/STATUS.md` (running log and decisions), `docs/demo-script.md` (the 90-second video), `docs/LICENSES.md` (what may ship), `CLAUDE.md` (rules for working in the repo).
 
@@ -12,9 +12,9 @@ Companion documents: `docs/build-plan.md` (why and in what order), `docs/STATUS.
 
 A Unity prototype of one working production cell: an infeed conveyor, a sensor gate, a six-axis pick-and-place arm, an outfeed conveyor, and a press reporting machine telemetry. Every drive, sensor and joint publishes its state over MQTT to a live dashboard.
 
-It proves one use case, **predictive maintenance**: the twin sees a press failure coming, shows where it is and what it will cost the line, and recommends a tool change in time. It was chosen as the most-asked-for digital-twin use in manufacturing and the one this build is closest to. Five other use cases (virtual commissioning, full monitoring, training and safety, layout what-if, pre-planning) are parked under "Later" in `docs/build-plan.md`.
+It proves two use cases. **Predictive maintenance** (done): the twin sees a press failure coming, shows where it is and what it will cost the line, and recommends a tool change in time. It was chosen as the most-asked-for digital-twin use in manufacturing and the one this build is closest to. **Virtual commissioning** (Rev 4, M7–M9): a soft PLC outside Unity runs the cell from Structured Text, and a commissioning test suite catches a logic bug before any hardware exists. It speaks to machine builders and system integrators. Four other use cases (full monitoring, training and safety, layout what-if, pre-planning) are parked under "Later" in `docs/build-plan.md`.
 
-It ships as a Windows build and a 90-second walkthrough video for the Manufacturing page on 2dudestudios.com, and it is run live in front of manufacturing prospects.
+It ships as a Windows build, a walkthrough video for each use case for the Manufacturing page on 2dudestudios.com, and it is run live in front of manufacturing prospects.
 
 ### What it is solving
 
@@ -26,7 +26,9 @@ It ships as a Windows build and a 90-second walkthrough video for the Manufactur
 
 The press's tool wears. The failure risk climbs, the press turns amber and the twin recommends a tool change while the line is still running. Then two outcomes. Ignored, the press fails: it goes red in 3D, the arm finishes its pick, both conveyors stop and the dashboard counts parts lost. Acted on, the tool is changed and the line never stops.
 
-Everything in the architecture exists to make that moment real rather than staged. The line stops because a signal says the press failed, and the dashboard shows it because it reads the same signal. The detection half already works (section 5); M5 adds the prediction half.
+For virtual commissioning (M7–M9): the soft PLC runs the cell. The commissioning suite runs and one test fails; in 3D, parts pile up at the gate because the program is missing an interlock. One line of the program is fixed, the suite reruns and every test passes. Found in the twin, not on site.
+
+Everything in the architecture exists to make those moments real rather than staged. The line stops because a signal says the press failed, and the dashboard shows it because it reads the same signal. The detection half already works (section 5); M5 adds the prediction half.
 
 ### Done when
 
@@ -37,9 +39,9 @@ Everything in the architecture exists to make that moment real rather than stage
 ### Not in scope
 
 - Client work. This is the studio's own marketing asset; a client project on this codebase needs a Unity Industry seat and a fresh licence pass.
-- A real PLC or plant connection. The press telemetry is replayed from a public dataset, and the cell's "PLC" is a state machine in C#.
+- A plant connection. The press telemetry is replayed from a public dataset. Until M7 the cell's "PLC" is a state machine in C#; from M7 a soft PLC (OpenPLC Runtime v4, Modbus TCP) can run it instead, but no vendor PLC or fieldbus.
 - A whole plant. One cell, built well.
-- The other five use cases, until a prospect asks (build plan, "Later"). Also not in scope: a VR product, and robot or sensor validation of the Unity Simulation Pro kind (Industry licence only).
+- The other four use cases, until a prospect asks (build plan, "Later"). Also not in scope: a VR product, and robot or sensor validation of the Unity Simulation Pro kind (Industry licence only).
 
 ### Where it stands
 
@@ -52,6 +54,9 @@ Everything in the architecture exists to make that moment real rather than stage
 | M4 Dashboard | Lean UI Toolkit dashboard for the press and the line, fault beat on camera | Done 2026-10-20 |
 | M5 Prediction | Degradation mode, failure risk, remaining tool life, recommendation, tool change | Done 2026-10-20 |
 | M6 Polish and capture | Lighting, VFX, audio, camera path, Windows build, walkthrough video | Done 2026-10-21 |
+| M7 Soft PLC link | OpenPLC Runtime v4 runs the cell over Modbus TCP; logic-source switch, heartbeat watchdog | Current |
+| M8 Commissioning suite | Sensor forcing, six scenarios against either logic source, I/O list, seeded bug | Planned |
+| M9 VC capture | Virtual commissioning clip | Planned |
 
 ---
 
@@ -527,9 +532,28 @@ Foundry HDRI and ambientCG materials (`Assets/_Project/Lighting`, `Materials` �
 
 Still pending by hand from `docs/STATUS.md`: delete the deactivated training objects in `Cell.unity`, delete `Assets/Screenshots/`, restart the Editor once for the colour-space and input-backend switch.
 
+### M7 — Soft PLC link
+
+| Piece | Notes |
+|---|---|
+| Soft PLC | OpenPLC Runtime v4.3.1 (MIT) on the studio PC, outside Unity and the repo. Modbus TCP slave. |
+| `tools/plc/cell.st` | `CellSequence` (section 5) in Structured Text: the same four states, pick handshake and hold. `CellSequence` stays the reference the PLC is tested against. |
+| I/O map | A ScriptableObject listing each coil, discrete input and register with its bus topic and direction. Source of the M8 I/O list. |
+| `PlcLink` | Our own Modbus TCP client: a pure frame codec (EditMode tests) and a socket loop off the main thread, handing values to the bus on the main thread. Host and port from `TwinConfig`. No package. |
+| Logic-source switch | `cell/plc/source` (0 Unity, 1 PLC). While the PLC owns the line, `CellSequencer` stops writing its outputs, so the drive-ownership issue in section 12 does not apply. |
+| Heartbeat watchdog | The PLC toggles a heartbeat register; if it stops, the line holds through the same path as a press fault. Signals `cell/plc/heartbeat`, `cell/plc/link`. |
+
+### M8 — Commissioning suite
+
+Sensor forcing (`cell/gate1/force`), a dropped part and an arm that stays busy, alongside the existing press faults. Six scenarios (normal run, stuck sensor, missing part, arm not ready, press fault, PLC loss) run against either logic source and write a pass/fail report (dashboard panel and CSV; signals `cell/vc/test`, `cell/vc/result`). I/O list exported from the I/O map as CSV. `tools/plc/cell_buggy.st` carries the seeded missing interlock.
+
+### M9 — VC capture
+
+Beats in `docs/demo-script.md` (virtual commissioning section), takes through `TakeSequencer`, cut with `tools/video`.
+
 ### Later (not scheduled)
 
-The five parked use cases and the touch/kiosk and Quest 3 views; see "Later" in `docs/build-plan.md`. Rev 2's code-level notes for them (soft-PLC logic source, protective stop that interrupts a pick, runtime IK, scenario runner) are in commit `ee852e9`.
+The four parked use cases and the touch/kiosk and Quest 3 views; see "Later" in `docs/build-plan.md`. Rev 2's code-level notes for them (protective stop that interrupts a pick, runtime IK, scenario runner) are in commit `ee852e9`.
 
 ---
 

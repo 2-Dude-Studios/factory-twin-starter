@@ -1,7 +1,9 @@
 {
     "name": "TwoDude.FactoryTwin.Twin.Editor",
     "rootNamespace": "TwoDude.FactoryTwin.Twin",
-    "references": [],
+    "references": [
+        "TwoDude.FactoryTwin.Twin"
+    ],
     "includePlatforms": [
         "Editor"
     ],

@@ -5,12 +5,16 @@ namespace TwoDude.FactoryTwin.Twin
     /// <summary>
     /// Production cell: runs <see cref="CellSequence"/> on the fixed timestep. Reads sensor state from the bus and
     /// publishes drive and pick commands back to it; TwinSignals turns those into realvirtual signal writes.
-    /// The line is held for as long as the press station reports a fault.
+    /// The line is held for as long as the press station reports a fault. While cell/plc/source hands the line to
+    /// an enabled soft PLC link, this component stands aside and writes nothing; taking the line back starts a
+    /// fresh sequence.
     /// </summary>
     [DefaultExecutionOrder(100)]
     public sealed class CellSequencer : MonoBehaviour
     {
         [SerializeField] private CellContext context;
+        [Tooltip("The soft PLC link. The sequencer stands aside only while this is enabled and cell/plc/source says PLC.")]
+        [SerializeField] private PlcLink plcLink;
         [SerializeField, Min(0.1f)] private float ackTimeoutSeconds = 2f;
         [SerializeField, Min(1f)] private float transferTimeoutSeconds = 15f;
 
@@ -45,6 +49,16 @@ namespace TwoDude.FactoryTwin.Twin
 
         private void FixedUpdate()
         {
+            if (plcLink != null && plcLink.isActiveAndEnabled && LogicSourceRule.Read(_bus) == LogicSource.Plc)
+            {
+                if (_published)
+                {
+                    _published = false;
+                    _sequence = new CellSequence(ackTimeoutSeconds, transferTimeoutSeconds);
+                }
+                return;
+            }
+
             var inputs = new CellInputs(
                 ReadBool(CellTopics.GatePartPresent),
                 ReadBool(CellTopics.ArmBusy),

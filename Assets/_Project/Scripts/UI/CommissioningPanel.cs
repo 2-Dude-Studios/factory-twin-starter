@@ -1,0 +1,213 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using TwoDude.FactoryTwin.Twin;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+namespace TwoDude.FactoryTwin.UI
+{
+    /// <summary>
+    /// Commissioning: shows the acceptance suite in Commissioning.uxml. One row per scenario with its status, the
+    /// logic source and program under test, a summary line and a Run button, plus a code card with the program's
+    /// infeed interlock, read from tools/plc/&lt;program&gt; in the Editor. Reads the suite's events and the logic
+    /// source from the bus; it never drives the line itself.
+    /// </summary>
+    [DefaultExecutionOrder(200)]
+    public sealed class CommissioningPanel : MonoBehaviour
+    {
+        private static readonly string[] StatusClasses =
+            { "vc-status--pending", "vc-status--running", "vc-status--pass", "vc-status--fail", "vc-status--na" };
+
+        [SerializeField] private UIDocument document;
+        [SerializeField] private CellContext context;
+        [SerializeField] private CommissioningSuite suite;
+
+        private readonly List<Row> _rows = new List<Row>();
+        private Label _source;
+        private Label _summary;
+        private Label _program;
+        private VisualElement _code;
+        private Label _codeFile;
+        private Label _codeLine;
+        private Button _run;
+        private IDisposable _sourceSubscription;
+        private int _passed;
+        private int _failed;
+
+        private void OnEnable()
+        {
+            VisualElement root = document != null ? document.rootVisualElement : null;
+            if (root == null || context == null || suite == null)
+            {
+                Debug.LogError("[CommissioningPanel] Assign the UIDocument (Commissioning.uxml), Context (Cell) and Suite.", this);
+                enabled = false;
+                return;
+            }
+
+            _source = root.Q<Label>("vc-source");
+            _summary = root.Q<Label>("vc-summary");
+            _program = root.Q<Label>("vc-program");
+            _run = root.Q<Button>("vc-run");
+            _code = root.Q("vc-code");
+            _codeFile = root.Q<Label>("vc-code-file");
+            _codeLine = root.Q<Label>("vc-code-line");
+            _program.text = "Program: " + suite.ProgramLabel;
+            BuildRows(root.Q("vc-rows"));
+
+            _run.clicked += suite.Run;
+            suite.SuiteStarted += OnSuiteStarted;
+            suite.ScenarioStarted += OnScenarioStarted;
+            suite.ScenarioFinished += OnScenarioFinished;
+            suite.SuiteFinished += OnSuiteFinished;
+            _sourceSubscription = context.Bus.Subscribe(CellTopics.PlcSource.ToString(), m => ShowSource(m.Value.AsNumber >= 0.5d));
+            ShowSource(LogicSourceRule.Read(context.Bus) == LogicSource.Plc);
+        }
+
+        private void OnDisable()
+        {
+            if (_run != null && suite != null)
+                _run.clicked -= suite.Run;
+            if (suite != null)
+            {
+                suite.SuiteStarted -= OnSuiteStarted;
+                suite.ScenarioStarted -= OnScenarioStarted;
+                suite.ScenarioFinished -= OnScenarioFinished;
+                suite.SuiteFinished -= OnSuiteFinished;
+            }
+            _sourceSubscription?.Dispose();
+            _sourceSubscription = null;
+        }
+
+        private void BuildRows(VisualElement container)
+        {
+            container.Clear();
+            _rows.Clear();
+            IReadOnlyList<CommissioningScenario> scenarios = CommissioningScenarios.Default();
+            for (int i = 0; i < scenarios.Count; i++)
+            {
+                var row = new Row(i + 1, scenarios[i].Name, scenarios[i].Purpose);
+                container.Add(row.Element);
+                _rows.Add(row);
+            }
+        }
+
+        private void ShowSource(bool plc)
+        {
+            _source.text = plc ? "Soft PLC (OpenPLC)" : "Unity sequencer";
+            _source.EnableInClassList("link--up", plc);
+        }
+
+        private void OnSuiteStarted(LogicSource source)
+        {
+            _passed = _failed = 0;
+            _program.text = "Program: " + suite.ProgramLabel;
+            foreach (Row row in _rows)
+                row.Show(0, string.Empty);
+            _summary.text = "Running…";
+            _run.SetEnabled(false);
+        }
+
+        private void OnScenarioStarted(int index)
+        {
+            if (index >= 1 && index <= _rows.Count)
+                _rows[index - 1].Show(1, string.Empty);
+        }
+
+        /// <summary>Shows or hides the code card with the loaded program's infeed interlock line.</summary>
+        public void ShowCode(bool show)
+        {
+            if (_code == null)
+                return;
+            if (show)
+                FillCode();
+            _code.EnableInClassList("hidden", !show);
+        }
+
+        // The card quotes the real file, so what the video shows is what the PLC runs. Only the Editor has tools/.
+        private void FillCode()
+        {
+            string label = suite.ProgramLabel;
+            _program.text = "Program: " + label;
+            string path = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", "tools", "plc", label);
+            _codeFile.text = label;
+            _codeLine.text = "(program file not found)";
+            if (!File.Exists(path))
+                return;
+            string[] lines = File.ReadAllLines(path);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (!line.StartsWith("infeed_run :=", StringComparison.Ordinal))
+                    continue;
+                _codeFile.text = $"{label} · line {i + 1}";
+                _codeLine.text = line;
+                return;
+            }
+        }
+
+        private void OnScenarioFinished(ScenarioResult result)
+        {
+            int i = result.Index - 1;
+            if (i < 0 || i >= _rows.Count)
+                return;
+
+            int status = result.Outcome == ScenarioOutcome.Passed ? 2
+                : result.Outcome == ScenarioOutcome.NotApplicable ? 4 : 3;
+            _rows[i].Show(status, result.Outcome == ScenarioOutcome.Passed ? string.Empty : result.Detail);
+            if (status == 2)
+                _passed++;
+            else if (status == 3)
+                _failed++;
+        }
+
+        private void OnSuiteFinished(string reportPath)
+        {
+            _summary.text = suite.StoppedEarly ? "Failed: stopped at the first failure"
+                : _failed == 0 ? $"All {_passed} passed" : $"{_failed} failed, {_passed} passed";
+            _run.SetEnabled(true);
+        }
+
+        private sealed class Row
+        {
+            private static readonly string[] Words = { "—", "Running", "Pass", "Fail", "n/a" };
+            private readonly Label _status;
+            private readonly Label _detail;
+            private readonly string _purpose;
+
+            public Row(int index, string name, string purpose)
+            {
+                _purpose = purpose;
+                Element = new VisualElement();
+                Element.AddToClassList("vc-row");
+                var number = new Label(index.ToString());
+                number.AddToClassList("vc-row__index");
+                var text = new VisualElement();
+                text.AddToClassList("vc-row__text");
+                var title = new Label(name);
+                title.AddToClassList("vc-row__name");
+                _detail = new Label(purpose);
+                _detail.AddToClassList("vc-row__detail");
+                text.Add(title);
+                text.Add(_detail);
+                _status = new Label(Words[0]);
+                _status.AddToClassList("chip");
+                Element.Add(number);
+                Element.Add(text);
+                Element.Add(_status);
+                Show(0, string.Empty);
+            }
+
+            public VisualElement Element { get; }
+
+            public void Show(int status, string detail)
+            {
+                _status.text = Words[status];
+                for (int c = 0; c < StatusClasses.Length; c++)
+                    _status.EnableInClassList(StatusClasses[c], c == status);
+                Element.EnableInClassList("vc-row--current", status == 1);
+                _detail.text = string.IsNullOrEmpty(detail) ? _purpose : detail;
+            }
+        }
+    }
+}

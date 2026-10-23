@@ -92,4 +92,28 @@ namespace TwoDude.FactoryTwin.Tests
             }
         }
     }
+
+    public sealed class VcTakeTests
+    {
+        [Test]
+        public void VcTakes_AreRealTime_AndNameTheirProgram()
+        {
+            Assert.IsTrue(TwoDude.FactoryTwin.UI.TakeSequencer.IsRealTimeTake("D"));
+            Assert.IsTrue(TwoDude.FactoryTwin.UI.TakeSequencer.IsRealTimeTake("E"));
+            Assert.IsFalse(TwoDude.FactoryTwin.UI.TakeSequencer.IsRealTimeTake("A"));
+            Assert.AreEqual("cell_buggy.st", TwoDude.FactoryTwin.UI.TakeSequencer.ProgramFor("D"));
+            Assert.AreEqual("cell.st", TwoDude.FactoryTwin.UI.TakeSequencer.ProgramFor("E"));
+            Assert.AreEqual(string.Empty, TwoDude.FactoryTwin.UI.TakeSequencer.ProgramFor("B"));
+        }
+
+        [Test]
+        public void TakeD_RunsTheSuiteStoppingAtFailure_TakeE_RunsItAll()
+        {
+            Assert.IsTrue(TwoDude.FactoryTwin.UI.TakeSequencer.TryGetTake("D", out var d, out float lengthD));
+            Assert.IsTrue(TwoDude.FactoryTwin.UI.TakeSequencer.TryGetTake("E", out var e, out float lengthE));
+            Assert.IsTrue(System.Array.Exists(d, s => s.Action == TwoDude.FactoryTwin.UI.TakeAction.RunSuiteStopAtFailure && s.At < lengthD));
+            Assert.IsTrue(System.Array.Exists(e, s => s.Action == TwoDude.FactoryTwin.UI.TakeAction.RunSuite && s.At < lengthE));
+            Assert.Greater(lengthE, 300f, "take E must outlast the whole suite (about 290 s)");
+        }
+    }
 }

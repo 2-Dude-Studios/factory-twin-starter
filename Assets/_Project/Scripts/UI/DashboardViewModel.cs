@@ -26,11 +26,13 @@ namespace TwoDude.FactoryTwin.UI
             CellTopics.PressAirTemp, CellTopics.PressProcessTemp, CellTopics.PressSpeed, CellTopics.PressTorque,
             CellTopics.PressToolWear, CellTopics.LineState, CellTopics.LinePartsOut, CellTopics.LinePartsPerHour,
             CellTopics.LinePartsLost, CellTopics.LineCycleTime, CellTopics.PressToolRemaining,
-            CellTopics.PressMaintenanceDue,
+            CellTopics.PressMaintenanceDue, CellTopics.PlcSource, CellTopics.PlcLink,
         };
 
         private readonly IDisposable _subscription;
         private long _version;
+        private bool _plcRunsLine;
+        private bool _plcLinkUp = true;
 
         private string _linkText = "Broker offline";
         private string _pressHealthText = NoValue;
@@ -149,6 +151,18 @@ namespace TwoDude.FactoryTwin.UI
                 ApplyMaintenanceDue(v != 0d);
             else if (topic == CellTopics.LinkConnected)
                 ApplyLink(v != 0d);
+            else if (topic == CellTopics.PlcSource)
+            {
+                _plcRunsLine = v >= 0.5d;
+                if (_lineStateText != NoValue)
+                    ApplyLineState(LineState);
+            }
+            else if (topic == CellTopics.PlcLink)
+            {
+                _plcLinkUp = v != 0d;
+                if (_lineStateText != NoValue)
+                    ApplyLineState(LineState);
+            }
         }
 
         private void ApplyRisk(double risk)
@@ -177,7 +191,7 @@ namespace TwoDude.FactoryTwin.UI
         {
             bool changed = state != LineState || _lineStateText == NoValue;
             LineState = state;
-            Set(ref _lineStateText, LineStateWords(state), nameof(LineStateText));
+            Set(ref _lineStateText, LineStateWords(state, _plcRunsLine && !_plcLinkUp), nameof(LineStateText));
             if (changed)
                 StatusChanged?.Invoke();
         }
@@ -212,6 +226,11 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         /// <summary>The line's state in the words the video uses; feeding and transferring are both just running.</summary>
+        public static string LineStateWords(CellState state, bool plcLinkLost)
+        {
+            return state == CellState.Held && plcLinkLost ? "Stopped — PLC link lost" : LineStateWords(state);
+        }
+
         public static string LineStateWords(CellState state)
         {
             switch (state)

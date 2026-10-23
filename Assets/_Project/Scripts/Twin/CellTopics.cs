@@ -17,6 +17,7 @@ namespace TwoDude.FactoryTwin.Twin
         // Pick station (placeholder transfer in M1, six-axis arm from M2)
         public static readonly TopicPath ArmPickCommand = new TopicPath("arm", "pick_cmd");
         public static readonly TopicPath ArmBusy = new TopicPath("arm", "busy");
+        public static readonly TopicPath ArmHolding = new TopicPath("arm", "holding");
 
         // Outfeed conveyor
         public static readonly TopicPath OutfeedDriveForward = new TopicPath("outfeed", "drive_fwd");
@@ -76,6 +77,31 @@ namespace TwoDude.FactoryTwin.Twin
         // Line figures derived by LineMetricsReporter for the dashboard
         public static readonly TopicPath LinePartsPerHour = new TopicPath("line", "parts_per_hour");
         public static readonly TopicPath LinePartsLost = new TopicPath("line", "parts_lost");
+
+        // Soft PLC link (M7). Which logic runs the line: a LogicSource value (0 the in-Unity CellSequencer, 1 the
+        // soft PLC). Link is true while the PLC answers and its heartbeat moves; heartbeat is the PLC's scan counter.
+        public static readonly TopicPath PlcSource = new TopicPath("plc", "source");
+        public static readonly TopicPath PlcLink = new TopicPath("plc", "link");
+        public static readonly TopicPath PlcHeartbeat = new TopicPath("plc", "heartbeat");
+
+        // Simulation clock (M8): Time.timeScale, and simulated seconds per wall-clock second over the last second.
+        // A soft PLC counts its timers in wall-clock time, so commissioning results only count while the ratio is ~1.
+        public static readonly TopicPath SimTimeScale = new TopicPath("sim", "time_scale");
+        public static readonly TopicPath SimRealtimeRatio = new TopicPath("sim", "realtime_ratio");
+
+        // Commissioning (M8). Stimuli: gate1/force is a ForceMode (0 none, 1 off, 2 on) on gate1/part_present;
+        // gate1/clear removes the part in the gate (operator clears a jam); arm/inhibit makes the arm ignore pick
+        // commands; arm/drop_part makes the gripper let go; plc/simulate_loss stops PlcLink talking to the PLC.
+        // vc/run = 1 starts the suite; vc/test is the scenario under test (1-based, 0 idle); vc/result is each
+        // finished scenario's ScenarioOutcome.
+        public static readonly TopicPath GateForce = new TopicPath("gate1", "force");
+        public static readonly TopicPath GateClear = new TopicPath("gate1", "clear");
+        public static readonly TopicPath ArmInhibit = new TopicPath("arm", "inhibit");
+        public static readonly TopicPath ArmDropPart = new TopicPath("arm", "drop_part");
+        public static readonly TopicPath PlcSimulateLoss = new TopicPath("plc", "simulate_loss");
+        public static readonly TopicPath VcRun = new TopicPath("vc", "run");
+        public static readonly TopicPath VcTest = new TopicPath("vc", "test");
+        public static readonly TopicPath VcResult = new TopicPath("vc", "result");
 
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
