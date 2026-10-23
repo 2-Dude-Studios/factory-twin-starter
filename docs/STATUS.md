@@ -165,15 +165,29 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 - [x] Rev 5 approved (2026-10-24, you): M10 safety zone, M11 lockout procedure, M12 Quest 3 view over Link, M13 training capture, about 10 days. Quest 3 over Link first; standalone stays under "Later".
 - [x] Packages approved for M12 only: com.unity.xr.openxr 1.18.0, com.unity.xr.management 4.6.1, com.unity.xr.interaction.toolkit 3.6.1 (Unity Companion License). Not added yet.
 - [x] Safety topics in `CellTopics`: `safety/zone_warning`, `safety/arm_zone_occupied`, `safety/protective_stop`, `safety/reset` (in), plus `safety/state` (a `SafetyState`: 0 normal, 1 reduced, 2 stopped, 3 awaiting reset) for the dashboard.
-- [x] `SafetyZone` (pure, `Scripts/Twin/Safety/`, 12 tests in `SafetyZoneTests`): the warning zone scales arm speed (0.25 by default), the protective zone latches the stop on the same update, leaving does not restart, reset counts on its rising edge and only with the protective zone clear (refused otherwise, reported as `RefusedZoneOccupied` for the event log). 12/12 pass under `dotnet test` (NUnit 3.14, net8.0). **Not yet run in the Unity Test Runner:** the factory-twin Editor was closed on 2026-10-24 when this landed; run the EditMode suite once it is open again.
-- [ ] Zone sensors as realvirtual signals bound in `TwinSignals` (the 3D↔data rule), and a `SafetyZoneController` that ticks `SafetyZone` from the bus and publishes `protective_stop` and `state`.
-- [ ] Arm freezes on the protective stop (not after the pick) and slows in the warning zone.
-- [ ] `CellSequence` and `cell.st` hold the line on the protective stop.
-- [ ] Zone volumes with fence and cone props; desktop first-person trainee.
-- [ ] Dashboard reason and event log lines; two commissioning scenarios.
+- [x] `SafetyZone` (pure, `Scripts/Twin/Safety/`, 12 tests in `SafetyZoneTests`): the warning zone scales arm speed (0.25 by default), the protective zone latches the stop on the same update, leaving does not restart, reset counts on its rising edge and only with the protective zone clear (refused otherwise, reported as `RefusedZoneOccupied` for the event log). 12/12 pass under `dotnet test` and in the Unity Test Runner.
+- [x] `Tools > Factory Twin > Build Safety Zone` (`SafetyZoneSetup`, re-runnable) builds it into `Cell.unity`:
+  - Layers 23 `Trainee` and 24 `SafetyZone`, which collide only with each other: parts never trip a zone, the trainee never trips a part sensor. (TagManager and DynamicsManager changed for this.)
+  - `Cell/Safety/WarningZone` (4.4 × 4.4 m) and `ProtectiveZone` (2.4 × 2.4 m), 2.2 m high, centred on the arm base, as realvirtual box `Sensor`s. Size follows the ISO 13855 form with demo values: reach 0.85 m + 1.6 m/s × 0.2 s ≈ 1.2 m. Not a safety-rated calculation.
+  - Signals `safety.zone_warning`, `safety.arm_zone_occupied` (inputs) and `arm.speed_scale` (output), bound in `TwinSignals`.
+  - `SafetyZoneController` on `Cell/Safety`, order −50: zones from the bus → `SafetyZone` → `safety/protective_stop`, `safety/state`, `arm/speed_scale`. Each `safety/reset` true is one press; `PressReset()` sends one.
+  - `CaptureRig/Trainee`: `TraineeWalker` (arrow keys, Shift, right-mouse look, kinematic capsule, `Teleport(x, z)` for scripted takes), its `Eye` CinemachineCamera added to `ShotDirector` as the trainee shot, F5.
+- [x] Arm: `ArmSignalBridge` reads `arm.speed_scale` into `ArmController.SpeedScale`, which scales the program's time step. At 0 the program freezes where it is, dwell included, and resumes from the same point.
+- [x] `CellSequence`: new state 4 `SafetyStop`. Entered from any state on the protective stop, everything off at once (mid-transfer too, unlike the CNC hold). The interrupted state and its timers resume on reset, so time stopped counts toward neither the transfer timeout nor the cycle time. Parts lost counts it like a hold. 5 new tests.
+- [x] Dashboard: "Stopped — person in robot zone". Event log: protective stop, zone clear / press reset, reset refused, safety reset, warning zone in and out, line running again. 6 new tests. F6 = safety reset in `TakeControls`.
+- [x] **Play check (2026-10-24, Unity sequencer):**
+  - Warning zone: safety state 1, arm speed 0.25, line running.
+  - Protective zone: state 2, line state 4, arm speed 0, joints identical 3 s apart, mid-pick.
+  - Reset while inside: refused (counted).
+  - Walked out: state 3, line still stopped 4 s later.
+  - Reset outside: line resumed the same transfer, 0 stalls, parts flowing.
+  - 0 console errors. 251/251 EditMode tests.
+- [ ] `cell.st` and the PLC I/O map: the protective stop as a PLC input, so the line also stops when the soft PLC runs it. Needs an OpenPLC Editor upload (your login).
+- [ ] Two commissioning scenarios: zone entry stops the arm within one tick and holds the line; leaving without a reset does not restart it. Needs a force on `safety/arm_zone_occupied`.
+- [ ] Floor markings for the two zones (amber, red) and the Factory Training fence and cone props, so the zones read on camera.
 
 ## Manual steps pending
-- **M10, after the Editor next opens:** Unity creates the `.meta` files for `Scripts/Twin/Safety/` (folder and `SafetyZone.cs`) and `Tests/EditMode/SafetyZoneTests.cs`; commit them with the next M10 commit, then run the EditMode suite (Window > General > Test Runner > EditMode > Run All). Expect all previous tests plus 12 in `SafetyZoneTests`.
+- **UnitySkills does not start by itself after an Editor restart** (seen 2026-10-24): start it from its toolbar button, or Claude Code cannot reach the Editor.
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Done: none of them are in `Cell.unity` any more (checked 2026-10-24; they went with the M2 commit).
 - Delete `Assets/Screenshots/` (UnitySkills capture output; git-ignored).
 - Play mode restarted itself once during the first soak attempt (~375 s in; no compile, refresh or skill call in the log). Did not recur in the 10-minute rerun. If it happens again, check the realvirtual runtime toolbar's restart/reset controls.

@@ -1,0 +1,23 @@
+{
+    "name": "TwoDude.FactoryTwin.Twin.Realvirtual.Editor",
+    "rootNamespace": "TwoDude.FactoryTwin.Twin",
+    "references": [
+        "TwoDude.FactoryTwin.Twin",
+        "TwoDude.FactoryTwin.Twin.Realvirtual",
+        "TwoDude.FactoryTwin.Robot",
+        "TwoDude.FactoryTwin.UI",
+        "realvirtual.base",
+        "Unity.Cinemachine"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -29,6 +29,7 @@ namespace TwoDude.FactoryTwin.Robot
         [SerializeField] private bool busy;
         [SerializeField] private bool gripClosed;
         [SerializeField] private int cyclesCompleted;
+        [SerializeField, Range(0f, 1f)] private float speedScale = 1f;
 
         private ArmProgram _program;
         private readonly float[] _measured = new float[ArmWaypoint.JointCount];
@@ -43,6 +44,17 @@ namespace TwoDude.FactoryTwin.Robot
 
         /// <summary>Measured joint angles in degrees, base to tool.</summary>
         public IReadOnlyList<float> JointAnglesDeg => _measured;
+
+        /// <summary>
+        /// The arm's speed as a fraction of full speed (0–1), set by the safety zone: reduced in the warning zone,
+        /// 0 on a protective stop. At 0 the program is frozen where it is, dwell timers included, and resumes from
+        /// the same point when the speed comes back.
+        /// </summary>
+        public float SpeedScale
+        {
+            get => speedScale;
+            set => speedScale = Mathf.Clamp01(value);
+        }
 
         /// <summary>Start one pick-and-place pass. Returns false if the arm is already moving.</summary>
         public bool RequestPick() => _program != null && _program.Start();
@@ -74,7 +86,7 @@ namespace TwoDude.FactoryTwin.Robot
         private void FixedUpdate()
         {
             ReadJoints();
-            _program.Tick(_measured, Time.fixedDeltaTime);
+            _program.Tick(_measured, Time.fixedDeltaTime * speedScale);
             ApplyTargets();
 
             busy = _program.IsRunning;

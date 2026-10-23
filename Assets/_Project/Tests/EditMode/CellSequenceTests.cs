@@ -209,6 +209,89 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void SafetyStop_StopsEverythingOnTheSameTick()
+        {
+            var sequence = new CellSequence();
+            sequence.Tick(new CellInputs(false, false, false, safetyStop: true), Dt);
+
+            Assert.AreEqual(CellState.SafetyStop, sequence.State);
+            Assert.IsFalse(sequence.Outputs.InfeedRun);
+            Assert.IsFalse(sequence.Outputs.OutfeedRun);
+            Assert.IsFalse(sequence.Outputs.PickCommand);
+        }
+
+        [Test]
+        public void SafetyStop_MidTransfer_DoesNotWaitForThePickAndDoesNotStall()
+        {
+            var stoppedBusy = new CellInputs(false, true, false, safetyStop: true);
+
+            var sequence = new CellSequence(ackTimeoutSeconds: 2d, transferTimeoutSeconds: 15d);
+            sequence.Tick(AtGate, Dt);
+            sequence.Tick(AtGateBusy, Dt);
+            Run(sequence, Busy, 10d);
+
+            sequence.Tick(stoppedBusy, Dt);
+            Assert.AreEqual(CellState.SafetyStop, sequence.State, "a protective stop does not let the pick finish");
+            Assert.IsFalse(sequence.Outputs.OutfeedRun);
+
+            Run(sequence, stoppedBusy, 30d);
+            Assert.AreEqual(CellState.SafetyStop, sequence.State, "time stopped does not count toward the transfer timeout");
+            Assert.AreEqual(0, sequence.Stalls);
+
+            sequence.Tick(Busy, Dt);
+            Assert.AreEqual(CellState.Transferring, sequence.State, "reset resumes the transfer that was under way");
+            Assert.IsTrue(sequence.Outputs.OutfeedRun);
+            Assert.IsFalse(sequence.Outputs.PickCommand, "the pick was already acknowledged");
+
+            sequence.Tick(Idle, Dt);
+            Assert.AreEqual(CellState.Feeding, sequence.State);
+            Assert.AreEqual(0, sequence.Stalls);
+        }
+
+        [Test]
+        public void SafetyStop_BeforeTheAck_RaisesThePickCommandAgainOnReset()
+        {
+            var stoppedAtGate = new CellInputs(true, false, false, safetyStop: true);
+
+            var sequence = new CellSequence();
+            sequence.Tick(AtGate, Dt);
+            Assert.IsTrue(sequence.Outputs.PickCommand);
+
+            sequence.Tick(stoppedAtGate, Dt);
+            Assert.IsFalse(sequence.Outputs.PickCommand);
+
+            sequence.Tick(AtGate, Dt);
+            Assert.AreEqual(CellState.Transferring, sequence.State);
+            Assert.IsTrue(sequence.Outputs.PickCommand, "a fresh rising edge for the arm");
+        }
+
+        [Test]
+        public void SafetyStop_OutranksAPressHold_AndTheHoldStillAppliesAfterTheReset()
+        {
+            var sequence = new CellSequence();
+            sequence.Tick(new CellInputs(false, false, false, hold: true, safetyStop: true), Dt);
+            Assert.AreEqual(CellState.SafetyStop, sequence.State);
+
+            sequence.Tick(new CellInputs(false, false, false, hold: true), Dt);
+            Assert.AreEqual(CellState.Held, sequence.State);
+        }
+
+        [Test]
+        public void CycleTime_LeavesOutTimeInAProtectiveStop()
+        {
+            var exit = new CellInputs(false, false, true);
+            var sequence = new CellSequence();
+
+            sequence.Tick(exit, Dt);
+            Run(sequence, Idle, 4d);
+            Run(sequence, new CellInputs(false, false, false, safetyStop: true), 20d);
+            Run(sequence, Idle, 1d);
+            sequence.Tick(exit, Dt);
+
+            Assert.AreEqual(5d + Dt, sequence.LastCycleSeconds, 0.05d);
+        }
+
+        [Test]
         public void Constructor_RejectsInconsistentTimeouts()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new CellSequence(0d, 5d));

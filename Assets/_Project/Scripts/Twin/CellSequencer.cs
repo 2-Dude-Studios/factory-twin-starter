@@ -5,7 +5,8 @@ namespace TwoDude.FactoryTwin.Twin
     /// <summary>
     /// Production cell: runs <see cref="CellSequence"/> on the fixed timestep. Reads sensor state from the bus and
     /// publishes drive and pick commands back to it; TwinSignals turns those into realvirtual signal writes.
-    /// The line is held for as long as the press station reports a fault. While cell/plc/source hands the line to
+    /// The line is held for as long as the press station reports a fault, and stops at once on the safety zone's
+    /// protective stop. While cell/plc/source hands the line to
     /// an enabled soft PLC link, this component stands aside and writes nothing; taking the line back starts a
     /// fresh sequence.
     /// </summary>
@@ -63,7 +64,8 @@ namespace TwoDude.FactoryTwin.Twin
                 ReadBool(CellTopics.GatePartPresent),
                 ReadBool(CellTopics.ArmBusy),
                 ReadBool(CellTopics.OutfeedPartExit),
-                PressHealthRule.IsFaulted(_bus));
+                PressHealthRule.IsFaulted(_bus),
+                ReadBool(CellTopics.SafetyProtectiveStop));
 
             _sequence.Tick(inputs, Time.fixedDeltaTime);
             PublishChanges();

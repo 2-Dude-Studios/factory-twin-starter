@@ -7,7 +7,7 @@ namespace TwoDude.FactoryTwin.UI
     /// <summary>
     /// Capture tools: switches the main camera between operator control (realvirtual's orbit navigation) and the
     /// Cinemachine shots. Keys 4–8 pick shots 1–5 (shot 1 replays its dolly move), 9 hands control back to the
-    /// operator. A live shot enables the CinemachineBrain on the main camera and disables the navigation
+    /// operator, F5 cuts to the trainee's eye (M10). A live shot enables the CinemachineBrain on the main camera and disables the navigation
     /// behaviours, so the two never fight over the view; the camera itself stays enabled, so Camera.main keeps
     /// working for everything else. The shot can also be set from the Inspector in Play mode.
     /// </summary>
@@ -23,6 +23,8 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private Behaviour cinemachineBrain;
         [Tooltip("The main camera's navigation behaviours (realvirtual's mouse and touch control). Disabled while a shot is live.")]
         [SerializeField] private Behaviour[] operatorNavigation;
+        [Tooltip("Index in Shots of the trainee's eye camera (M10), cut to with F5. −1 if there is none.")]
+        [SerializeField] private int traineeShot = -1;
         [Tooltip("−1 is the operator camera. Change it in Play mode to cut to a shot.")]
         [SerializeField] private int shot = -1;
 
@@ -51,6 +53,7 @@ namespace TwoDude.FactoryTwin.UI
             if (keyboard.digit7Key.wasPressedThisFrame) Apply(3);
             if (keyboard.digit8Key.wasPressedThisFrame) Apply(4);
             if (keyboard.digit9Key.wasPressedThisFrame) Apply(-1);
+            if (keyboard.f5Key.wasPressedThisFrame && traineeShot >= 0) Apply(traineeShot);
         }
 
         /// <summary>Cuts to shot <paramref name="index"/> (0-based), or back to the operator camera with −1.</summary>

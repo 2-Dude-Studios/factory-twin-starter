@@ -113,6 +113,10 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath SafetyReset = new TopicPath("safety", "reset");
         public static readonly TopicPath SafetyState = new TopicPath("safety", "state");
 
+        // The arm's speed as a fraction of full speed (0–1), written by the safety zone and read by the arm through
+        // its realvirtual signal: 1 normal, reduced in the warning zone, 0 on a protective stop.
+        public static readonly TopicPath ArmSpeedScale = new TopicPath("arm", "speed_scale");
+
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }

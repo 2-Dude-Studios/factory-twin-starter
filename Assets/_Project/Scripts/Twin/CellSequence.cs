@@ -9,6 +9,9 @@ namespace TwoDude.FactoryTwin.Twin
         Transferring = 1,
         Stalled = 2,
         Held = 3,
+
+        /// <summary>Protective stop from the safety zone (M10): everything stops at once, mid-transfer included.</summary>
+        SafetyStop = 4,
     }
 
     /// <summary>Production cell: sensor and actuator feedback the sequence reacts to.</summary>
@@ -21,12 +24,16 @@ namespace TwoDude.FactoryTwin.Twin
         /// <summary>An upstream station reports a fault; the line must not move parts while this is set.</summary>
         public bool Hold { get; }
 
-        public CellInputs(bool partAtGate, bool transferBusy, bool partAtExit, bool hold = false)
+        /// <summary>The safety zone's latched protective stop (cell/safety/protective_stop).</summary>
+        public bool SafetyStop { get; }
+
+        public CellInputs(bool partAtGate, bool transferBusy, bool partAtExit, bool hold = false, bool safetyStop = false)
         {
             PartAtGate = partAtGate;
             TransferBusy = transferBusy;
             PartAtExit = partAtExit;
             Hold = hold;
+            SafetyStop = safetyStop;
         }
     }
 
@@ -51,6 +58,9 @@ namespace TwoDude.FactoryTwin.Twin
     /// station moves the part; a pick command that is never acknowledged is re-pulsed, and a transfer that never
     /// finishes stalls the line until the gate is cleared. A hold stops both conveyors for as long as it is set;
     /// a pick already under way is finished first so the arm never freezes with a part in its gripper.
+    /// A protective stop is different: the safety zone has already frozen the arm, so the sequence stops at once in
+    /// whatever state it is in, with every output off and its timers paused, and resumes that state when the stop is
+    /// reset. Time in a protective stop counts toward neither the transfer timeout nor the cycle time.
     /// </summary>
     public sealed class CellSequence
     {
@@ -65,6 +75,9 @@ namespace TwoDude.FactoryTwin.Twin
         private double _lastExitAt = double.NaN;
         // Seconds the line was not held for a press fault; cycle time is measured on this clock.
         private double _runningSeconds;
+        // The state a protective stop interrupted, and how long it had been in it.
+        private CellState _suspendedState;
+        private double _suspendedStateSeconds;
 
         public CellSequence(double ackTimeoutSeconds = 2d, double transferTimeoutSeconds = 15d)
         {
@@ -97,6 +110,27 @@ namespace TwoDude.FactoryTwin.Twin
                 throw new ArgumentOutOfRangeException(nameof(deltaSeconds));
 
             ElapsedSeconds += deltaSeconds;
+
+            if (State == CellState.SafetyStop || inputs.SafetyStop)
+            {
+                if (inputs.SafetyStop)
+                {
+                    if (State != CellState.SafetyStop)
+                    {
+                        _suspendedState = State;
+                        _suspendedStateSeconds = _stateSeconds;
+                        Enter(CellState.SafetyStop);
+                    }
+                    CountExits(inputs.PartAtExit);
+                    Outputs = new CellOutputs(false, false, false);
+                    return;
+                }
+
+                // Reset: pick up where the stop left off.
+                State = _suspendedState;
+                _stateSeconds = _suspendedStateSeconds;
+            }
+
             if (State != CellState.Held)
                 _runningSeconds += deltaSeconds;
             _stateSeconds += deltaSeconds;

@@ -62,7 +62,7 @@ namespace TwoDude.FactoryTwin.Twin
             double span = Math.Min(ElapsedSeconds, _windowSeconds);
             PartsPerHour = span > 0d ? _exitTimes.Count * 3600d / span : 0d;
 
-            if (state == CellState.Held)
+            if (state == CellState.Held || state == CellState.SafetyStop)
             {
                 PartsLost += deltaSeconds * _runningRate / 3600d;
                 _wasHeld = true;

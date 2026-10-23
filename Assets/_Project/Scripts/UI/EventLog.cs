@@ -78,6 +78,13 @@ namespace TwoDude.FactoryTwin.UI
                     Add(message.UnixMs, "Tool changed", LogSeverity.Info);
                 return;
             }
+            // A safety reset is a button press: every one is news. An accepted reset shows as the safety state change.
+            if (topic == CellTopics.SafetyReset)
+            {
+                if (value != 0d && _last.TryGetValue(CellTopics.SafetyState, out double safety) && (int)safety == (int)SafetyState.Stopped)
+                    Add(message.UnixMs, "Reset refused: person still in the robot zone", LogSeverity.Warning);
+                return;
+            }
             bool seen = _last.TryGetValue(topic, out double previous);
             if (seen && previous.Equals(value))
                 return;
@@ -113,6 +120,8 @@ namespace TwoDude.FactoryTwin.UI
 
             if (topic == CellTopics.LineState)
                 LogLineState((CellState)(int)previous, (CellState)(int)value, message.UnixMs);
+            else if (topic == CellTopics.SafetyState)
+                LogSafetyState((SafetyState)(int)previous, (SafetyState)(int)value, message.UnixMs);
             else if (topic == CellTopics.PressHealth)
                 LogPressHealth((MachineHealth)(int)previous, (MachineHealth)(int)value, message.UnixMs);
             else if (topic == CellTopics.PressMaintenanceDue && value != 0d)
@@ -140,8 +149,31 @@ namespace TwoDude.FactoryTwin.UI
                 Add(unixMs, PlcRunsLine() && !PlcLinkUp() ? "Line stopped: PLC link lost" : "Line stopped: CNC fault", LogSeverity.Fault);
             else if (to == CellState.Stalled)
                 Add(unixMs, "Line stalled: part not picked", LogSeverity.Warning);
-            else if (from == CellState.Held || from == CellState.Stalled)
+            else if (from == CellState.Held || from == CellState.Stalled || from == CellState.SafetyStop)
                 Add(unixMs, "Line running again", LogSeverity.Info);
+            // Entering a protective stop is logged from the safety state, which also covers a PLC-run line.
+        }
+
+        private void LogSafetyState(SafetyState from, SafetyState to, long unixMs)
+        {
+            switch (to)
+            {
+                case SafetyState.Stopped:
+                    Add(unixMs, "Protective stop: person in robot zone", LogSeverity.Fault);
+                    break;
+                case SafetyState.AwaitingReset:
+                    Add(unixMs, "Robot zone clear: press reset to restart", LogSeverity.Warning);
+                    break;
+                case SafetyState.Reduced:
+                    Add(unixMs, from == SafetyState.AwaitingReset
+                        ? "Safety reset: arm released at reduced speed"
+                        : "Person in warning zone: arm slowed", LogSeverity.Info);
+                    break;
+                case SafetyState.Normal:
+                    Add(unixMs, from == SafetyState.AwaitingReset ? "Safety reset: arm released" : "Warning zone clear: arm at full speed",
+                        LogSeverity.Info);
+                    break;
+            }
         }
 
         private bool PlcRunsLine() => _last.TryGetValue(CellTopics.PlcSource, out double source) && source >= 0.5d;

@@ -6,7 +6,8 @@ namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
     /// Capture tools: keyboard shortcuts for recording takes, so the demo can be driven without the cursor on screen.
-    /// 1 Wear tool out · 2 Change tool · 3 Clear · 0 fresh take · F9 FPS readout · F10 show or hide the cursor.
+    /// 1 Wear tool out · 2 Change tool · 3 Clear · 0 fresh take · F6 safety reset · F9 FPS readout · F10 show or
+    /// hide the cursor.
     /// Number and function keys only: realvirtual's own hotkeys use letters, Tab, Esc, Home/End/Insert, F1, F12 and
     /// the keypad. Every action goes out as the same bus command the dashboard buttons send.
     /// </summary>
@@ -47,6 +48,8 @@ namespace TwoDude.FactoryTwin.UI
                 fpsReadout.Visible = !fpsReadout.Visible;
             if (keyboard.f10Key.wasPressedThisFrame)
                 Cursor.visible = !Cursor.visible;
+            if (keyboard.f6Key.wasPressedThisFrame)
+                Send(CellTopics.SafetyReset);
         }
 
         /// <summary>
