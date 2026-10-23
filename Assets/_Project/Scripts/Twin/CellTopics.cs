@@ -103,6 +103,16 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath VcTest = new TopicPath("vc", "test");
         public static readonly TopicPath VcResult = new TopicPath("vc", "result");
 
+        // Safety zone around the arm (M10), a simulated safety function, not safety-rated. zone_warning and
+        // arm_zone_occupied are the two sensor volumes (true while a person is inside). protective_stop is the
+        // latched stop: set on entering the protective zone, cleared only by safety/reset (in, true) with that zone
+        // clear. safety/state is a SafetyState value for the dashboard.
+        public static readonly TopicPath SafetyZoneWarning = new TopicPath("safety", "zone_warning");
+        public static readonly TopicPath SafetyArmZoneOccupied = new TopicPath("safety", "arm_zone_occupied");
+        public static readonly TopicPath SafetyProtectiveStop = new TopicPath("safety", "protective_stop");
+        public static readonly TopicPath SafetyReset = new TopicPath("safety", "reset");
+        public static readonly TopicPath SafetyState = new TopicPath("safety", "state");
+
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }

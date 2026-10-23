@@ -164,14 +164,16 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 ## M10 — Safety zone (exit: entering the zone stops the arm within one physics tick of the signal and the dashboard shows why; leaving the zone does not restart the line, the reset does; the suite passes against both logic sources)
 - [x] Rev 5 approved (2026-10-24, you): M10 safety zone, M11 lockout procedure, M12 Quest 3 view over Link, M13 training capture, about 10 days. Quest 3 over Link first; standalone stays under "Later".
 - [x] Packages approved for M12 only: com.unity.xr.openxr 1.18.0, com.unity.xr.management 4.6.1, com.unity.xr.interaction.toolkit 3.6.1 (Unity Companion License). Not added yet.
-- [ ] Safety signals and topics: `safety/zone_warning`, `safety/arm_zone_occupied`, `safety/protective_stop`, `safety/reset`.
-- [ ] Safety logic (pure, tested): warning slows, protective zone latches a stop, reset only with the zone clear.
+- [x] Safety topics in `CellTopics`: `safety/zone_warning`, `safety/arm_zone_occupied`, `safety/protective_stop`, `safety/reset` (in), plus `safety/state` (a `SafetyState`: 0 normal, 1 reduced, 2 stopped, 3 awaiting reset) for the dashboard.
+- [x] `SafetyZone` (pure, `Scripts/Twin/Safety/`, 12 tests in `SafetyZoneTests`): the warning zone scales arm speed (0.25 by default), the protective zone latches the stop on the same update, leaving does not restart, reset counts on its rising edge and only with the protective zone clear (refused otherwise, reported as `RefusedZoneOccupied` for the event log). 12/12 pass under `dotnet test` (NUnit 3.14, net8.0). **Not yet run in the Unity Test Runner:** the factory-twin Editor was closed on 2026-10-24 when this landed; run the EditMode suite once it is open again.
+- [ ] Zone sensors as realvirtual signals bound in `TwinSignals` (the 3D↔data rule), and a `SafetyZoneController` that ticks `SafetyZone` from the bus and publishes `protective_stop` and `state`.
 - [ ] Arm freezes on the protective stop (not after the pick) and slows in the warning zone.
 - [ ] `CellSequence` and `cell.st` hold the line on the protective stop.
 - [ ] Zone volumes with fence and cone props; desktop first-person trainee.
 - [ ] Dashboard reason and event log lines; two commissioning scenarios.
 
 ## Manual steps pending
+- **M10, after the Editor next opens:** Unity creates the `.meta` files for `Scripts/Twin/Safety/` (folder and `SafetyZone.cs`) and `Tests/EditMode/SafetyZoneTests.cs`; commit them with the next M10 commit, then run the EditMode suite (Window > General > Test Runner > EditMode > Run All). Expect all previous tests plus 12 in `SafetyZoneTests`.
 - **Delete the deactivated training objects in Cell.unity** (`ImmersiveTraining`, `Canvas`, `EventSystem`, `DistributionCenterScripts`, `mottoes`, `stopTargets`, `NavMesh_GO`, `NavBlocker`, `cam`, `audio/audioSnapping`, and the hall `Main Camera`). Done: none of them are in `Cell.unity` any more (checked 2026-10-24; they went with the M2 commit).
 - Delete `Assets/Screenshots/` (UnitySkills capture output; git-ignored).
 - Play mode restarted itself once during the first soak attempt (~375 s in; no compile, refresh or skill call in the log). Did not recur in the 10-minute rerun. If it happens again, check the realvirtual runtime toolbar's restart/reset controls.
