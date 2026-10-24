@@ -1,6 +1,6 @@
 # Factory Twin — project blueprint
 
-As of 2026-10-24, commit `0c3b0fc`. Both use cases are built: predictive maintenance (M4–M6, video approved) and virtual commissioning (M7–M8 closed, M9 waiting on the voiceover). A third, workforce training and safety (Rev 5, M10–M13), was approved on 2026-10-24 and is not built yet. Written from the code, `Cell.unity` and the docs in this repo. Where they disagree, the code is described and the difference is listed in section 13.
+As of 2026-10-24, commit `0c3b0fc`. Both use cases are built: predictive maintenance (M4–M6, video approved) and virtual commissioning (M7–M8 closed, M9 waiting on the voiceover). A third, workforce training and safety (Rev 5, M10–M13), was approved on 2026-10-24; its safety zone (M10) closed the same day, the lockout procedure (M11) is next. Written from the code, `Cell.unity` and the docs in this repo. Where they disagree, the code is described and the difference is listed in section 13.
 
 Companion documents: `docs/build-plan.md` (why and in what order, Rev 5), `docs/STATUS.md` (running log and decisions), `docs/demo-script.md` (video beats), `docs/voiceover.md` and `docs/voiceover_vc*.md` (scripts and cut plans), `docs/LICENSES.md` (what may ship), `CLAUDE.md` (rules for working in the repo).
 
@@ -51,8 +51,8 @@ It ships as a Windows build for live demos and a walkthrough video per use case 
 | M7 Soft PLC link | OpenPLC Runtime v4 runs the cell over Modbus TCP; logic-source switch; watchdogs | Done 2026-10-23 |
 | M8 Commissioning suite | Six scenarios against either logic source, I/O list, seeded bug caught | Done 2026-10-23 |
 | M9 VC capture | Takes D and E, 76 s picture-only rough cut | **Waiting on your recorded voiceover** |
-| M10 Safety zone | Warning and protective zones, arm freeze, reset, PLC hold, first-person trainee | **Current** (Rev 5) |
-| M11 Lockout procedure | 1910.147 steps on the CNC, PLC refuses start with the lock on, training record | Planned |
+| M10 Safety zone | Warning and protective zones, arm freeze, reset, PLC hold, first-person trainee, two suite scenarios | Done 2026-10-24 |
+| M11 Lockout procedure | 1910.147 steps on the CNC, PLC refuses start with the lock on, training record | **Current** (Rev 5) |
 | M12 Quest 3 view | OpenXR + XR Interaction Toolkit over Link, same signals | Planned |
 | M13 Training capture | Training clip | Planned |
 
@@ -106,7 +106,7 @@ Three ideas hold the design together:
 - QoS 0, not retained. A client that connects mid-run sees a signal only when it next changes.
 - Enumerations travel as numbers: `line/state` 0 feeding, 1 transferring, 2 stalled, 3 held; `press/health` 0 ok, 1 warning, 2 fault; `plc/source` 0 Unity, 1 PLC.
 
-### Topic catalogue (61 topics)
+### Topic catalogue (68 topics)
 
 **out** is state leaving the cell; **in** is a command or stimulus the cell obeys. Commands are visible on the broker too. The station is called `press` in topics and code; on screen it is a CNC machining centre (AI4I models milling).
 
@@ -132,7 +132,7 @@ Three ideas hold the design together:
 
 | Topic | Type | Dir | Written by | Meaning |
 |---|---|---|---|---|
-| `line/state` | number | out | Logic source | 0 feeding, 1 transferring, 2 stalled, 3 held |
+| `line/state` | number | out | Logic source | 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop (M10) |
 | `line/stalled` | bool | out | Logic source | State 2 |
 | `line/parts_out` | number | out | Logic source | Parts that left the cell this run |
 | `line/cycle_time_s` | number | out | Logic source | Seconds between the last two exits, held time left out |
@@ -176,6 +176,19 @@ Three ideas hold the design together:
 **Link and capture**: `link/connected` (bool, out, MqttBridge: broker link up) and `demo/fresh_take` (bool, in, TakeControls: parts lost back to 0, event log emptied).
 
 "Logic source" means `CellSequencer` or, while `plc/source` = 1, `PlcLink` publishing what the PLC decided. `CellTopics` holds every constant; the CNC telemetry names are also built in `DatasetReplayer` and must stay identical to `tools/replay/replay.py`.
+
+
+**Safety zone (M10)**, a simulated safety function, not safety-rated:
+
+| Topic | Type | Dir | Written by | Meaning |
+|---|---|---|---|---|
+| `safety/zone_warning` | bool | out | WarningZone sensor (or the force table) | A person is in the warning zone |
+| `safety/arm_zone_occupied` | bool | out | ProtectiveZone sensor (or the force table) | A person is in the protective zone |
+| `safety/protective_stop` | bool | out | SafetyZoneController | Latched stop; to the PLC as `safety_stop` (`%MW5`) |
+| `safety/state` | number | out | SafetyZoneController | 0 normal, 1 reduced, 2 stopped, 3 awaiting reset |
+| `safety/reset` | bool | in | Dashboard, F6, suite | Each true is one press; accepted only with the protective zone clear |
+| `arm/speed_scale` | number | in | SafetyZoneController | Arm speed fraction: 1, 0.25 in the warning zone, 0 on the stop |
+| `safety/zone_force` | number | in | Commissioning suite | ForceMode on both zone sensors (a person) |
 
 ---
 

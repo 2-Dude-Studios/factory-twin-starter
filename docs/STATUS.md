@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M10 — Safety zone (build plan Rev 5, workforce training and safety; approved 2026-10-24). M9 — VC capture runs alongside and waits on your voiceover. M8 and M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
+**Current milestone:** M11 — Lockout procedure (build plan Rev 5, workforce training and safety). M10 closed 2026-10-24. M9 — VC capture runs alongside and waits on your voiceover. M8 and M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
 **Last updated:** 2026-10-24
 
 ## Done
@@ -161,7 +161,7 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 - [x] **Picture-only rough cut (2026-10-23):** `Builds/Recordings/2DS_Manufacturing_FactoryTwin_VC_roughcut_picture_20261023.mp4`, 76.1 s, 1920×1080, 60 fps, game audio at −20 LUFS. Burned-in timecode (top right) and the voice block that belongs at each moment (red label, bottom). Built by `tools/video/vc/build_vc.py --guides` (takes D and E, the take E test run time-lapsed from 271 s to 11 s with a caption, I/O list card from `tools/plc/io_list.csv`, end card with the studio logo).
 - [ ] Your voiceover: `block1.wav` … `block6.wav`, one per numbered block of `docs/voiceover_vc_script.md`, in one folder. Then `python tools/video/vc/build_vc.py --voice-dir <folder> --logo "<logo>" Builds/Recordings/2DS_Manufacturing_FactoryTwin_VC_v01_<date>.mp4` places them at their block times, ducks the game audio and mixes to −14 LUFS. Not yet run with a real voice.
 
-## M10 — Safety zone (exit: entering the zone stops the arm within one physics tick of the signal and the dashboard shows why; leaving the zone does not restart the line, the reset does; the suite passes against both logic sources)
+## M10 — Safety zone, closed 2026-10-24 (exit: entering the zone stops the arm within one physics tick of the signal and the dashboard shows why; leaving the zone does not restart the line, the reset does; the suite passes against both logic sources)
 - [x] Rev 5 approved (2026-10-24, you): M10 safety zone, M11 lockout procedure, M12 Quest 3 view over Link, M13 training capture, about 10 days. Quest 3 over Link first; standalone stays under "Later".
 - [x] Packages approved for M12 only: com.unity.xr.openxr 1.18.0, com.unity.xr.management 4.6.1, com.unity.xr.interaction.toolkit 3.6.1 (Unity Companion License). Not added yet.
 - [x] Safety topics in `CellTopics`: `safety/zone_warning`, `safety/arm_zone_occupied`, `safety/protective_stop`, `safety/reset` (in), plus `safety/state` (a `SafetyState`: 0 normal, 1 reduced, 2 stopped, 3 awaiting reset) for the dashboard.
@@ -187,7 +187,20 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - resume the interrupted state on reset.
   - The key line `infeed_run := state = FEEDING;` is now line 168 (175 in the bugged copy); the code card finds it by text.
   - `PlcIoMap` (code and asset), `io_list.csv` (re-exported) and `tools/plc/README.md` updated; the write block is now 1024–1029. 253/253 EditMode tests.
-- [ ] **Your step: upload the new `cell.st` to OpenPLC** (steps in `tools/plc/README.md`, Run it 2–4: `python sync_project.py`, reopen the project, Build and upload). Then the suite runs against the PLC: the exit needs it to pass there too.
+- [x] Uploaded to OpenPLC (2026-10-24, you). First build failed: Structured Text names ignore case, so the state constant `SAFETY_STOP` clashed with the input `safety_stop`; renamed `PROTECTIVE_STOP`. Checked over Modbus: `%MW5` = 1 turns the state to 4.
+- [x] With the PLC running the line (Play, `cell/plc/source` = 1 over MQTT):
+  - Trainee in the protective zone: PLC state 4, both conveyors off.
+  - Walked out: still 4.
+  - Reset: feeding again, next part out.
+- [x] **Suite on the soft PLC (2026-10-24): 8 passed, 0 failed** (`Builds/Commissioning/vc_plc_20261024_182116.csv`), both safety scenarios included.
+- [x] **M10 exit met (2026-10-24):**
+  - Entering the zone stops the arm within one physics tick (suite check, both sources); the dashboard says "Stopped — person in robot zone".
+  - Leaving the zone does not restart the line; the reset does.
+  - The suite passes against both logic sources: Unity 7/7 with 1 n/a, PLC 8/8.
+- Note for later: when the Editor is restarted, OpenPLC Editor needs Device > Configuration > Connect (and your runtime login) before Build and upload is available.
+
+## M11 — Lockout procedure (exit: the procedure runs end to end and the line restarts; starting the line with the lock on is refused by the PLC and logged; a wrong-order run records its errors in the training record)
+- [ ] Decide at start: the trainee's name in the record (fixed demo name or typed in).
 - [x] Force and scenarios:
   - Force command `safety/zone_force` (a `ForceMode`) on both zone sensors, standing in for a person; `SignalForcer` handles it.
   - `CellSnapshot` gains zone occupied, protective stop and arm speed scale.
