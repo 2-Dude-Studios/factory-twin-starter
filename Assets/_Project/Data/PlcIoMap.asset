@@ -54,6 +54,38 @@ MonoBehaviour:
     scale: 1
     plcName: safety_stop
     description: 'Protective stop from the safety zone: the line stops at once and resumes on reset'
+  - topic: cell/line/start_count
+    area: 1
+    address: 1030
+    direction: 0
+    isBool: 0
+    scale: 1
+    plcName: start_count
+    description: 'Start presses: +1 per press'
+  - topic: cell/line/stop_count
+    area: 1
+    address: 1031
+    direction: 0
+    isBool: 0
+    scale: 1
+    plcName: stop_count
+    description: 'Stop presses: +1 per press'
+  - topic: cell/press/isolated
+    area: 1
+    address: 1032
+    direction: 0
+    isBool: 1
+    scale: 1
+    plcName: press_isolated
+    description: 'CNC main isolator off (holds the line, refuses a start)'
+  - topic: cell/press/lockout
+    area: 1
+    address: 1033
+    direction: 0
+    isBool: 1
+    scale: 1
+    plcName: press_lockout
+    description: 'Lock and tag on the CNC isolator (refuses a start)'
   - topic: cell/infeed/drive_fwd
     area: 0
     address: 0
@@ -93,7 +125,7 @@ MonoBehaviour:
     isBool: 0
     scale: 1
     plcName: line_state
-    description: 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop
+    description: 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop, 5 stopped
   - topic: cell/plc/heartbeat
     area: 1
     address: 1
@@ -118,3 +150,11 @@ MonoBehaviour:
     scale: 0.01
     plcName: cycle_time_cs
     description: Seconds between the last two parts out (register in 1/100 s)
+  - topic: cell/line/starts_refused
+    area: 1
+    address: 4
+    direction: 1
+    isBool: 0
+    scale: 1
+    plcName: starts_refused
+    description: 'Starts refused while the CNC was locked out or isolated'

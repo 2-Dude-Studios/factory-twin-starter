@@ -50736,6 +50736,7 @@ GameObject:
   - component: {fileID: 1633254727}
   - component: {fileID: 1633254728}
   - component: {fileID: 1633254729}
+  - component: {fileID: 1633254730}
   m_Layer: 0
   m_Name: Cell
   m_TagString: Untagged
@@ -50986,6 +50987,21 @@ MonoBehaviour:
   current: 
   passed: 0
   failed: 0
+--- !u!114 &1633254730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1633254719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72e3b473ad02da94ba8e8524f48b2de1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.LineCommands
+  context: {fileID: 1633254721}
+  starts: 0
+  stops: 0
 --- !u!1001 &1633362769
 PrefabInstance:
   m_ObjectHideFlags: 0

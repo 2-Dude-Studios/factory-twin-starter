@@ -162,7 +162,7 @@ namespace TwoDude.FactoryTwin.UI
 
             CellState state = _model.LineState;
             _lineState?.EnableInClassList("state--running", state == CellState.Feeding || state == CellState.Transferring);
-            _lineState?.EnableInClassList("state--stalled", state == CellState.Stalled);
+            _lineState?.EnableInClassList("state--stalled", state == CellState.Stalled || state == CellState.Stopped);
             _lineState?.EnableInClassList("state--held", state == CellState.Held || state == CellState.SafetyStop);
 
             _toolLife?.EnableInClassList("tool-life--due", _model.MaintenanceDue);

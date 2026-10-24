@@ -93,9 +93,9 @@ namespace TwoDude.FactoryTwin.Tests
         {
             PlcImage image = DefaultImage();
 
-            Assert.AreEqual(((ushort)1024, (ushort)6), image.WriteBlock);
+            Assert.AreEqual(((ushort)1024, (ushort)10), image.WriteBlock);
             Assert.AreEqual(((ushort)0, (ushort)4), image.CoilBlock);
-            Assert.AreEqual(((ushort)0, (ushort)4), image.RegisterBlock);
+            Assert.AreEqual(((ushort)0, (ushort)5), image.RegisterBlock);
         }
 
         [Test]
@@ -109,12 +109,16 @@ namespace TwoDude.FactoryTwin.Tests
                 ["cell/outfeed/part_exit"] = 1d,
                 ["cell/press/health"] = 2d,
                 ["cell/safety/protective_stop"] = 1d,
+                ["cell/line/start_count"] = 7d,
+                ["cell/line/stop_count"] = 3d,
+                ["cell/press/isolated"] = 1d,
+                ["cell/press/lockout"] = 0d,
             };
             var block = new ushort[image.WriteBlock.Count];
 
             image.FillWriteBlock(block, t => bus.TryGetValue(t.ToString(), out double v) ? v : 0d, 42);
 
-            CollectionAssert.AreEqual(new ushort[] { 1, 0, 1, 2, 42, 1 }, block);
+            CollectionAssert.AreEqual(new ushort[] { 1, 0, 1, 2, 42, 1, 7, 3, 1, 0 }, block);
         }
 
         [Test]
@@ -123,7 +127,7 @@ namespace TwoDude.FactoryTwin.Tests
             PlcImage image = DefaultImage();
             var decoded = new List<(TopicPath Topic, SignalValue Value)>();
 
-            image.Decode(new[] { true, true, false, false }, new ushort[] { 1, 500, 17, 458 }, decoded);
+            image.Decode(new[] { true, true, false, false }, new ushort[] { 1, 500, 17, 458, 2 }, decoded);
             var byTopic = decoded.ToDictionary(d => d.Topic.ToString(), d => d.Value);
 
             Assert.AreEqual(SignalValue.FromBool(true), byTopic["cell/infeed/drive_fwd"]);
@@ -132,6 +136,7 @@ namespace TwoDude.FactoryTwin.Tests
             Assert.AreEqual(SignalValue.FromNumber(500), byTopic["cell/plc/heartbeat"]);
             Assert.AreEqual(17d, byTopic["cell/line/parts_out"].AsNumber);
             Assert.AreEqual(4.58d, byTopic["cell/line/cycle_time_s"].AsNumber, 1e-9);
+            Assert.AreEqual(2d, byTopic["cell/line/starts_refused"].AsNumber);
         }
 
         [Test]

@@ -41,16 +41,22 @@ namespace TwoDude.FactoryTwin.Twin
             yield return new PlcPoint("cell/press/health", register, 1027, toPlc, false, "press_health", "Press health: 0 ok, 1 warning, 2 fault (holds the line)");
             // The safety zone's latched protective stop (M10, %MW5, after the twin heartbeat at %MW4)
             yield return new PlcPoint("cell/safety/protective_stop", register, 1029, toPlc, true, "safety_stop", "Protective stop from the safety zone: the line stops at once and resumes on reset");
+            // Operator start and stop as press counts, and the CNC's isolator and lock (M11, %MW6–%MW9)
+            yield return new PlcPoint("cell/line/start_count", register, 1030, toPlc, false, "start_count", "Start presses: +1 per press");
+            yield return new PlcPoint("cell/line/stop_count", register, 1031, toPlc, false, "stop_count", "Stop presses: +1 per press");
+            yield return new PlcPoint("cell/press/isolated", register, 1032, toPlc, true, "press_isolated", "CNC main isolator off (holds the line, refuses a start)");
+            yield return new PlcPoint("cell/press/lockout", register, 1033, toPlc, true, "press_lockout", "Lock and tag on the CNC isolator (refuses a start)");
 
-            // Commands and status the program writes (%QX0.0–%QX0.3, %QW0–%QW3)
+            // Commands and status the program writes (%QX0.0–%QX0.3, %QW0–%QW4)
             yield return new PlcPoint("cell/infeed/drive_fwd", coil, 0, fromPlc, true, "infeed_run", "Infeed conveyor runs forward");
             yield return new PlcPoint("cell/outfeed/drive_fwd", coil, 1, fromPlc, true, "outfeed_run", "Outfeed conveyor runs forward");
             yield return new PlcPoint("cell/arm/pick_cmd", coil, 2, fromPlc, true, "pick_cmd", "Pick the part at the gate (rising edge)");
             yield return new PlcPoint("cell/line/stalled", coil, 3, fromPlc, true, "line_stalled", "A transfer did not finish in time");
-            yield return new PlcPoint("cell/line/state", register, 0, fromPlc, false, "line_state", "0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop");
+            yield return new PlcPoint("cell/line/state", register, 0, fromPlc, false, "line_state", "0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop, 5 stopped");
             yield return new PlcPoint("cell/plc/heartbeat", register, 1, fromPlc, false, "plc_heartbeat", "Scan counter; the twin holds the line if it stops");
             yield return new PlcPoint("cell/line/parts_out", register, 2, fromPlc, false, "parts_out", "Parts that left the cell");
             yield return new PlcPoint("cell/line/cycle_time_s", register, 3, fromPlc, false, "cycle_time_cs", "Seconds between the last two parts out (register in 1/100 s)", 0.01d);
+            yield return new PlcPoint("cell/line/starts_refused", register, 4, fromPlc, false, "starts_refused", "Starts refused while the CNC was locked out or isolated");
         }
     }
 }

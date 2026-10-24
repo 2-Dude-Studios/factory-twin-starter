@@ -12,6 +12,9 @@ namespace TwoDude.FactoryTwin.Twin
 
         /// <summary>Protective stop from the safety zone (M10): everything stops at once, mid-transfer included.</summary>
         SafetyStop = 4,
+
+        /// <summary>Stopped by the operator (M11): everything off until a start is pressed and allowed.</summary>
+        Stopped = 5,
     }
 
     /// <summary>Production cell: sensor and actuator feedback the sequence reacts to.</summary>
@@ -27,13 +30,26 @@ namespace TwoDude.FactoryTwin.Twin
         /// <summary>The safety zone's latched protective stop (cell/safety/protective_stop).</summary>
         public bool SafetyStop { get; }
 
-        public CellInputs(bool partAtGate, bool transferBusy, bool partAtExit, bool hold = false, bool safetyStop = false)
+        /// <summary>The operator pressed Start on this tick (M11).</summary>
+        public bool StartPressed { get; }
+
+        /// <summary>The operator pressed Stop on this tick (M11).</summary>
+        public bool StopPressed { get; }
+
+        /// <summary>A start must be refused: the CNC is locked out or isolated (M11).</summary>
+        public bool StartBlocked { get; }
+
+        public CellInputs(bool partAtGate, bool transferBusy, bool partAtExit, bool hold = false, bool safetyStop = false,
+            bool startPressed = false, bool stopPressed = false, bool startBlocked = false)
         {
             PartAtGate = partAtGate;
             TransferBusy = transferBusy;
             PartAtExit = partAtExit;
             Hold = hold;
             SafetyStop = safetyStop;
+            StartPressed = startPressed;
+            StopPressed = stopPressed;
+            StartBlocked = startBlocked;
         }
     }
 
@@ -61,6 +77,9 @@ namespace TwoDude.FactoryTwin.Twin
     /// A protective stop is different: the safety zone has already frozen the arm, so the sequence stops at once in
     /// whatever state it is in, with every output off and its timers paused, and resumes that state when the stop is
     /// reset. Time in a protective stop counts toward neither the transfer timeout nor the cycle time.
+    /// Stop and Start are the operator's (M11). Stop is orderly: a pick under way finishes, then the line is Stopped
+    /// with everything off. Start in Stopped runs the line again, unless the start is blocked (the CNC is locked out
+    /// or isolated): then it is refused and counted, and the line stays stopped.
     /// </summary>
     public sealed class CellSequence
     {
@@ -78,6 +97,8 @@ namespace TwoDude.FactoryTwin.Twin
         // The state a protective stop interrupted, and how long it had been in it.
         private CellState _suspendedState;
         private double _suspendedStateSeconds;
+        // Stop pressed and not yet honoured: a pick under way finishes first.
+        private bool _stopRequested;
 
         public CellSequence(double ackTimeoutSeconds = 2d, double transferTimeoutSeconds = 15d)
         {
@@ -98,6 +119,9 @@ namespace TwoDude.FactoryTwin.Twin
         public int PickRetries { get; private set; }
         public int Stalls { get; private set; }
 
+        /// <summary>Starts pressed while the start was blocked (the CNC locked out or isolated).</summary>
+        public int StartsRefused { get; private set; }
+
         /// <summary>
         /// Running seconds between the last two parts leaving the cell, leaving out any time the line was held for a
         /// press fault, so a stop does not show up as one very long cycle. NaN until two parts have left.
@@ -110,6 +134,9 @@ namespace TwoDude.FactoryTwin.Twin
                 throw new ArgumentOutOfRangeException(nameof(deltaSeconds));
 
             ElapsedSeconds += deltaSeconds;
+            // Latched before the protective stop, so a stop pressed during one is honoured after the reset.
+            if (inputs.StopPressed)
+                _stopRequested = true;
 
             if (State == CellState.SafetyStop || inputs.SafetyStop)
             {
@@ -131,7 +158,20 @@ namespace TwoDude.FactoryTwin.Twin
                 _stateSeconds = _suspendedStateSeconds;
             }
 
-            if (State != CellState.Held)
+            if (inputs.StartPressed && State == CellState.Stopped)
+            {
+                if (inputs.StartBlocked)
+                {
+                    StartsRefused++;
+                }
+                else
+                {
+                    _stopRequested = false;
+                    Enter(CellState.Feeding);
+                }
+            }
+
+            if (State != CellState.Held && State != CellState.Stopped)
                 _runningSeconds += deltaSeconds;
             _stateSeconds += deltaSeconds;
             CountExits(inputs.PartAtExit);
@@ -139,7 +179,9 @@ namespace TwoDude.FactoryTwin.Twin
             switch (State)
             {
                 case CellState.Feeding:
-                    if (inputs.Hold)
+                    if (_stopRequested)
+                        Enter(CellState.Stopped);
+                    else if (inputs.Hold)
                         Enter(CellState.Held);
                     else if (inputs.PartAtGate)
                         BeginTransfer();
@@ -147,24 +189,30 @@ namespace TwoDude.FactoryTwin.Twin
 
                 case CellState.Transferring:
                     TickTransfer(inputs, deltaSeconds);
-                    if (State == CellState.Feeding && inputs.Hold)
+                    if (State == CellState.Feeding && _stopRequested)
+                        Enter(CellState.Stopped);
+                    else if (State == CellState.Feeding && inputs.Hold)
                         Enter(CellState.Held);
                     break;
 
                 case CellState.Stalled:
-                    if (!inputs.PartAtGate && !inputs.TransferBusy)
+                    if (_stopRequested)
+                        Enter(CellState.Stopped);
+                    else if (!inputs.PartAtGate && !inputs.TransferBusy)
                         Enter(inputs.Hold ? CellState.Held : CellState.Feeding);
                     break;
 
                 case CellState.Held:
-                    if (!inputs.Hold)
+                    if (_stopRequested)
+                        Enter(CellState.Stopped);
+                    else if (!inputs.Hold)
                         Enter(CellState.Feeding);
                     break;
             }
 
             Outputs = new CellOutputs(
                 infeedRun: State == CellState.Feeding,
-                outfeedRun: State != CellState.Held,
+                outfeedRun: State != CellState.Held && State != CellState.Stopped,
                 pickCommand: State == CellState.Transferring && !_ackSeen && !_repulse);
             _repulse = false;
         }

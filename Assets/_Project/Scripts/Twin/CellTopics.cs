@@ -132,6 +132,17 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath TrainingErrors = new TopicPath("training", "errors");
         public static readonly TopicPath TrainingResult = new TopicPath("training", "result");
 
+        // Line start and stop (M11). line/start and line/stop (in) are button presses: each true is one press.
+        // LineCommands counts them on line/start_count and line/stop_count, which is what both logic sources read: a
+        // press is the count going up by exactly one, so a press cannot fall between two Modbus polls, and a count
+        // that jumps (a restart) is not a press. line/starts_refused counts starts refused while the CNC was locked
+        // out or isolated.
+        public static readonly TopicPath LineStart = new TopicPath("line", "start");
+        public static readonly TopicPath LineStop = new TopicPath("line", "stop");
+        public static readonly TopicPath LineStartCount = new TopicPath("line", "start_count");
+        public static readonly TopicPath LineStopCount = new TopicPath("line", "stop_count");
+        public static readonly TopicPath LineStartsRefused = new TopicPath("line", "starts_refused");
+
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }

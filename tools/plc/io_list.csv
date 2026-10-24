@@ -4,12 +4,17 @@ arm_busy,%MW1,holding register,1025,input (twin → PLC),BOOL,cell/arm/busy,Arm 
 part_at_exit,%MW2,holding register,1026,input (twin → PLC),BOOL,cell/outfeed/part_exit,Exit sensor at the end of the outfeed
 press_health,%MW3,holding register,1027,input (twin → PLC),UINT,cell/press/health,"Press health: 0 ok, 1 warning, 2 fault (holds the line)"
 safety_stop,%MW5,holding register,1029,input (twin → PLC),BOOL,cell/safety/protective_stop,Protective stop from the safety zone: the line stops at once and resumes on reset
+start_count,%MW6,holding register,1030,input (twin → PLC),UINT,cell/line/start_count,Start presses: +1 per press
+stop_count,%MW7,holding register,1031,input (twin → PLC),UINT,cell/line/stop_count,Stop presses: +1 per press
+press_isolated,%MW8,holding register,1032,input (twin → PLC),BOOL,cell/press/isolated,"CNC main isolator off (holds the line, refuses a start)"
+press_lockout,%MW9,holding register,1033,input (twin → PLC),BOOL,cell/press/lockout,Lock and tag on the CNC isolator (refuses a start)
 infeed_run,%QX0.0,coil,0,output (PLC → twin),BOOL,cell/infeed/drive_fwd,Infeed conveyor runs forward
 outfeed_run,%QX0.1,coil,1,output (PLC → twin),BOOL,cell/outfeed/drive_fwd,Outfeed conveyor runs forward
 pick_cmd,%QX0.2,coil,2,output (PLC → twin),BOOL,cell/arm/pick_cmd,Pick the part at the gate (rising edge)
 line_stalled,%QX0.3,coil,3,output (PLC → twin),BOOL,cell/line/stalled,A transfer did not finish in time
-line_state,%QW0,holding register,0,output (PLC → twin),UINT,cell/line/state,"0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop"
+line_state,%QW0,holding register,0,output (PLC → twin),UINT,cell/line/state,"0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop, 5 stopped"
 plc_heartbeat,%QW1,holding register,1,output (PLC → twin),UINT,cell/plc/heartbeat,Scan counter; the twin holds the line if it stops
 parts_out,%QW2,holding register,2,output (PLC → twin),UINT,cell/line/parts_out,Parts that left the cell
 cycle_time_cs,%QW3,holding register,3,output (PLC → twin),UINT ×0.01,cell/line/cycle_time_s,Seconds between the last two parts out (register in 1/100 s)
+starts_refused,%QW4,holding register,4,output (PLC → twin),UINT,cell/line/starts_refused,Starts refused while the CNC was locked out or isolated
 twin_heartbeat,%MW4,holding register,1028,input (twin → PLC),UINT,,Counts up once a second; the PLC holds the line if it stops for 3 s

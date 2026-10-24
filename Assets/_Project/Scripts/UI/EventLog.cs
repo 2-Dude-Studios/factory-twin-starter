@@ -120,6 +120,8 @@ namespace TwoDude.FactoryTwin.UI
 
             if (topic == CellTopics.LineState)
                 LogLineState((CellState)(int)previous, (CellState)(int)value, message.UnixMs);
+            else if (topic == CellTopics.LineStartsRefused && value > previous)
+                Add(message.UnixMs, StartRefusedText(), LogSeverity.Warning);
             else if (topic == CellTopics.SafetyState)
                 LogSafetyState((SafetyState)(int)previous, (SafetyState)(int)value, message.UnixMs);
             else if (topic == CellTopics.PressHealth)
@@ -149,6 +151,10 @@ namespace TwoDude.FactoryTwin.UI
                 Add(unixMs, PlcRunsLine() && !PlcLinkUp() ? "Line stopped: PLC link lost" : "Line stopped: CNC fault", LogSeverity.Fault);
             else if (to == CellState.Stalled)
                 Add(unixMs, "Line stalled: part not picked", LogSeverity.Warning);
+            else if (to == CellState.Stopped)
+                Add(unixMs, "Line stopped by the operator", LogSeverity.Info);
+            else if (from == CellState.Stopped)
+                Add(unixMs, "Line started", LogSeverity.Info);
             else if (from == CellState.Held || from == CellState.Stalled || from == CellState.SafetyStop)
                 Add(unixMs, "Line running again", LogSeverity.Info);
             // Entering a protective stop is logged from the safety state, which also covers a PLC-run line.
@@ -174,6 +180,16 @@ namespace TwoDude.FactoryTwin.UI
                         LogSeverity.Info);
                     break;
             }
+        }
+
+        // The logic source refuses a start while the CNC is locked out or isolated; the lock is the reason to name.
+        private string StartRefusedText()
+        {
+            if (_last.TryGetValue(CellTopics.PressLockout, out double locked) && locked != 0d)
+                return "Start refused: CNC locked out";
+            if (_last.TryGetValue(CellTopics.PressIsolated, out double isolated) && isolated != 0d)
+                return "Start refused: CNC isolated";
+            return "Start refused";
         }
 
         private bool PlcRunsLine() => _last.TryGetValue(CellTopics.PlcSource, out double source) && source >= 0.5d;

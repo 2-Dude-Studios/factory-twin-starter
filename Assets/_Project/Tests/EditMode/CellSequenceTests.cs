@@ -291,6 +291,104 @@ namespace TwoDude.FactoryTwin.Tests
             Assert.AreEqual(5d + Dt, sequence.LastCycleSeconds, 0.05d);
         }
 
+        private static readonly CellInputs StopPress = new CellInputs(false, false, false, stopPressed: true);
+        private static readonly CellInputs StartPress = new CellInputs(false, false, false, startPressed: true);
+
+        [Test]
+        public void Stop_WhileFeeding_StopsEverythingAndStaysStopped()
+        {
+            var sequence = new CellSequence();
+            sequence.Tick(StopPress, Dt);
+
+            Assert.AreEqual(CellState.Stopped, sequence.State);
+            Assert.IsFalse(sequence.Outputs.InfeedRun);
+            Assert.IsFalse(sequence.Outputs.OutfeedRun);
+            Assert.IsFalse(sequence.Outputs.PickCommand);
+
+            Run(sequence, AtGate, 5d);
+            Assert.AreEqual(CellState.Stopped, sequence.State, "a part at the gate is not picked while stopped");
+        }
+
+        [Test]
+        public void Stop_DuringATransfer_LetsThePickFinishFirst()
+        {
+            var sequence = new CellSequence();
+            sequence.Tick(AtGate, Dt);
+            sequence.Tick(AtGateBusy, Dt);
+            sequence.Tick(new CellInputs(false, true, false, stopPressed: true), Dt);
+
+            Assert.AreEqual(CellState.Transferring, sequence.State);
+            Assert.IsTrue(sequence.Outputs.OutfeedRun);
+
+            sequence.Tick(Idle, Dt);
+            Assert.AreEqual(CellState.Stopped, sequence.State);
+        }
+
+        [Test]
+        public void Start_RunsAStoppedLineAgain()
+        {
+            var sequence = new CellSequence();
+            sequence.Tick(StopPress, Dt);
+            sequence.Tick(StartPress, Dt);
+
+            Assert.AreEqual(CellState.Feeding, sequence.State);
+            Assert.IsTrue(sequence.Outputs.InfeedRun);
+            Assert.AreEqual(0, sequence.StartsRefused);
+        }
+
+        [Test]
+        public void Start_WithTheCncLockedOut_IsRefusedAndCounted()
+        {
+            var blockedStart = new CellInputs(false, false, false, startPressed: true, startBlocked: true);
+            var sequence = new CellSequence();
+            sequence.Tick(StopPress, Dt);
+
+            sequence.Tick(blockedStart, Dt);
+            sequence.Tick(blockedStart, Dt);
+            Assert.AreEqual(CellState.Stopped, sequence.State);
+            Assert.IsFalse(sequence.Outputs.InfeedRun);
+            Assert.AreEqual(2, sequence.StartsRefused);
+
+            sequence.Tick(StartPress, Dt);
+            Assert.AreEqual(CellState.Feeding, sequence.State, "starts once the lock is off");
+        }
+
+        [Test]
+        public void Start_WhileRunning_ChangesNothing()
+        {
+            var sequence = new CellSequence();
+            sequence.Tick(new CellInputs(false, false, false, startPressed: true, startBlocked: true), Dt);
+
+            Assert.AreEqual(CellState.Feeding, sequence.State);
+            Assert.AreEqual(0, sequence.StartsRefused, "only a start of a stopped line can be refused");
+        }
+
+        [Test]
+        public void Stop_DuringACncHold_KeepsTheLineStoppedOnceTheFaultClears()
+        {
+            var sequence = new CellSequence();
+            sequence.Tick(new CellInputs(false, false, false, hold: true), Dt);
+            Assert.AreEqual(CellState.Held, sequence.State);
+
+            sequence.Tick(new CellInputs(false, false, false, hold: true, stopPressed: true), Dt);
+            Assert.AreEqual(CellState.Stopped, sequence.State);
+
+            Run(sequence, Idle, 2d);
+            Assert.AreEqual(CellState.Stopped, sequence.State, "the fault clearing does not restart a stopped line");
+        }
+
+        [Test]
+        public void Stop_DuringAProtectiveStop_IsHonouredAfterTheReset()
+        {
+            var sequence = new CellSequence();
+            sequence.Tick(new CellInputs(false, false, false, safetyStop: true), Dt);
+            sequence.Tick(new CellInputs(false, false, false, safetyStop: true, stopPressed: true), Dt);
+            Assert.AreEqual(CellState.SafetyStop, sequence.State);
+
+            sequence.Tick(Idle, Dt);
+            Assert.AreEqual(CellState.Stopped, sequence.State);
+        }
+
         [Test]
         public void Constructor_RejectsInconsistentTimeouts()
         {

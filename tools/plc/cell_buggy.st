@@ -6,15 +6,18 @@
    Factory twin — production cell sequence for the soft PLC (OpenPLC Runtime v4).
 
    The same logic as CellSequence.cs in the Unity project: four states, the pick handshake with re-pulse, the
-   transfer timeout and the hold, plus the safety zone's protective stop (M10). CellSequence stays the reference
-   this program is tested against (M8).
+   transfer timeout and the hold, plus the safety zone's protective stop (M10) and the operator's start and stop
+   with the lockout interlock (M11). CellSequence stays the reference this program is tested against (M8).
 
    I/O over Modbus TCP, as listed in Assets/_Project/Data/PlcIoMap.asset (OpenPLC's Modbus slave layout):
-     %MW0..%MW5  holding registers 1024..1029, written by the twin
+     %MW0..%MW9  holding registers 1024..1033, written by the twin
      %QX0.0..0.3 coils 0..3, read by the twin
-     %QW0..%QW3  holding registers 0..3, read by the twin
+     %QW0..%QW4  holding registers 0..4, read by the twin
 
-   States (line_state): 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop. *)
+   States (line_state): 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop, 5 stopped.
+
+   Start and stop arrive as counts (start_count, stop_count): a press is the count going up by exactly one, so it
+   cannot fall between two Modbus polls, and a count that jumps (the twin restarting) only moves the baseline. *)
 
 PROGRAM cell
   VAR
@@ -25,6 +28,10 @@ PROGRAM cell
     press_health AT %MW3 : UINT;     (* press/health: 0 ok, 1 warning, 2 fault *)
     twin_heartbeat AT %MW4 : UINT;   (* counts up once a second while the twin runs *)
     safety_stop AT %MW5 : UINT;      (* safety/protective_stop: latched by the safety zone, cleared by its reset *)
+    start_count AT %MW6 : UINT;      (* line/start_count: +1 per Start press *)
+    stop_count AT %MW7 : UINT;       (* line/stop_count: +1 per Stop press *)
+    press_isolated AT %MW8 : UINT;   (* press/isolated: the CNC's main isolator is off *)
+    press_lockout AT %MW9 : UINT;    (* press/lockout: a lock and tag hang on the isolator *)
 
     (* Read by the twin *)
     infeed_run AT %QX0.0 : BOOL;     (* infeed/drive_fwd *)
@@ -35,6 +42,7 @@ PROGRAM cell
     plc_heartbeat AT %QW1 : UINT;    (* plc/heartbeat: +1 every scan *)
     parts_out AT %QW2 : UINT;        (* line/parts_out *)
     cycle_time_cs AT %QW3 : UINT;    (* line/cycle_time_s, in 1/100 s *)
+    starts_refused AT %QW4 : UINT;   (* line/starts_refused: starts refused while the CNC was locked out or isolated *)
   END_VAR
 
   VAR CONSTANT
@@ -43,6 +51,7 @@ PROGRAM cell
     STALLED : UINT := 2;
     HELD : UINT := 3;
     PROTECTIVE_STOP : UINT := 4;
+    STOPPED : UINT := 5;
     ACK_TIMEOUT_MS : DINT := 2000;       (* no busy from the arm: drop the command one scan and raise it again *)
     TRANSFER_TIMEOUT_MS : DINT := 15000; (* pick not finished: stall the line *)
     TWIN_TIMEOUT_MS : DINT := 3000;      (* twin heartbeat frozen: hold the line *)
@@ -67,6 +76,11 @@ PROGRAM cell
     hold : BOOL;
     suspended_state : UINT := 0;   (* the state a protective stop interrupted, and how long it had been in it *)
     suspended_ms : DINT := 0;
+    first_scan : BOOL := TRUE;
+    last_start_count : UINT := 0;
+    last_stop_count : UINT := 0;
+    start_pressed : BOOL;
+    stop_requested : BOOL := FALSE;   (* stop pressed and not yet honoured: a pick under way finishes first *)
   END_VAR
 
   (* Scan time from a free-running 10 s timer: ET counts up, resets to 0 for one scan, starts again. *)
@@ -89,7 +103,18 @@ PROGRAM cell
     twin_quiet_ms := twin_quiet_ms + dt_ms;
   END_IF;
 
-  hold := press_health >= PRESS_FAULT OR twin_quiet_ms > TWIN_TIMEOUT_MS;
+  hold := press_health >= PRESS_FAULT OR twin_quiet_ms > TWIN_TIMEOUT_MS OR press_isolated <> 0;
+
+  (* Operator commands. A press is the count going up by exactly one; any other change only moves the baseline. *)
+  IF first_scan THEN
+    last_start_count := start_count; last_stop_count := stop_count; first_scan := FALSE;
+  END_IF;
+  start_pressed := start_count = last_start_count + 1;
+  IF stop_count = last_stop_count + 1 THEN
+    stop_requested := TRUE;          (* latched before the protective stop, honoured after its reset *)
+  END_IF;
+  last_start_count := start_count;
+  last_stop_count := stop_count;
 
   (* Protective stop: the safety zone has already frozen the arm, so stop at once in whatever state the line is in,
      with every output off and the timers paused, and resume that state on the reset. *)
@@ -102,7 +127,17 @@ PROGRAM cell
     state := suspended_state; state_ms := suspended_ms;
   END_IF;
 
-  IF state <> HELD AND state <> PROTECTIVE_STOP THEN
+  (* Start in STOPPED runs the line, unless the CNC is locked out or isolated: then it is refused and counted. *)
+  IF start_pressed AND state = STOPPED THEN
+    IF press_lockout <> 0 OR press_isolated <> 0 THEN
+      starts_refused := starts_refused + 1;
+    ELSE
+      stop_requested := FALSE;
+      state := FEEDING; state_ms := 0;
+    END_IF;
+  END_IF;
+
+  IF state <> HELD AND state <> PROTECTIVE_STOP AND state <> STOPPED THEN
     run_ms := run_ms + dt_ms;
   END_IF;
   IF state <> PROTECTIVE_STOP THEN
@@ -122,7 +157,9 @@ PROGRAM cell
   (* Literal labels: not every IEC compiler accepts named constants as CASE labels. *)
   CASE state OF
     0: (* FEEDING *)
-      IF hold THEN
+      IF stop_requested THEN
+        state := STOPPED; state_ms := 0;
+      ELSIF hold THEN
         state := HELD; state_ms := 0;
       ELSIF part_at_gate <> 0 THEN
         state := TRANSFERRING; state_ms := 0; ack_seen := FALSE; since_cmd_ms := 0;
@@ -145,6 +182,8 @@ PROGRAM cell
         IF part_at_gate <> 0 THEN
           (* The arm is done but the part is still in the gate: the pick missed, try again. *)
           state := TRANSFERRING; state_ms := 0; ack_seen := FALSE; since_cmd_ms := 0;
+        ELSIF stop_requested THEN
+          state := STOPPED; state_ms := 0;
         ELSIF hold THEN
           state := HELD; state_ms := 0;
         ELSE
@@ -153,7 +192,9 @@ PROGRAM cell
       END_IF;
 
     2: (* STALLED *)
-      IF part_at_gate = 0 AND arm_busy = 0 THEN
+      IF stop_requested THEN
+        state := STOPPED; state_ms := 0;
+      ELSIF part_at_gate = 0 AND arm_busy = 0 THEN
         IF hold THEN
           state := HELD;
         ELSE
@@ -163,17 +204,20 @@ PROGRAM cell
       END_IF;
 
     3: (* HELD *)
-      IF NOT hold THEN
+      IF stop_requested THEN
+        state := STOPPED; state_ms := 0;
+      ELSIF NOT hold THEN
         state := FEEDING; state_ms := 0;
       END_IF;
 
-    (* 4, PROTECTIVE_STOP: nothing moves until the reset, handled above. *)
+    (* 4, PROTECTIVE_STOP: nothing moves until the reset, handled above.
+       5, STOPPED: nothing moves until an allowed start, handled above. *)
   END_CASE;
 
   (* SEEDED BUG (M8): the infeed restarts as soon as the arm acknowledges the pick, before the arm has left the
      gate. The next part rides into the gate under the arm. The correct line is: infeed_run := state = FEEDING; *)
   infeed_run := state = FEEDING OR (state = TRANSFERRING AND ack_seen);
-  outfeed_run := state <> HELD AND state <> PROTECTIVE_STOP;
+  outfeed_run := state <> HELD AND state <> PROTECTIVE_STOP AND state <> STOPPED;
   pick_cmd := state = TRANSFERRING AND NOT ack_seen AND NOT repulse;
   line_stalled := state = STALLED;
   line_state := state;

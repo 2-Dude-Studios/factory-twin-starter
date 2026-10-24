@@ -207,7 +207,14 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - `AlwaysReachesThePlant`: only Start always reaches the line, so the logic source's own interlock refuses a start with the lock on. Every other out-of-order action is held back, so a mistake costs an error, not an injury.
 - [x] `TrainingRecord`: CSV with one row per step done or mistake made (trainee, start time UTC, seconds in, step, regulation, done or mistake, detail) and a summary row.
 - [x] Topics in `CellTopics`: `press/isolated`, `press/lockout`, `training/action` (in), `training/step`, `training/errors`, `training/result` (a `TrainingOutcome`). 263/263 EditMode tests in the Editor.
-- [ ] Line start and stop, and the start interlock: a run command for the line; the CNC isolated holds it; a start with the lock on is refused and the refusal is visible on the bus. In `CellSequence` and `cell.st` (another OpenPLC upload).
+- [x] Line start and stop with the lockout interlock:
+  - Commands: `line/start` and `line/stop` are presses (F7, F8). `LineCommands` (on `Cell`) counts them on `line/start_count` and `line/stop_count`, which both logic sources read. A press is the count going up by exactly one (`CommandCount`), so a press survives the gap between Modbus polls, and a restart's jump back to 0 is not a press.
+  - `CellSequence`: new state 5 `Stopped`. Stop is orderly: a pick under way finishes; stop during a CNC hold stops the line so it stays down once the fault clears; stop during a protective stop is honoured after the reset.
+  - Start in `Stopped` runs the line, unless the CNC is locked out or isolated: then it is refused and counted on `line/starts_refused`. An isolated CNC also holds the line. Parts lost counts Stopped too. 7 new tests.
+  - `cell.st` and `cell_buggy.st` mirror it: inputs `%MW6`–`%MW9` (start and stop counts, isolated, locked out), output `starts_refused` `%QW4`. The key `infeed_run` line is now 212. `PlcIoMap` (code and asset), `io_list.csv` and the PLC README updated.
+  - Dashboard "Stopped"; event log "Line stopped by the operator", "Line started", "Start refused: CNC locked out" (or isolated). 5 more tests; 275/275 EditMode.
+  - Play check on the Unity sequencer (2026-10-24): stop → state 5 once the pick finished; isolated + locked, two starts → refused 1, 2, still stopped; lock off, isolator on, start → feeding. 0 console errors.
+- [ ] **Your step: upload the new `cell.st` to OpenPLC** (Device > Configuration > Connect if needed, then Build and upload). Then the same check and the suite run against the PLC.
 - [ ] CNC isolator and lock: a station component that owns `press/isolated` and `press/lockout`. Isolated, the CNC goes dark (stack light off, telemetry paused).
 - [ ] `TrainingController`: runs `LockoutProcedure` from `training/action`, carries out accepted actions (and Start always), publishes step, errors and result, writes `Builds/Training/lockout_<time>.csv`.
 - [ ] Interaction points on the CNC (isolator, lock hasp, tool, start and stop buttons) for the desktop trainee, through signals only.
