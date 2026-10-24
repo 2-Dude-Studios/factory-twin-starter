@@ -200,7 +200,19 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 - Note for later: when the Editor is restarted, OpenPLC Editor needs Device > Configuration > Connect (and your runtime login) before Build and upload is available.
 
 ## M11 — Lockout procedure (exit: the procedure runs end to end and the line restarts; starting the line with the lock on is refused by the PLC and logged; a wrong-order run records its errors in the training record)
-- [ ] Decide at start: the trainee's name in the record (fixed demo name or typed in).
+- [x] Decided (2026-10-24, you): a fixed demo trainee name in the training record for now ("Demo Trainee").
+- [x] `LockoutProcedure` (pure, `Scripts/Twin/Training/`, 10 tests):
+  - The 1910.147 sequence for this cell in 12 steps, each with its paragraph: notify (c)(9); stop the line (d)(2); isolate the CNC (d)(3); lock and tag (d)(4); release stored energy (d)(5); verify by trying to start (d)(6); change the tool; inspect (e)(1); clear and notify (e)(2); remove the lock (e)(3); restore energy; restart.
+  - The trainee's actions come in one at a time (`LockoutAction`, 11 actions; Start is used twice). The expected one moves the run on; any other is a counted, named mistake ("Start before: Remove your lock and tag") and does not move it.
+  - `AlwaysReachesThePlant`: only Start always reaches the line, so the logic source's own interlock refuses a start with the lock on. Every other out-of-order action is held back, so a mistake costs an error, not an injury.
+- [x] `TrainingRecord`: CSV with one row per step done or mistake made (trainee, start time UTC, seconds in, step, regulation, done or mistake, detail) and a summary row.
+- [x] Topics in `CellTopics`: `press/isolated`, `press/lockout`, `training/action` (in), `training/step`, `training/errors`, `training/result` (a `TrainingOutcome`). 263/263 EditMode tests in the Editor.
+- [ ] Line start and stop, and the start interlock: a run command for the line; the CNC isolated holds it; a start with the lock on is refused and the refusal is visible on the bus. In `CellSequence` and `cell.st` (another OpenPLC upload).
+- [ ] CNC isolator and lock: a station component that owns `press/isolated` and `press/lockout`. Isolated, the CNC goes dark (stack light off, telemetry paused).
+- [ ] `TrainingController`: runs `LockoutProcedure` from `training/action`, carries out accepted actions (and Start always), publishes step, errors and result, writes `Builds/Training/lockout_<time>.csv`.
+- [ ] Interaction points on the CNC (isolator, lock hasp, tool, start and stop buttons) for the desktop trainee, through signals only.
+- [ ] Step panel on the dashboard and event log lines; a suite scenario "Start with the lock on is refused".
+- [ ] Exit runs: end to end, a wrong-order run, the refused start logged.
 - [x] Force and scenarios:
   - Force command `safety/zone_force` (a `ForceMode`) on both zone sensors, standing in for a person; `SignalForcer` handles it.
   - `CellSnapshot` gains zone occupied, protective stop and arm speed scale.

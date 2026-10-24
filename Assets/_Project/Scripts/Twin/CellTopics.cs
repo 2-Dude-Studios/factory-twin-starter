@@ -121,6 +121,17 @@ namespace TwoDude.FactoryTwin.Twin
         // its realvirtual signal: 1 normal, reduced in the warning zone, 0 on a protective stop.
         public static readonly TopicPath ArmSpeedScale = new TopicPath("arm", "speed_scale");
 
+        // Lockout training (M11). press/isolated and press/lockout are the CNC's main isolator (true when off) and
+        // whether a lock and tag hang on it. training/action (in) is a LockoutAction, one per thing the trainee does;
+        // training/step is the 1-based step due (0 before a run, steps + 1 when done), training/errors the mistakes
+        // so far, training/result a TrainingOutcome.
+        public static readonly TopicPath PressIsolated = new TopicPath("press", "isolated");
+        public static readonly TopicPath PressLockout = new TopicPath("press", "lockout");
+        public static readonly TopicPath TrainingAction = new TopicPath("training", "action");
+        public static readonly TopicPath TrainingStep = new TopicPath("training", "step");
+        public static readonly TopicPath TrainingErrors = new TopicPath("training", "errors");
+        public static readonly TopicPath TrainingResult = new TopicPath("training", "result");
+
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }
