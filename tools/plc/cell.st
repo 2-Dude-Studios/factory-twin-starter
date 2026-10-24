@@ -37,7 +37,7 @@ PROGRAM cell
     TRANSFERRING : UINT := 1;
     STALLED : UINT := 2;
     HELD : UINT := 3;
-    SAFETY_STOP : UINT := 4;
+    PROTECTIVE_STOP : UINT := 4;
     ACK_TIMEOUT_MS : DINT := 2000;       (* no busy from the arm: drop the command one scan and raise it again *)
     TRANSFER_TIMEOUT_MS : DINT := 15000; (* pick not finished: stall the line *)
     TWIN_TIMEOUT_MS : DINT := 3000;      (* twin heartbeat frozen: hold the line *)
@@ -89,18 +89,18 @@ PROGRAM cell
   (* Protective stop: the safety zone has already frozen the arm, so stop at once in whatever state the line is in,
      with every output off and the timers paused, and resume that state on the reset. *)
   IF safety_stop <> 0 THEN
-    IF state <> SAFETY_STOP THEN
+    IF state <> PROTECTIVE_STOP THEN
       suspended_state := state; suspended_ms := state_ms;
-      state := SAFETY_STOP; state_ms := 0;
+      state := PROTECTIVE_STOP; state_ms := 0;
     END_IF;
-  ELSIF state = SAFETY_STOP THEN
+  ELSIF state = PROTECTIVE_STOP THEN
     state := suspended_state; state_ms := suspended_ms;
   END_IF;
 
-  IF state <> HELD AND state <> SAFETY_STOP THEN
+  IF state <> HELD AND state <> PROTECTIVE_STOP THEN
     run_ms := run_ms + dt_ms;
   END_IF;
-  IF state <> SAFETY_STOP THEN
+  IF state <> PROTECTIVE_STOP THEN
     state_ms := state_ms + dt_ms;
   END_IF;
 
@@ -162,11 +162,11 @@ PROGRAM cell
         state := FEEDING; state_ms := 0;
       END_IF;
 
-    (* 4, SAFETY_STOP: nothing moves until the reset, handled above. *)
+    (* 4, PROTECTIVE_STOP: nothing moves until the reset, handled above. *)
   END_CASE;
 
   infeed_run := state = FEEDING;
-  outfeed_run := state <> HELD AND state <> SAFETY_STOP;
+  outfeed_run := state <> HELD AND state <> PROTECTIVE_STOP;
   pick_cmd := state = TRANSFERRING AND NOT ack_seen AND NOT repulse;
   line_stalled := state = STALLED;
   line_state := state;
