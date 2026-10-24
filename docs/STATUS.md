@@ -214,7 +214,12 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - `cell.st` and `cell_buggy.st` mirror it: inputs `%MW6`–`%MW9` (start and stop counts, isolated, locked out), output `starts_refused` `%QW4`. The key `infeed_run` line is now 212. `PlcIoMap` (code and asset), `io_list.csv` and the PLC README updated.
   - Dashboard "Stopped"; event log "Line stopped by the operator", "Line started", "Start refused: CNC locked out" (or isolated). 5 more tests; 275/275 EditMode.
   - Play check on the Unity sequencer (2026-10-24): stop → state 5 once the pick finished; isolated + locked, two starts → refused 1, 2, still stopped; lock off, isolator on, start → feeding. 0 console errors.
-- [ ] **Your step: upload the new `cell.st` to OpenPLC** (Device > Configuration > Connect if needed, then Build and upload). Then the same check and the suite run against the PLC.
+- [x] Uploaded to OpenPLC (2026-10-24, you).
+  - Checked over Modbus: a stop press gives state 5; a start while locked is refused and counted.
+  - With the PLC running the line: stop → state 5 once the pick finished; isolated + locked, two starts → both refused, still stopped; lock off, isolator on, start → feeding.
+- [x] Suite on the PLC: 8 passed, 0 failed (`Builds/Commissioning/vc_plc_20261024_195541.csv`).
+  - The run before it failed one check, "Plant ran in real time", at 0.0 s in the Normal run. All its logic checks passed. It started straight after the Modbus probes and the interlock check; a clean rerun from a fresh Play passed.
+  - The suite has no scenario for start and stop yet; that comes with the training scenario.
 - [ ] CNC isolator and lock: a station component that owns `press/isolated` and `press/lockout`. Isolated, the CNC goes dark (stack light off, telemetry paused).
 - [ ] `TrainingController`: runs `LockoutProcedure` from `training/action`, carries out accepted actions (and Start always), publishes step, errors and result, writes `Builds/Training/lockout_<time>.csv`.
 - [ ] Interaction points on the CNC (isolator, lock hasp, tool, start and stop buttons) for the desktop trainee, through signals only.
