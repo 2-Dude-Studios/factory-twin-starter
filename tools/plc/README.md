@@ -17,7 +17,7 @@ OpenPLC's Modbus slave layout, mirrored in `Assets/_Project/Data/PlcIoMap.asset`
 
 | Area | Modbus | IEC | Direction |
 |---|---|---|---|
-| Sensors, press health, twin heartbeat | holding registers 1024–1028 | `%MW0`–`%MW4` | twin → PLC |
+| Sensors, press health, twin heartbeat, protective stop (M10) | holding registers 1024–1029 | `%MW0`–`%MW5` | twin → PLC |
 | Infeed, outfeed, pick command, stalled | coils 0–3 | `%QX0.0`–`%QX0.3` | PLC → twin |
 | Line state, PLC heartbeat, parts out, cycle time (1/100 s) | holding registers 0–3 | `%QW0`–`%QW3` | PLC → twin |
 
@@ -31,11 +31,13 @@ The twin writes only holding registers: Modbus cannot write `%IX` inputs.
 4. Build options > Build and upload. The console ends with "Compilation completed successfully", "PLC started", "Upload complete". The left-rail Stop/Start PLC button stops and starts it.
 5. In Unity, Play. The PLC shadows the line straight away (it reads the sensors and counts parts) but drives nothing. Publish `cell/plc/source` = 1 to hand it the line, 0 to take it back. `cell/plc/link` shows whether the PLC answers.
 
-A quick check without Unity: holding registers 0–3 should show the state and a heartbeat that counts up about 50 times a second (20 ms task). With Unity stopped, the state is 3 (held), because the twin's heartbeat is missing.
+A quick check without Unity: holding registers 0–3 should show the state and a heartbeat that counts up about 50 times a second (20 ms task). With Unity stopped, the state is 3 (held), because the twin's heartbeat is missing. States: 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop.
 
 If the PLC's heartbeat stops for longer than `TwinConfig`'s watchdog time (0.5 s) while it runs the line, the twin stops both conveyors. If the twin's heartbeat stops for 3 s, the PLC holds the line itself.
 
+The safety zone's protective stop (M10) reaches the PLC as `safety_stop` (`%MW5`): the program stops everything at once in whatever state it is in, pauses its timers, and resumes that state when the twin clears the stop on a reset. The arm's own freeze comes from the safety zone in the twin and does not wait for the PLC.
+
 ## Commissioning suite (M8)
 
-In Play, publish `cell/vc/run` = 1 (or press Run tests on the Commissioning panel). The suite runs six scenarios against whichever logic source runs the line and writes `Builds/Commissioning/vc_<source>_<time>.csv`. To show the bug being caught: `python sync_project.py cell_buggy.st <project dir>`, reopen the project in the Editor (it does not always reload `main.st` by itself), Build and upload, run the suite, then put `cell.st` back the same way. The I/O list is `io_list.csv` (Tools > Factory Twin > Export PLC I-O List).
+In Play, publish `cell/vc/run` = 1 (or press Run tests on the Commissioning panel). The suite runs eight scenarios (two of them for the M10 safety zone) against whichever logic source runs the line and writes `Builds/Commissioning/vc_<source>_<time>.csv`. To show the bug being caught: `python sync_project.py cell_buggy.st <project dir>`, reopen the project in the Editor (it does not always reload `main.st` by itself), Build and upload, run the suite, then put `cell.st` back the same way. The I/O list is `io_list.csv` (Tools > Factory Twin > Export PLC I-O List).
 

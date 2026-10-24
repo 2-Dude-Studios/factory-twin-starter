@@ -182,7 +182,12 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - Walked out: state 3, line still stopped 4 s later.
   - Reset outside: line resumed the same transfer, 0 stalls, parts flowing.
   - 0 console errors. 251/251 EditMode tests.
-- [ ] `cell.st` and the PLC I/O map: the protective stop as a PLC input, so the line also stops when the soft PLC runs it. Needs an OpenPLC Editor upload (your login).
+- [x] `cell.st` and `cell_buggy.st` (identical change): input `safety_stop AT %MW5` (holding register 1029, `cell/safety/protective_stop`) and state 4 `SAFETY_STOP`, mirroring `CellSequence`:
+  - stop at once from any state, all outputs off, timers paused;
+  - resume the interrupted state on reset.
+  - The key line `infeed_run := state = FEEDING;` is now line 168 (175 in the bugged copy); the code card finds it by text.
+  - `PlcIoMap` (code and asset), `io_list.csv` (re-exported) and `tools/plc/README.md` updated; the write block is now 1024–1029. 253/253 EditMode tests.
+- [ ] **Your step: upload the new `cell.st` to OpenPLC** (steps in `tools/plc/README.md`, Run it 2–4: `python sync_project.py`, reopen the project, Build and upload). Then the suite runs against the PLC: the exit needs it to pass there too.
 - [x] Force and scenarios:
   - Force command `safety/zone_force` (a `ForceMode`) on both zone sensors, standing in for a person; `SignalForcer` handles it.
   - `CellSnapshot` gains zone occupied, protective stop and arm speed scale.

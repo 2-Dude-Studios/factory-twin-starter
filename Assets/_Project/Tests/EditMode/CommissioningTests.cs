@@ -308,9 +308,10 @@ namespace TwoDude.FactoryTwin.Tests
 
             Assert.AreEqual(PlcIoList.Header, lines[0]);
             Assert.AreEqual(points.Count + 2, lines.Length);
-            StringAssert.StartsWith("pick_cmd,%QX0.2,coil,2,output (PLC → twin),BOOL,cell/arm/pick_cmd,", lines[7]);
+            StringAssert.StartsWith("safety_stop,%MW5,holding register,1029,input (twin → PLC),BOOL,cell/safety/protective_stop,", lines[5]);
+            StringAssert.StartsWith("pick_cmd,%QX0.2,coil,2,output (PLC → twin),BOOL,cell/arm/pick_cmd,", lines[8]);
             StringAssert.StartsWith("twin_heartbeat,%MW4,holding register,1028,", lines[lines.Length - 1]);
-            StringAssert.Contains("UINT ×0.01", lines[12]);
+            StringAssert.Contains("UINT ×0.01", lines[13]);
         }
     }
 }

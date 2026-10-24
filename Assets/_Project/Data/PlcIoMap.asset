@@ -46,6 +46,14 @@ MonoBehaviour:
     scale: 1
     plcName: press_health
     description: 'Press health: 0 ok, 1 warning, 2 fault (holds the line)'
+  - topic: cell/safety/protective_stop
+    area: 1
+    address: 1029
+    direction: 0
+    isBool: 1
+    scale: 1
+    plcName: safety_stop
+    description: 'Protective stop from the safety zone: the line stops at once and resumes on reset'
   - topic: cell/infeed/drive_fwd
     area: 0
     address: 0
@@ -85,7 +93,7 @@ MonoBehaviour:
     isBool: 0
     scale: 1
     plcName: line_state
-    description: 0 feeding, 1 transferring, 2 stalled, 3 held
+    description: 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop
   - topic: cell/plc/heartbeat
     area: 1
     address: 1

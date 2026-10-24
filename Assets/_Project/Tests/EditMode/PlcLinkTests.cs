@@ -93,13 +93,13 @@ namespace TwoDude.FactoryTwin.Tests
         {
             PlcImage image = DefaultImage();
 
-            Assert.AreEqual(((ushort)1024, (ushort)5), image.WriteBlock);
+            Assert.AreEqual(((ushort)1024, (ushort)6), image.WriteBlock);
             Assert.AreEqual(((ushort)0, (ushort)4), image.CoilBlock);
             Assert.AreEqual(((ushort)0, (ushort)4), image.RegisterBlock);
         }
 
         [Test]
-        public void WriteBlock_CarriesSensorsAndTwinHeartbeat()
+        public void WriteBlock_CarriesSensorsTwinHeartbeatAndProtectiveStop()
         {
             PlcImage image = DefaultImage();
             var bus = new Dictionary<string, double>
@@ -108,12 +108,13 @@ namespace TwoDude.FactoryTwin.Tests
                 ["cell/arm/busy"] = 0d,
                 ["cell/outfeed/part_exit"] = 1d,
                 ["cell/press/health"] = 2d,
+                ["cell/safety/protective_stop"] = 1d,
             };
             var block = new ushort[image.WriteBlock.Count];
 
             image.FillWriteBlock(block, t => bus.TryGetValue(t.ToString(), out double v) ? v : 0d, 42);
 
-            CollectionAssert.AreEqual(new ushort[] { 1, 0, 1, 2, 42 }, block);
+            CollectionAssert.AreEqual(new ushort[] { 1, 0, 1, 2, 42, 1 }, block);
         }
 
         [Test]

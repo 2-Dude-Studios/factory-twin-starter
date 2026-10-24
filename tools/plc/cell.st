@@ -1,14 +1,15 @@
 (* Factory twin — production cell sequence for the soft PLC (OpenPLC Runtime v4).
 
    The same logic as CellSequence.cs in the Unity project: four states, the pick handshake with re-pulse, the
-   transfer timeout and the hold. CellSequence stays the reference this program is tested against (M8).
+   transfer timeout and the hold, plus the safety zone's protective stop (M10). CellSequence stays the reference
+   this program is tested against (M8).
 
    I/O over Modbus TCP, as listed in Assets/_Project/Data/PlcIoMap.asset (OpenPLC's Modbus slave layout):
-     %MW0..%MW4  holding registers 1024..1028, written by the twin
+     %MW0..%MW5  holding registers 1024..1029, written by the twin
      %QX0.0..0.3 coils 0..3, read by the twin
      %QW0..%QW3  holding registers 0..3, read by the twin
 
-   States (line_state): 0 feeding, 1 transferring, 2 stalled, 3 held. *)
+   States (line_state): 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop. *)
 
 PROGRAM cell
   VAR
@@ -18,6 +19,7 @@ PROGRAM cell
     part_at_exit AT %MW2 : UINT;     (* outfeed/part_exit: exit sensor *)
     press_health AT %MW3 : UINT;     (* press/health: 0 ok, 1 warning, 2 fault *)
     twin_heartbeat AT %MW4 : UINT;   (* counts up once a second while the twin runs *)
+    safety_stop AT %MW5 : UINT;      (* safety/protective_stop: latched by the safety zone, cleared by its reset *)
 
     (* Read by the twin *)
     infeed_run AT %QX0.0 : BOOL;     (* infeed/drive_fwd *)
@@ -35,6 +37,7 @@ PROGRAM cell
     TRANSFERRING : UINT := 1;
     STALLED : UINT := 2;
     HELD : UINT := 3;
+    SAFETY_STOP : UINT := 4;
     ACK_TIMEOUT_MS : DINT := 2000;       (* no busy from the arm: drop the command one scan and raise it again *)
     TRANSFER_TIMEOUT_MS : DINT := 15000; (* pick not finished: stall the line *)
     TWIN_TIMEOUT_MS : DINT := 3000;      (* twin heartbeat frozen: hold the line *)
@@ -57,6 +60,8 @@ PROGRAM cell
     last_twin_heartbeat : UINT := 0;
     twin_quiet_ms : DINT := 0;
     hold : BOOL;
+    suspended_state : UINT := 0;   (* the state a protective stop interrupted, and how long it had been in it *)
+    suspended_ms : DINT := 0;
   END_VAR
 
   (* Scan time from a free-running 10 s timer: ET counts up, resets to 0 for one scan, starts again. *)
@@ -81,10 +86,23 @@ PROGRAM cell
 
   hold := press_health >= PRESS_FAULT OR twin_quiet_ms > TWIN_TIMEOUT_MS;
 
-  IF state <> HELD THEN
+  (* Protective stop: the safety zone has already frozen the arm, so stop at once in whatever state the line is in,
+     with every output off and the timers paused, and resume that state on the reset. *)
+  IF safety_stop <> 0 THEN
+    IF state <> SAFETY_STOP THEN
+      suspended_state := state; suspended_ms := state_ms;
+      state := SAFETY_STOP; state_ms := 0;
+    END_IF;
+  ELSIF state = SAFETY_STOP THEN
+    state := suspended_state; state_ms := suspended_ms;
+  END_IF;
+
+  IF state <> HELD AND state <> SAFETY_STOP THEN
     run_ms := run_ms + dt_ms;
   END_IF;
-  state_ms := state_ms + dt_ms;
+  IF state <> SAFETY_STOP THEN
+    state_ms := state_ms + dt_ms;
+  END_IF;
 
   (* Count parts on the rising edge of the exit sensor. *)
   IF part_at_exit <> 0 AND NOT last_exit THEN
@@ -143,10 +161,12 @@ PROGRAM cell
       IF NOT hold THEN
         state := FEEDING; state_ms := 0;
       END_IF;
+
+    (* 4, SAFETY_STOP: nothing moves until the reset, handled above. *)
   END_CASE;
 
   infeed_run := state = FEEDING;
-  outfeed_run := state <> HELD;
+  outfeed_run := state <> HELD AND state <> SAFETY_STOP;
   pick_cmd := state = TRANSFERRING AND NOT ack_seen AND NOT repulse;
   line_stalled := state = STALLED;
   line_state := state;
