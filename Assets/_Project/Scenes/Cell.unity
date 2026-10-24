@@ -7480,6 +7480,57 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2378943385111424555, guid: 8806423bfd49da94ab5bfaed4a5102fc, type: 3}
   m_PrefabInstance: {fileID: 197200199}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &198857318
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 198857319}
+  - component: {fileID: 198857320}
+  m_Layer: 0
+  m_Name: Training
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &198857319
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 198857318}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1633254720}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &198857320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 198857318}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f23b8fd83565d2418db4c6f13696aa6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.TrainingController
+  context: {fileID: 1633254721}
+  traineeName: Demo Trainee
+  result: 0
+  step: 0
+  errors: 0
+  expected: 
+  lastRecord: 
 --- !u!1001 &199383509
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -48064,6 +48115,7 @@ MonoBehaviour:
   glowIntensity: 9
   known: 0
   health: 0
+  isolated: 0
 --- !u!1001 &1568727809
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -50768,6 +50820,7 @@ Transform:
   - {fileID: 2108969894}
   - {fileID: 467458432}
   - {fileID: 1646805083}
+  - {fileID: 198857319}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1633254721
@@ -60830,6 +60883,7 @@ GameObject:
   - component: {fileID: 2108969898}
   - component: {fileID: 2108969899}
   - component: {fileID: 2108969900}
+  - component: {fileID: 2108969901}
   m_Layer: 0
   m_Name: Press
   m_TagString: Untagged
@@ -60966,6 +61020,22 @@ MonoBehaviour:
   freshToolMaxWearMin: 5
   changeNow: 0
   toolChanges: 0
+--- !u!114 &2108969901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2108969893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba3cf1538f39dac48b973a4693a8126b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.PressIsolation
+  context: {fileID: 1633254721}
+  isolated: 0
+  locked: 0
+  refused: 0
 --- !u!1 &2112621187
 GameObject:
   m_ObjectHideFlags: 0

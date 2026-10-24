@@ -220,8 +220,23 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 - [x] Suite on the PLC: 8 passed, 0 failed (`Builds/Commissioning/vc_plc_20261024_195541.csv`).
   - The run before it failed one check, "Plant ran in real time", at 0.0 s in the Normal run. All its logic checks passed. It started straight after the Modbus probes and the interlock check; a clean rerun from a fresh Play passed.
   - The suite has no scenario for start and stop yet; that comes with the training scenario.
-- [ ] CNC isolator and lock: a station component that owns `press/isolated` and `press/lockout`. Isolated, the CNC goes dark (stack light off, telemetry paused).
-- [ ] `TrainingController`: runs `LockoutProcedure` from `training/action`, carries out accepted actions (and Start always), publishes step, errors and result, writes `Builds/Training/lockout_<time>.csv`.
+- [x] CNC isolator and lock: `PressIsolation` on `Cell/Press`, with the pure `IsolatorLock` hasp rules.
+  - Acts on `press/isolator_cmd` (1 off, 0 on) and `press/lock_cmd` (1 apply, 0 remove); publishes `press/isolated` and `press/lockout`.
+  - A lock fits only while the isolator is off; the isolator cannot go back on while locked.
+  - The stack light goes dark while isolated. Telemetry keeps replaying (not paused: the dashboard would freeze mid-video; revisit at M13 if it reads wrong).
+- [x] `TrainingController` on `Cell/Training`:
+  - `training/run` = 1 starts a run for "Demo Trainee". Each `training/action` is checked by `LockoutProcedure`.
+  - The step due is carried out through the cell's own commands (`line/stop`, `line/start`, `press/isolator_cmd`, `press/lock_cmd`, `press/tool_change`); Start always goes through. A mistake is held back and published on `training/mistake` before `training/errors`. The event log names mistakes from there: subscribers see the count before the action itself.
+  - Publishes `training/step`, `training/errors`, `training/result`, and writes `Builds/Training/lockout_<time>.csv` when a run completes.
+  - Event log: "Lockout training started", "Step n done: …", "Mistake: Start before: Remove your lock and tag", "CNC isolated…", "Lock and tag on…", "Start refused: CNC locked out", "Lockout training finished with 1 mistake". 6 new tests; 281/281 EditMode.
+- [x] **Lockout runs end to end (2026-10-24), scripted over MQTT (`training/action`), with one deliberate mistake: Start before removing the lock.**
+  - Unity sequencer:
+    - The CNC tool-wear failure holds the line (3); Stop → 5; isolate, lock.
+    - The verification start is refused (`line/starts_refused` +1); the tool change clears the fault (health 0).
+    - The early Start is refused and recorded as the mistake. Remove the lock, isolator on, restart → line running.
+    - Result "passed with mistakes", 1 mistake (`Builds/Training/lockout_20261024_203436.csv`). 0 console errors.
+  - Soft PLC: the same run. The PLC refused both starts while locked (its counter 7 → 8 → 9; it still holds earlier test presses) and restarted the line at step 12 (`lockout_20261024_203900.csv`).
+  - The exit's three parts are shown with scripted actions; the trainee does not yet have controls of their own.
 - [ ] Interaction points on the CNC (isolator, lock hasp, tool, start and stop buttons) for the desktop trainee, through signals only.
 - [ ] Step panel on the dashboard and event log lines; a suite scenario "Start with the lock on is refused".
 - [ ] Exit runs: end to end, a wrong-order run, the refused start logged.

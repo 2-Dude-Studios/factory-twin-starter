@@ -120,6 +120,16 @@ namespace TwoDude.FactoryTwin.UI
 
             if (topic == CellTopics.LineState)
                 LogLineState((CellState)(int)previous, (CellState)(int)value, message.UnixMs);
+            else if (topic == CellTopics.PressIsolated)
+                Add(message.UnixMs, value != 0d ? "CNC isolated at its main isolator" : "CNC energy restored", LogSeverity.Info);
+            else if (topic == CellTopics.PressLockout)
+                Add(message.UnixMs, value != 0d ? "Lock and tag on the CNC isolator" : "Lock and tag removed", LogSeverity.Info);
+            else if (topic == CellTopics.TrainingStep)
+                LogTrainingStep((int)previous, (int)value, message.UnixMs);
+            else if (topic == CellTopics.TrainingErrors && value > previous)
+                Add(message.UnixMs, MistakeText(), LogSeverity.Warning);
+            else if (topic == CellTopics.TrainingResult)
+                LogTrainingResult((TrainingOutcome)(int)value, message.UnixMs);
             else if (topic == CellTopics.LineStartsRefused && value > previous)
                 Add(message.UnixMs, StartRefusedText(), LogSeverity.Warning);
             else if (topic == CellTopics.SafetyState)
@@ -179,6 +189,36 @@ namespace TwoDude.FactoryTwin.UI
                     Add(unixMs, from == SafetyState.AwaitingReset ? "Safety reset: arm released" : "Warning zone clear: arm at full speed",
                         LogSeverity.Info);
                     break;
+            }
+        }
+
+        // training/step is the step due: going up by one means the step before it was done; going back to 1 is a new run.
+        private void LogTrainingStep(int from, int to, long unixMs)
+        {
+            if (to == 1 && from != 1)
+                Add(unixMs, "Lockout training started", LogSeverity.Info);
+            else if (to == from + 1 && from >= 1 && from <= LockoutProcedure.Steps.Count)
+                Add(unixMs, $"Step {from} done: {LockoutProcedure.Steps[from - 1].Title}", LogSeverity.Info);
+        }
+
+        // The action the controller judged a mistake, against the step that was due when the trainee did it.
+        private string MistakeText()
+        {
+            var action = _last.TryGetValue(CellTopics.TrainingMistake, out double a) ? (LockoutAction)(int)a : LockoutAction.None;
+            int due = _last.TryGetValue(CellTopics.TrainingStep, out double s) ? (int)s : 0;
+            return due >= 1 && due <= LockoutProcedure.Steps.Count
+                ? $"Mistake: {LockoutProcedure.Describe(action)} before: {LockoutProcedure.Steps[due - 1].Title}"
+                : "Mistake: " + LockoutProcedure.Describe(action);
+        }
+
+        private void LogTrainingResult(TrainingOutcome outcome, long unixMs)
+        {
+            if (outcome == TrainingOutcome.Passed)
+                Add(unixMs, "Lockout training passed", LogSeverity.Info);
+            else if (outcome == TrainingOutcome.PassedWithErrors)
+            {
+                int mistakes = _last.TryGetValue(CellTopics.TrainingErrors, out double e) ? (int)e : 0;
+                Add(unixMs, $"Lockout training finished with {mistakes} mistake{(mistakes == 1 ? "" : "s")}", LogSeverity.Warning);
             }
         }
 

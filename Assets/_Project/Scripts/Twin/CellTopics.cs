@@ -127,6 +127,17 @@ namespace TwoDude.FactoryTwin.Twin
         // so far, training/result a TrainingOutcome.
         public static readonly TopicPath PressIsolated = new TopicPath("press", "isolated");
         public static readonly TopicPath PressLockout = new TopicPath("press", "lockout");
+
+        // Commands to the CNC's isolator (1 off, 0 on) and lock (1 apply, 0 remove), carried out by PressIsolation
+        // under the hasp's rules. training/run = 1 starts a new lockout run for the training record.
+        public static readonly TopicPath PressIsolatorCommand = new TopicPath("press", "isolator_cmd");
+        public static readonly TopicPath PressLockCommand = new TopicPath("press", "lock_cmd");
+        public static readonly TopicPath TrainingRun = new TopicPath("training", "run");
+
+        // The LockoutAction the trainee just got wrong, published before training/errors goes up. Subscribers see the
+        // count before they see training/action itself (the controller reacts inside that delivery), so the event
+        // log names the mistake from here.
+        public static readonly TopicPath TrainingMistake = new TopicPath("training", "mistake");
         public static readonly TopicPath TrainingAction = new TopicPath("training", "action");
         public static readonly TopicPath TrainingStep = new TopicPath("training", "step");
         public static readonly TopicPath TrainingErrors = new TopicPath("training", "errors");

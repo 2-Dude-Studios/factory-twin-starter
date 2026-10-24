@@ -19,6 +19,9 @@ namespace TwoDude.FactoryTwin.Twin
             Red = red;
             Glow = glow;
         }
+
+        /// <summary>No power to the machine (M11, isolated): every lamp and the glow off.</summary>
+        public static StackLightOutput Dark => new StackLightOutput(0f, 0f, 0f, 0f);
     }
 
     /// <summary>

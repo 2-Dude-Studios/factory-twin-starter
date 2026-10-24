@@ -7,6 +7,7 @@ namespace TwoDude.FactoryTwin.Twin
     /// Press station: drives a stack light and a coloured glow light from cell/&lt;station&gt;/health, so the 3D
     /// machine shows the same health the dashboard does. Lamps are tinted through a MaterialPropertyBlock
     /// (_BaseColor and _EmissionColor on a URP Lit material with emission on); nothing reads the machine itself.
+    /// While cell/&lt;station&gt;/isolated is set (M11) the machine has no power, so every lamp is dark.
     /// </summary>
     public sealed class StackLight : MonoBehaviour
     {
@@ -32,10 +33,13 @@ namespace TwoDude.FactoryTwin.Twin
         [Header("Status (play mode, read-only)")]
         [SerializeField] private bool known;
         [SerializeField] private MachineHealth health;
+        [SerializeField] private bool isolated;
 
         private MaterialPropertyBlock _block;
         private IDisposable _subscription;
+        private IDisposable _isolatedSubscription;
         private TopicPath _topic;
+        private TopicPath _isolatedTopic;
         private StackLightOutput _shown = new StackLightOutput(-1f, -1f, -1f, -1f);
         private MachineHealth _shownHealth;
 
@@ -43,6 +47,7 @@ namespace TwoDude.FactoryTwin.Twin
         {
             _block = new MaterialPropertyBlock();
             _topic = new TopicPath(station, "health");
+            _isolatedTopic = new TopicPath(station, "isolated");
         }
 
         private void OnEnable()
@@ -51,12 +56,22 @@ namespace TwoDude.FactoryTwin.Twin
             if (bus.TryGetLast(_topic, out SignalMessage last))
                 OnHealth(last);
             _subscription = bus.Subscribe(_topic.ToString(), OnHealth);
+            if (bus.TryGetLast(_isolatedTopic, out SignalMessage power))
+                OnIsolated(power);
+            _isolatedSubscription = bus.Subscribe(_isolatedTopic.ToString(), OnIsolated);
         }
 
         private void OnDisable()
         {
             _subscription?.Dispose();
             _subscription = null;
+            _isolatedSubscription?.Dispose();
+            _isolatedSubscription = null;
+        }
+
+        private void OnIsolated(SignalMessage message)
+        {
+            isolated = message.Value.AsNumber != 0d;
         }
 
         private void OnHealth(SignalMessage message)
@@ -67,7 +82,9 @@ namespace TwoDude.FactoryTwin.Twin
 
         private void Update()
         {
-            StackLightOutput output = StackLightPattern.Evaluate(known, health, Time.timeAsDouble);
+            StackLightOutput output = isolated
+                ? StackLightOutput.Dark
+                : StackLightPattern.Evaluate(known, health, Time.timeAsDouble);
 
             if (output.Green != _shown.Green)
                 SetLamp(greenLamp, green, output.Green);
