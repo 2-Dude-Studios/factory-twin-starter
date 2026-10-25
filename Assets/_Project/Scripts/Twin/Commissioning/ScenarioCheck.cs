@@ -45,7 +45,14 @@ namespace TwoDude.FactoryTwin.Twin
 
         /// <summary>Passes if at least <paramref name="count"/> parts leave the cell inside [from, to].</summary>
         public static ScenarioCheck PartsOut(string name, double from, double to, int count)
-            => new PartsOutCheck(name, from, to, count);
+            => new RisesCheck(name, from, to, c => c.PartsOut, count, "parts");
+
+        /// <summary>
+        /// Passes if the counter <paramref name="counter"/> reads goes up by at least <paramref name="count"/> inside
+        /// [from, to], measured from its value at <paramref name="from"/> (counters such as the PLC's carry over).
+        /// </summary>
+        public static ScenarioCheck Rises(string name, double from, double to, Func<CellSnapshot, int> counter, int count, string unit)
+            => new RisesCheck(name, from, to, counter, count, unit);
 
         private sealed class NeverCheck : ScenarioCheck
         {
@@ -131,32 +138,37 @@ namespace TwoDude.FactoryTwin.Twin
             public override ScenarioCheck Clone() => new WithinCheck(Name, _from, _within, _condition);
         }
 
-        private sealed class PartsOutCheck : ScenarioCheck
+        private sealed class RisesCheck : ScenarioCheck
         {
             private readonly double _from, _to;
+            private readonly Func<CellSnapshot, int> _counter;
             private readonly int _count;
-            private int _start = -1;
+            private readonly string _unit;
+            private int _start = int.MinValue;
             private int _seen;
 
-            public PartsOutCheck(string name, double from, double to, int count) : base(name)
+            public RisesCheck(string name, double from, double to, Func<CellSnapshot, int> counter, int count, string unit) : base(name)
             {
                 _from = from;
                 _to = to;
+                _counter = counter ?? throw new ArgumentNullException(nameof(counter));
                 _count = count;
+                _unit = unit ?? string.Empty;
             }
 
             public override void Observe(double t, in CellSnapshot cell)
             {
                 if (Outcome != CheckOutcome.Pending || t < _from)
                     return;
-                if (_start < 0)
-                    _start = cell.PartsOut;
+                int value = _counter(cell);
+                if (_start == int.MinValue)
+                    _start = value;
                 if (t <= _to)
-                    _seen = Math.Max(_seen, cell.PartsOut - _start);
+                    _seen = Math.Max(_seen, value - _start);
                 if (_seen >= _count)
                 {
                     Outcome = CheckOutcome.Passed;
-                    Detail = $"{_seen} parts";
+                    Detail = $"{_seen} {_unit}";
                 }
             }
 
@@ -165,10 +177,10 @@ namespace TwoDude.FactoryTwin.Twin
                 if (Outcome != CheckOutcome.Pending)
                     return;
                 Outcome = CheckOutcome.Failed;
-                Detail = $"{_seen} of {_count} parts";
+                Detail = $"{_seen} of {_count} {_unit}";
             }
 
-            public override ScenarioCheck Clone() => new PartsOutCheck(Name, _from, _to, _count);
+            public override ScenarioCheck Clone() => new RisesCheck(Name, _from, _to, _counter, _count, _unit);
         }
     }
 }

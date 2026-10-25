@@ -252,7 +252,13 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - A whole lockout through the points (`TrainingPoint.Use`, what a click calls), with the CNC failed and one mistake (Start before removing the lock), finished "passed with mistakes", 1 mistake.
   - Record `Builds/Training/lockout_20261025_163642.csv` names Apoorv Garg and Akaash Garg. Panel and log as expected; 0 console errors.
   - Not yet done by hand with real mouse clicks; try F5, walk to the CNC, aim and click.
-- [ ] A suite scenario "Start with the lock on is refused"; then the M11 exit runs by hand.
+- [x] Suite scenario 9 **Start with the lock on is refused** (30 s):
+  - Stop the line; isolate and lock out at 6 s; two starts at 8 and 10 s; lock off and isolator on at 14 s; start at 16 s.
+  - Checks: the line stops on the stop command; nothing moves while locked out; both starts refused and counted; the line runs again once the lock is off.
+  - New `ScenarioCheck.Rises` (counter rise from its value at the window start, since the PLC's counter carries over; `PartsOut` now uses it, 2 tests). `CellSnapshot` gains lockout and starts refused.
+  - The stimulus reset now also takes the lock off, puts the isolator on and presses start once, so a scenario that ends early cannot leave the line stopped. 287/287 EditMode.
+- [x] **Suite (2026-10-25):** Unity sequencer 8 passed, 0 failed, PLC link lost n/a (`vc_unity_20261025_164655.csv`); soft PLC **9 of 9 passed** (`vc_plc_20261025_165430.csv`; scenario 9: "2 refused").
+- [ ] Your step: a lockout by hand. Play, F5 for the trainee, arrow keys and right mouse to move and look; "Lockout training" on the dashboard starts a run; walk to the control station and the CNC's east end, aim and left-click. Then M11's exit can be closed.
 - [ ] Exit runs: end to end, a wrong-order run, the refused start logged.
 - [x] Force and scenarios:
   - Force command `safety/zone_force` (a `ForceMode`) on both zone sensors, standing in for a person; `SignalForcer` handles it.

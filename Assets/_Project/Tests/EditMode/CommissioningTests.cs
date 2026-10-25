@@ -185,10 +185,10 @@ namespace TwoDude.FactoryTwin.Tests
     public sealed class CommissioningScenariosTests
     {
         [Test]
-        public void DefaultSuite_HasEightScenarios_OnlyThePlcLossOneNeedsThePlc()
+        public void DefaultSuite_HasNineScenarios_OnlyThePlcLossOneNeedsThePlc()
         {
             IReadOnlyList<CommissioningScenario> suite = CommissioningScenarios.Default();
-            Assert.AreEqual(8, suite.Count);
+            Assert.AreEqual(9, suite.Count);
             CollectionAssert.AreEqual(new[] { "PLC link lost" }, suite.Where(s => s.PlcOnly).Select(s => s.Name).ToArray());
         }
 
@@ -247,6 +247,38 @@ namespace TwoDude.FactoryTwin.Tests
             Assert.IsFalse(run.Passed);
             Assert.AreEqual(CheckOutcome.Failed,
                 run.Checks.Single(c => c.Name == "Interlock: infeed stops while the arm works").Outcome);
+        }
+    }
+
+    public sealed class RisesCheckTests
+    {
+        private static CellSnapshot Refused(int count) =>
+            new CellSnapshot(false, false, false, false, false, CellState.Stopped, 0, startsRefused: count);
+
+        [Test]
+        public void Rises_CountsFromTheValueAtTheWindowStart()
+        {
+            ScenarioCheck check = ScenarioCheck.Rises("refused", 1d, 5d, c => c.StartsRefused, 2, "refused");
+            check.Observe(0.5d, Refused(7));
+            check.Observe(1d, Refused(7));
+            check.Observe(2d, Refused(8));
+            Assert.AreEqual(CheckOutcome.Pending, check.Outcome);
+
+            check.Observe(3d, Refused(9));
+            Assert.AreEqual(CheckOutcome.Passed, check.Outcome);
+            Assert.AreEqual("2 refused", check.Detail);
+        }
+
+        [Test]
+        public void Rises_FailsWhenTheCounterDoesNotMoveEnough()
+        {
+            ScenarioCheck check = ScenarioCheck.Rises("refused", 0d, 5d, c => c.StartsRefused, 2, "refused");
+            check.Observe(0d, Refused(3));
+            check.Observe(4d, Refused(4));
+            check.Finish(6d);
+
+            Assert.AreEqual(CheckOutcome.Failed, check.Outcome);
+            Assert.AreEqual("1 of 2 refused", check.Detail);
         }
     }
 

@@ -22,10 +22,19 @@ namespace TwoDude.FactoryTwin.Twin
         /// <summary>The arm's speed scale (cell/arm/speed_scale): 0 stopped, 1 full speed.</summary>
         public double ArmSpeedScale { get; }
 
+        /// <summary>A lock and tag hang on the CNC isolator (cell/press/lockout, M11).</summary>
+        public bool Lockout { get; }
+
+        /// <summary>Starts the logic source has refused so far (cell/line/starts_refused, M11).</summary>
+        public int StartsRefused { get; }
+
         public CellSnapshot(bool infeedRun, bool outfeedRun, bool armBusy, bool armHolding, bool partAtGate,
             CellState state, int partsOut, bool plcLink = true, double realtimeRatio = 1d,
-            bool zoneOccupied = false, bool protectiveStop = false, double armSpeedScale = 1d)
+            bool zoneOccupied = false, bool protectiveStop = false, double armSpeedScale = 1d,
+            bool lockout = false, int startsRefused = 0)
         {
+            Lockout = lockout;
+            StartsRefused = startsRefused;
             ZoneOccupied = zoneOccupied;
             ProtectiveStop = protectiveStop;
             ArmSpeedScale = armSpeedScale;
@@ -58,7 +67,9 @@ namespace TwoDude.FactoryTwin.Twin
                 Number(bus, CellTopics.SimRealtimeRatio, 1d),
                 Bool(bus, CellTopics.SafetyArmZoneOccupied),
                 Bool(bus, CellTopics.SafetyProtectiveStop),
-                Number(bus, CellTopics.ArmSpeedScale, 1d));
+                Number(bus, CellTopics.ArmSpeedScale, 1d),
+                Bool(bus, CellTopics.PressLockout),
+                (int)Number(bus, CellTopics.LineStartsRefused, 0d));
         }
 
         private static bool Bool(SignalBus bus, TopicPath topic) =>

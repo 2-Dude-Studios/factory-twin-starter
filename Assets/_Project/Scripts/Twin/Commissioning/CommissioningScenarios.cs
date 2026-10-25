@@ -4,7 +4,8 @@ using System.Collections.Generic;
 namespace TwoDude.FactoryTwin.Twin
 {
     /// <summary>
-    /// Commissioning: the cell's acceptance suite. Eight scenarios (six from M8, two for the safety zone from M10), each with the stimuli a commissioning engineer
+    /// Commissioning: the cell's acceptance suite. Nine scenarios (six from M8, two for the safety zone from M10, one for
+    /// the lockout interlock from M11), each with the stimuli a commissioning engineer
     /// would apply on site and the behaviour the line must show. Every scenario also checks the two conveyor
     /// interlocks and that the plant ran in real time, since the soft PLC's timers count wall-clock time.
     /// </summary>
@@ -107,6 +108,28 @@ namespace TwoDude.FactoryTwin.Twin
                     ScenarioCheck.Never("Reset refused while the person is inside", 2.5d, 6d, c => !c.ProtectiveStop, 0d),
                     ScenarioCheck.Never("No restart without a reset", 6.5d, 20d, c => c.Running || c.InfeedRun || c.OutfeedRun || c.ArmSpeedScale > 0d, 0.1d),
                     ScenarioCheck.Within("Line runs again after the reset", 20d, 5d, c => c.Running && c.ArmSpeedScale >= 1d)),
+
+                // Lockout interlock (M11): the logic source must refuse a start while the CNC is locked out.
+                Scenario("Start with the lock on is refused", "The line is stopped and the CNC isolated and locked out; two starts must be refused and counted, and a start once the lock is off must run the line.", 30d,
+                    new[]
+                    {
+                        Act(0d, CellTopics.LineStop, SignalValue.FromBool(true)),
+                        Act(0.5d, CellTopics.LineStop, SignalValue.FromBool(false)),
+                        Act(6d, CellTopics.PressIsolatorCommand, SignalValue.FromNumber(1)),
+                        Act(6.5d, CellTopics.PressLockCommand, SignalValue.FromNumber(1)),
+                        Act(8d, CellTopics.LineStart, SignalValue.FromBool(true)),
+                        Act(8.5d, CellTopics.LineStart, SignalValue.FromBool(false)),
+                        Act(10d, CellTopics.LineStart, SignalValue.FromBool(true)),
+                        Act(10.5d, CellTopics.LineStart, SignalValue.FromBool(false)),
+                        Act(14d, CellTopics.PressLockCommand, SignalValue.FromNumber(0)),
+                        Act(14.5d, CellTopics.PressIsolatorCommand, SignalValue.FromNumber(0)),
+                        Act(16d, CellTopics.LineStart, SignalValue.FromBool(true)),
+                        Act(16.5d, CellTopics.LineStart, SignalValue.FromBool(false)),
+                    },
+                    ScenarioCheck.Within("Line stops on the stop command", 0d, 7d, c => c.State == CellState.Stopped),
+                    ScenarioCheck.Never("Nothing moves while locked out", 7.5d, 14d, c => c.Running || c.InfeedRun || c.OutfeedRun, 0.1d),
+                    ScenarioCheck.Rises("Both starts refused and counted", 7.5d, 13d, c => c.StartsRefused, 2, "refused"),
+                    ScenarioCheck.Within("Line runs again once the lock is off", 16d, 5d, c => c.Running && !c.Lockout)),
             };
         }
 

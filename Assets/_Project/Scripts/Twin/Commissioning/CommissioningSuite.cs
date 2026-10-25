@@ -210,6 +210,12 @@ namespace TwoDude.FactoryTwin.Twin
             // that ended early cannot keep the next one from starting.
             _bus.Publish(CellTopics.SafetyReset, SignalValue.FromBool(true), now);
             _bus.Publish(CellTopics.SafetyReset, SignalValue.FromBool(false), now);
+            // Lock off before the isolator goes back on (the hasp allows nothing else), then one start press, so a line
+            // left stopped and locked out by a scenario that ended early is running again for the next one.
+            _bus.Publish(CellTopics.PressLockCommand, SignalValue.FromNumber(0), now);
+            _bus.Publish(CellTopics.PressIsolatorCommand, SignalValue.FromNumber(0), now);
+            _bus.Publish(CellTopics.LineStart, SignalValue.FromBool(true), now);
+            _bus.Publish(CellTopics.LineStart, SignalValue.FromBool(false), now);
         }
 
         private string WriteReport()
