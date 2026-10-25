@@ -27,6 +27,7 @@ namespace TwoDude.FactoryTwin.UI
             CellTopics.PressToolWear, CellTopics.LineState, CellTopics.LinePartsOut, CellTopics.LinePartsPerHour,
             CellTopics.LinePartsLost, CellTopics.LineCycleTime, CellTopics.PressToolRemaining,
             CellTopics.PressMaintenanceDue, CellTopics.PlcSource, CellTopics.PlcLink,
+            CellTopics.TrainingStep, CellTopics.TrainingErrors, CellTopics.TrainingResult,
         };
 
         private readonly IDisposable _subscription;
@@ -49,6 +50,11 @@ namespace TwoDude.FactoryTwin.UI
         private string _partsLostText = NoValue;
         private string _cycleTimeText = NoValue;
         private string _toolRemainingText = NoValue;
+        private string _trainingResultText = NoValue;
+        private string _trainingStepText = NoValue;
+        private string _trainingNextText = NoValue;
+        private string _trainingMistakesText = NoValue;
+        private int _trainingStep;
 
         public DashboardViewModel(SignalBus bus)
         {
@@ -97,6 +103,14 @@ namespace TwoDude.FactoryTwin.UI
         [CreateProperty] public string PartsLostText => _partsLostText;
         [CreateProperty] public string CycleTimeText => _cycleTimeText;
         [CreateProperty] public string ToolRemainingText => _toolRemainingText;
+        [CreateProperty] public string TrainingResultText => _trainingResultText;
+        [CreateProperty] public string TrainingStepText => _trainingStepText;
+        [CreateProperty] public string TrainingNextText => _trainingNextText;
+        [CreateProperty] public string TrainingMistakesText => _trainingMistakesText;
+
+        /// <summary>Lockout training (M11): how the run stands and its mistakes, for the step panel colours.</summary>
+        public TrainingOutcome Training { get; private set; } = TrainingOutcome.Idle;
+        public int TrainingMistakes { get; private set; }
 
         /// <summary>The risk model says act now: tool change due or a warning. Drives the tool-life row's colour.</summary>
         public bool MaintenanceDue { get; private set; }
@@ -151,6 +165,21 @@ namespace TwoDude.FactoryTwin.UI
                 ApplyMaintenanceDue(v != 0d);
             else if (topic == CellTopics.LinkConnected)
                 ApplyLink(v != 0d);
+            else if (topic == CellTopics.TrainingStep)
+            {
+                _trainingStep = (int)v;
+                ApplyTraining();
+            }
+            else if (topic == CellTopics.TrainingErrors)
+            {
+                TrainingMistakes = (int)v;
+                ApplyTraining();
+            }
+            else if (topic == CellTopics.TrainingResult)
+            {
+                Training = (TrainingOutcome)(int)v;
+                ApplyTraining();
+            }
             else if (topic == CellTopics.PlcSource)
             {
                 _plcRunsLine = v >= 0.5d;
@@ -164,6 +193,48 @@ namespace TwoDude.FactoryTwin.UI
                     ApplyLineState(LineState);
             }
         }
+
+        private void ApplyTraining()
+        {
+            Set(ref _trainingResultText, TrainingResultWords(Training), nameof(TrainingResultText));
+            Set(ref _trainingStepText, TrainingStepWords(_trainingStep, Training), nameof(TrainingStepText));
+            Set(ref _trainingNextText, TrainingNextWords(_trainingStep, Training), nameof(TrainingNextText));
+            Set(ref _trainingMistakesText, MistakeWords(TrainingMistakes), nameof(TrainingMistakesText));
+            StatusChanged?.Invoke();
+        }
+
+        public static string TrainingResultWords(TrainingOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case TrainingOutcome.InProgress: return "In progress";
+                case TrainingOutcome.Passed: return "Passed";
+                case TrainingOutcome.PassedWithErrors: return "Done, with mistakes";
+                default: return "Not started";
+            }
+        }
+
+        public static string TrainingStepWords(int step, TrainingOutcome outcome)
+        {
+            int total = LockoutProcedure.Steps.Count;
+            if (outcome == TrainingOutcome.Passed || outcome == TrainingOutcome.PassedWithErrors)
+                return $"{total} of {total} steps";
+            return step >= 1 && step <= total ? $"Step {step} of {total}" : string.Empty;
+        }
+
+        /// <summary>The step due, with the paragraph of 1910.147 it follows; once done, that the record is saved.</summary>
+        public static string TrainingNextWords(int step, TrainingOutcome outcome)
+        {
+            if (outcome == TrainingOutcome.Passed || outcome == TrainingOutcome.PassedWithErrors)
+                return "Lockout complete. Training record saved.";
+            if (step < 1 || step > LockoutProcedure.Steps.Count)
+                return string.Empty;
+            LockoutStep due = LockoutProcedure.Steps[step - 1];
+            return $"{due.Title} · {due.Regulation}";
+        }
+
+        public static string MistakeWords(int mistakes) =>
+            mistakes == 0 ? "No mistakes" : $"{mistakes} mistake{(mistakes == 1 ? "" : "s")}";
 
         private void ApplyRisk(double risk)
         {

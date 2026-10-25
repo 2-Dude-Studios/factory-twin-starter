@@ -46,6 +46,22 @@ namespace TwoDude.FactoryTwin.UI
             transform.position = position;
         }
 
+        /// <summary>
+        /// Puts the trainee at (<paramref name="x"/>, <paramref name="z"/>) looking along <paramref name="yawDegrees"/>
+        /// (0 is +z) and <paramref name="pitchDegrees"/> down. For scripted takes and checks.
+        /// </summary>
+        public void Teleport(float x, float z, float yawDegrees, float pitchDegrees)
+        {
+            Teleport(x, z);
+            _yaw = yawDegrees;
+            _pitch = Mathf.Clamp(pitchDegrees, -pitchLimit, pitchLimit);
+            Quaternion facing = Quaternion.Euler(0f, _yaw, 0f);
+            _body.rotation = facing;
+            transform.rotation = facing;
+            if (eye != null)
+                eye.transform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
+
         private void Update()
         {
             if (eye == null || !eye.IsLive)

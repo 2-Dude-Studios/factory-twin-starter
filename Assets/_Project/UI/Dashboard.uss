@@ -409,3 +409,14 @@
     margin-top: 16px;
     font-size: 12px;
 }
+
+/* Lockout training (M11): the step due, its OSHA paragraph, mistakes so far. Shown while a run is on or done. */
+.section--training { border-left-color: var(--warning); }
+.section--training.training--passed { border-left-color: var(--ok); }
+.training--passed.chip { background-color: var(--ok); color: rgb(8, 24, 15); }
+.training--mistakes.chip { background-color: var(--warning); color: rgb(29, 22, 0); }
+.training__step { font-size: 12px; color: var(--muted); margin: 0 0 2px 0; padding: 0; }
+.training__next { font-size: 15px; -unity-font-style: bold; color: var(--ink); white-space: normal; margin: 0 0 6px 0; padding: 0; }
+.training__mistakes { font-size: 12px; color: var(--muted); margin: 0; padding: 0; }
+.training__mistakes.training__mistakes--some { color: var(--warning); }
+.training__who { font-size: 12px; color: var(--ink); margin: 0 0 4px 0; padding: 0; }

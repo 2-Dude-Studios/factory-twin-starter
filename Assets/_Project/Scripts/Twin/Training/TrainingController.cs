@@ -15,8 +15,10 @@ namespace TwoDude.FactoryTwin.Twin
     public sealed class TrainingController : MonoBehaviour
     {
         [SerializeField] private CellContext context;
-        [Tooltip("Name written into the training record. A fixed demo name for now (decided 2026-10-24).")]
-        [SerializeField] private string traineeName = "Demo Trainee";
+        [Tooltip("Trainee written into the training record (set 2026-10-25).")]
+        [SerializeField] private string traineeName = "Apoorv Garg";
+        [Tooltip("Trainer who supervises the run, written into the training record (set 2026-10-25).")]
+        [SerializeField] private string trainerName = "Akaash Garg";
 
         [Header("Status (play mode, read-only)")]
         [SerializeField] private TrainingOutcome result;
@@ -31,6 +33,8 @@ namespace TwoDude.FactoryTwin.Twin
         private double _startedAt;
 
         public LockoutProcedure Run => _run;
+        public string TraineeName => traineeName;
+        public string TrainerName => trainerName;
 
         /// <summary>Raised with the record's path when a run completes.</summary>
         public event Action<string> RecordWritten;
@@ -58,7 +62,7 @@ namespace TwoDude.FactoryTwin.Twin
         /// <summary>Starts a new run, as cell/training/run = 1 does.</summary>
         public void Begin()
         {
-            _run.Begin(traineeName, CellContext.NowUnixMs);
+            _run.Begin(traineeName, CellContext.NowUnixMs, trainerName);
             _startedAt = Time.timeAsDouble;
             PublishProgress();
         }

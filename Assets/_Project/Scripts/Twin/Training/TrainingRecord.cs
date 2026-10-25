@@ -10,7 +10,7 @@ namespace TwoDude.FactoryTwin.Twin
     /// </summary>
     public static class TrainingRecord
     {
-        public const string Header = "trainee,started_utc,at_s,step,regulation,kind,detail";
+        public const string Header = "trainee,trainer,started_utc,at_s,step,regulation,kind,detail";
 
         public static string ToCsv(LockoutProcedure run)
         {
@@ -25,13 +25,13 @@ namespace TwoDude.FactoryTwin.Twin
             foreach (TrainingEvent e in run.Events)
             {
                 int index = Math.Min(Math.Max(e.Step, 1), LockoutProcedure.Steps.Count) - 1;
-                Row(csv, run.Trainee, started, e.AtSeconds.ToString("0.0", CultureInfo.InvariantCulture),
+                Row(csv, run.Trainee, run.Trainer, started, e.AtSeconds.ToString("0.0", CultureInfo.InvariantCulture),
                     e.Step.ToString(CultureInfo.InvariantCulture), LockoutProcedure.Steps[index].Regulation,
                     e.Mistake ? "mistake" : "done", e.Text);
             }
 
             string summary = $"{run.Done} of {LockoutProcedure.Steps.Count} steps, {run.Errors} mistake{(run.Errors == 1 ? "" : "s")}";
-            Row(csv, run.Trainee, started, string.Empty, string.Empty, string.Empty, ResultWord(run.Result), summary);
+            Row(csv, run.Trainee, run.Trainer, started, string.Empty, string.Empty, string.Empty, ResultWord(run.Result), summary);
             return csv.ToString();
         }
 

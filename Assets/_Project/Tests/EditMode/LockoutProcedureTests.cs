@@ -11,7 +11,7 @@ namespace TwoDude.FactoryTwin.Tests
         private static LockoutProcedure Started()
         {
             var run = new LockoutProcedure();
-            run.Begin("Demo Trainee", 1_700_000_000_000L);
+            run.Begin("Apoorv Garg", 1_700_000_000_000L, "Akaash Garg");
             return run;
         }
 
@@ -113,7 +113,7 @@ namespace TwoDude.FactoryTwin.Tests
         {
             LockoutProcedure run = Started();
             run.Attempt(LockoutAction.Stop, 1d);
-            run.Begin("Second Trainee", 1_700_000_100_000L);
+            run.Begin("Second Trainee", 1_700_000_100_000L, "Akaash Garg");
 
             Assert.AreEqual(0, run.Errors);
             Assert.AreEqual(1, run.StepNumber);
@@ -144,9 +144,9 @@ namespace TwoDude.FactoryTwin.Tests
 
             Assert.AreEqual(TrainingRecord.Header, lines[0]);
             Assert.AreEqual(4, lines.Length);
-            Assert.AreEqual("Demo Trainee,2023-11-14 22:13:20,1.3,1,1910.147(c)(9),done,Notify affected employees", lines[1]);
-            StringAssert.StartsWith("Demo Trainee,2023-11-14 22:13:20,2.0,2,1910.147(d)(2),mistake,", lines[2]);
-            Assert.AreEqual("Demo Trainee,2023-11-14 22:13:20,,,,not finished,\"1 of 12 steps, 1 mistake\"", lines[3]);
+            Assert.AreEqual("Apoorv Garg,Akaash Garg,2023-11-14 22:13:20,1.3,1,1910.147(c)(9),done,Notify affected employees", lines[1]);
+            StringAssert.StartsWith("Apoorv Garg,Akaash Garg,2023-11-14 22:13:20,2.0,2,1910.147(d)(2),mistake,", lines[2]);
+            Assert.AreEqual("Apoorv Garg,Akaash Garg,2023-11-14 22:13:20,,,,not finished,\"1 of 12 steps, 1 mistake\"", lines[3]);
         }
     }
 }

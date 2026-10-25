@@ -126,6 +126,25 @@
                 </ui:VisualElement>
             </ui:VisualElement>
 
+            <ui:VisualElement name="training-panel" class="section section--training hidden">
+                <ui:VisualElement class="section__header">
+                    <ui:Label text="Lockout training" class="section__title" />
+                    <ui:Label name="training-result" text="—" class="chip training">
+                        <Bindings><ui:DataBinding property="text" data-source-path="TrainingResultText" binding-mode="ToTarget" /></Bindings>
+                    </ui:Label>
+                </ui:VisualElement>
+                <ui:Label name="training-who" text="" class="training__who" />
+                <ui:Label text="—" class="training__step">
+                    <Bindings><ui:DataBinding property="text" data-source-path="TrainingStepText" binding-mode="ToTarget" /></Bindings>
+                </ui:Label>
+                <ui:Label text="—" class="training__next">
+                    <Bindings><ui:DataBinding property="text" data-source-path="TrainingNextText" binding-mode="ToTarget" /></Bindings>
+                </ui:Label>
+                <ui:Label name="training-mistakes" text="—" class="training__mistakes">
+                    <Bindings><ui:DataBinding property="text" data-source-path="TrainingMistakesText" binding-mode="ToTarget" /></Bindings>
+                </ui:Label>
+            </ui:VisualElement>
+
             <ui:VisualElement name="fault-panel" class="section section--faults">
                 <ui:Label text="Scenarios" class="section__title" />
                 <ui:VisualElement class="fault-buttons">
@@ -140,6 +159,7 @@
                     <ui:Button name="inject-osf" text="Overstrain" class="fault-button" />
                     <ui:Button name="inject-rnf" text="Random" class="fault-button" />
                     <ui:Button name="clear-fault" text="Clear" class="fault-button fault-button--clear" />
+                    <ui:Button name="start-training" text="Lockout training" class="fault-button fault-button--key" />
                 </ui:VisualElement>
             </ui:VisualElement>
 

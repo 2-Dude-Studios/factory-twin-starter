@@ -97,6 +97,9 @@ namespace TwoDude.FactoryTwin.Twin
 
         public string Trainee { get; private set; } = string.Empty;
 
+        /// <summary>Who supervised the run, for the training record.</summary>
+        public string Trainer { get; private set; } = string.Empty;
+
         /// <summary>Wall-clock start of the run (unix ms), for the training record.</summary>
         public long StartedUnixMs { get; private set; }
 
@@ -124,9 +127,10 @@ namespace TwoDude.FactoryTwin.Twin
         }
 
         /// <summary>Starts a fresh run for <paramref name="trainee"/>; any run in progress is discarded.</summary>
-        public void Begin(string trainee, long startedUnixMs)
+        public void Begin(string trainee, long startedUnixMs, string trainer = "")
         {
             Trainee = trainee ?? string.Empty;
+            Trainer = trainer ?? string.Empty;
             StartedUnixMs = startedUnixMs;
             Done = 0;
             Errors = 0;

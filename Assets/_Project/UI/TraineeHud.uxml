@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="TraineeHud.uss" />
+    <ui:VisualElement name="hud" class="hud" picking-mode="Ignore">
+        <ui:VisualElement name="crosshair" class="hud__crosshair" picking-mode="Ignore" />
+        <ui:Label name="prompt" text="" class="hud__prompt hidden" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

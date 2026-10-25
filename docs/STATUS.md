@@ -237,8 +237,22 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
     - Result "passed with mistakes", 1 mistake (`Builds/Training/lockout_20261024_203436.csv`). 0 console errors.
   - Soft PLC: the same run. The PLC refused both starts while locked (its counter 7 → 8 → 9; it still holds earlier test presses) and restarted the line at step 12 (`lockout_20261024_203900.csv`).
   - The exit's three parts are shown with scripted actions; the trainee does not yet have controls of their own.
-- [ ] Interaction points on the CNC (isolator, lock hasp, tool, start and stop buttons) for the desktop trainee, through signals only.
-- [ ] Step panel on the dashboard and event log lines; a suite scenario "Start with the lock on is refused".
+- [x] Names (2026-10-25, you): trainee **Apoorv Garg**, trainer **Akaash Garg**, set on the `TrainingController`. The training record gains a `trainer` column; the step panel names both.
+- [x] Training points: `TrainingPoint` (with the pure `TrainingPoints` mapping, 4 tests). Using a point publishes its `training/action`; the isolator and hasp offer the opposite of their state, and nothing depends on the procedure, so the trainee can make real mistakes.
+  - `Tools > Factory Twin > Build Training Points` (`TrainingPointsSetup`, re-runnable) places them from the whole CNC's measured bounds (x −1.76…0.94, z 2.27…5.18; the case mesh alone is smaller and hid them):
+    - a line control station east of the CNC with Start, Stop, intercom Notify and All clear;
+    - on the CNC's east end, the isolator, its lock hasp, the air dump valve and the inspection plate;
+    - the tool change at the front's east corner.
+  - Everything sits outside both safety zones; the rest of the CNC's front is behind the fence or in the protective zone. Primitives with the lamp and pole materials; trigger colliders on Default.
+- [x] `TraineeInteractor` and `TraineeHud`: while the trainee's eye is live, the point under the crosshair within 2.5 m lights up, `TraineeHud.uxml` shows its prompt ("CNC isolator: switch off · click"), and a left click uses it. Right mouse stays look.
+  - `TraineeWalker.Teleport(x, z, yaw, pitch)` added for checks and scripted takes.
+- [x] Dashboard step panel ("Lockout training"), shown once a run starts: trainee and trainer, "Step n of 12", the step due with its paragraph, mistakes, and a result chip. A "Lockout training" button in Scenarios starts a run. 285/285 EditMode.
+- [x] Checked in Play (2026-10-25, Unity sequencer):
+  - Aiming at the isolator from the trainee's eye lights it and shows its prompt.
+  - A whole lockout through the points (`TrainingPoint.Use`, what a click calls), with the CNC failed and one mistake (Start before removing the lock), finished "passed with mistakes", 1 mistake.
+  - Record `Builds/Training/lockout_20261025_163642.csv` names Apoorv Garg and Akaash Garg. Panel and log as expected; 0 console errors.
+  - Not yet done by hand with real mouse clicks; try F5, walk to the CNC, aim and click.
+- [ ] A suite scenario "Start with the lock on is refused"; then the M11 exit runs by hand.
 - [ ] Exit runs: end to end, a wrong-order run, the refused start logged.
 - [x] Force and scenarios:
   - Force command `safety/zone_force` (a `ForceMode`) on both zone sensors, standing in for a person; `SignalForcer` handles it.

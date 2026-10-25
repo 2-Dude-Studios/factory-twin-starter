@@ -18,6 +18,8 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private UIDocument document;
         [SerializeField] private CellContext context;
         [SerializeField] private FaultInjector faultInjector;
+        [Tooltip("Lockout training (M11): names the trainee and trainer on the step panel.")]
+        [SerializeField] private TrainingController training;
 
         private DashboardViewModel _model;
         private VisualElement _root;
@@ -43,6 +45,11 @@ namespace TwoDude.FactoryTwin.UI
         private Label _toolLife;
         private Label _toolLifeNote;
         private Action _toggleCredits;
+        private Action _startTrainingHandler;
+        private VisualElement _trainingPanel;
+        private Label _trainingResult;
+        private Label _trainingMistakes;
+        private Label _trainingWho;
 
         private void OnEnable()
         {
@@ -81,6 +88,12 @@ namespace TwoDude.FactoryTwin.UI
             AssignSeries("parts-per-hour-spark", _model.PartsPerHour);
 
             _log = _root.Q<ListView>("event-log");
+            _trainingPanel = _root.Q("training-panel");
+            _trainingResult = _root.Q<Label>("training-result");
+            _trainingMistakes = _root.Q<Label>("training-mistakes");
+            _trainingWho = _root.Q<Label>("training-who");
+            if (_trainingWho != null && training != null)
+                _trainingWho.text = $"Trainee {training.TraineeName} · Trainer {training.TrainerName}";
             if (_log != null)
             {
                 _log.makeItem = MakeLogLine;
@@ -129,6 +142,7 @@ namespace TwoDude.FactoryTwin.UI
                 _degradeHandler = () => context.Bus.Publish(CellTopics.PressDegrade, SignalValue.FromBool(true), CellContext.NowUnixMs);
                 _changeToolHandler = () => context.Bus.Publish(CellTopics.PressToolChange, SignalValue.FromBool(true), CellContext.NowUnixMs);
                 _toggleCredits = () => _credits?.ToggleInClassList("hidden");
+                _startTrainingHandler = () => context.Bus.Publish(CellTopics.TrainingRun, SignalValue.FromBool(true), CellContext.NowUnixMs);
             }
 
             for (int i = 0; i < _faultButtons.Length; i++)
@@ -137,6 +151,7 @@ namespace TwoDude.FactoryTwin.UI
             Wire("degrade-tool", _degradeHandler, wire);
             Wire("change-tool", _changeToolHandler, wire);
             Wire("credits-button", _toggleCredits, wire);
+            Wire("start-training", _startTrainingHandler, wire);
             Wire("credits-close", _toggleCredits, wire);
         }
 
@@ -168,6 +183,13 @@ namespace TwoDude.FactoryTwin.UI
             _toolLife?.EnableInClassList("tool-life--due", _model.MaintenanceDue);
             if (_toolLifeNote != null)
                 _toolLifeNote.text = _model.MaintenanceDue ? "Change due" : string.Empty;
+
+            TrainingOutcome training = _model.Training;
+            _trainingPanel?.EnableInClassList("hidden", training == TrainingOutcome.Idle);
+            _trainingPanel?.EnableInClassList("training--passed", training == TrainingOutcome.Passed);
+            _trainingResult?.EnableInClassList("training--passed", training == TrainingOutcome.Passed);
+            _trainingResult?.EnableInClassList("training--mistakes", training == TrainingOutcome.PassedWithErrors);
+            _trainingMistakes?.EnableInClassList("training__mistakes--some", _model.TrainingMistakes > 0);
 
             _link?.EnableInClassList("link--up", _model.LinkUp);
             _link?.EnableInClassList("link--down", !_model.LinkUp);
