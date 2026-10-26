@@ -182,6 +182,58 @@ namespace TwoDude.FactoryTwin.Tests
         }
     }
 
+    public sealed class SettleGateTests
+    {
+        private static CellSnapshot Line(bool running = true, double ratio = 1d, bool armBusy = false)
+            => new CellSnapshot(true, true, armBusy, false, false, running ? CellState.Feeding : CellState.Stopped, 0, true, ratio);
+
+        private static int TicksUntilReady(SettleGate gate, System.Func<int, CellSnapshot> cellAt, int maxTicks = 500)
+        {
+            for (int i = 0; i < maxTicks; i++)
+            {
+                if (gate.Tick(0.02d, cellAt(i)))
+                    return i + 1;
+            }
+            return -1;
+        }
+
+        [Test]
+        public void StartsAfterTwoSteadySeconds_OfARunningLine()
+        {
+            var gate = new SettleGate();
+            Assert.AreEqual(100, TicksUntilReady(gate, _ => Line()));
+        }
+
+        [Test]
+        public void AHitchAsTheSuiteStarts_RestartsTheWait()
+        {
+            // The ratio sample after the hitch arrives 1 s in: two clean seconds are counted from there.
+            var gate = new SettleGate();
+            Assert.AreEqual(150, TicksUntilReady(gate, i => Line(ratio: i == 49 ? 0.6d : 1d)));
+        }
+
+        [Test]
+        public void ARunningLineInRealTime_IsNotEnough_WhileTheArmWorks()
+        {
+            var gate = new SettleGate();
+            Assert.AreEqual(201, TicksUntilReady(gate, i => Line(armBusy: i < 200)));
+            Assert.IsFalse(gate.WaitingForRealTime);
+        }
+
+        [Test]
+        public void WaitingForRealTime_SaysWhyTheLineHasNotStarted()
+        {
+            var gate = new SettleGate();
+            for (int i = 0; i < 50; i++)
+                Assert.IsFalse(gate.Tick(0.02d, Line(ratio: 0.5d)));
+            Assert.IsTrue(gate.WaitingForRealTime);
+            Assert.AreEqual(1d, gate.Waited, 1e-9);
+            gate.Reset();
+            Assert.AreEqual(0d, gate.Waited);
+            Assert.IsFalse(gate.WaitingForRealTime);
+        }
+    }
+
     public sealed class CommissioningScenariosTests
     {
         [Test]

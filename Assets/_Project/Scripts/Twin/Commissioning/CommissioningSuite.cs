@@ -34,7 +34,7 @@ namespace TwoDude.FactoryTwin.Twin
 
         private int _index = -1;
         private ScenarioRun _run;
-        private double _settling = -1d;
+        private readonly SettleGate _gate = new SettleGate();
         private LogicSource _source;
         private bool _stopAtFirstFailure;
 
@@ -142,21 +142,23 @@ namespace TwoDude.FactoryTwin.Twin
                 Finish(ScenarioOutcome.NotApplicable, "needs the soft PLC", null);
                 return;
             }
-            _settling = 0d;
+            _gate.Reset();
         }
 
-        // Each scenario starts from a running line, so one scenario's aftermath cannot fail the next.
+        // Each scenario starts from a running line, so one scenario's aftermath cannot fail the next, and from a plant
+        // steadily in real time, so a hitch as the suite starts cannot fail the first one's real-time check.
         private void Settle(in CellSnapshot cell)
         {
-            if (cell.Running && !cell.PartAtGate && !cell.ArmBusy)
+            if (_gate.Tick(Time.fixedDeltaTime, cell))
             {
                 _run = new ScenarioRun(_scenarios[_index]);
                 ScenarioStarted?.Invoke(_index + 1);
                 return;
             }
-            _settling += Time.fixedDeltaTime;
-            if (_settling > settleTimeoutSeconds)
-                Finish(ScenarioOutcome.NotRun, $"line not running after {settleTimeoutSeconds:0} s", null);
+            if (_gate.Waited > settleTimeoutSeconds)
+                Finish(ScenarioOutcome.NotRun, _gate.WaitingForRealTime
+                    ? $"plant not in real time for {settleTimeoutSeconds:0} s"
+                    : $"line not running after {settleTimeoutSeconds:0} s", null);
         }
 
         private void Finish(ScenarioOutcome outcome, string detail, IReadOnlyList<ScenarioCheck> checks)
