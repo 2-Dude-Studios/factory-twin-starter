@@ -289,6 +289,10 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - **Selection panel** (`VrMenu`, 18 cm, on the left controller, pressed with the right ray): Lockout training, Fail the CNC (tool-wear failure), Safety reset, Go to cell overview / control station / CNC isolator (teleport, facing the right way), Exit VR.
   - Checked: the board reads in the desktop trainee's view; in the headset the HUD shows status and step. The selection panel is not checked yet: the controllers were not tracking at that moment.
   - 290/290 EditMode.
+- [x] Panels, second pass (2026-10-26, you asked for the task at the top left, options on the left controller and a world menu you can press):
+  - **VR HUD** now at the top left of the view (LazyFollow 1 m ahead, 0.26 m left, 0.14 m up; 36 × 17 cm): "NOW · STEP n OF 12" with the task at hand, "NEXT" with the one after it, then safety or line status and the point prompt. `VrHudText.NowLabel/Current/Next`, 2 more tests.
+  - **Training board** is pressable (0.9 m): a 12-segment step bar (done green, due amber) and three buttons for the controller ray: Start lockout training, Fail the CNC, Safety reset. Same bus commands as the dashboard, shared with the left-controller panel through `TrainingCommands`.
+  - **Left-controller panel**: the menu button or Y shows and hides it; buttons outline on hover.
 - [ ] Your step: both beats in the Quest 3 over Link; frame rate at 72 fps or better; the training record matches a desktop run.
 - [ ] Exit runs: end to end, a wrong-order run, the refused start logged.
 - [x] Force and scenarios:

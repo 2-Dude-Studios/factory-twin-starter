@@ -6,9 +6,15 @@
             <ui:Label name="result" text="Not started" class="board__chip" />
         </ui:VisualElement>
         <ui:Label name="who" text="" class="board__who" />
+        <ui:VisualElement name="progress" class="board__progress" picking-mode="Ignore" />
         <ui:Label name="step" text="" class="board__step" />
         <ui:Label name="next" text="" class="board__next" />
         <ui:Label name="mistakes" text="" class="board__mistakes" />
         <ui:Label name="status" text="" class="board__status" />
+        <ui:VisualElement class="board__actions" picking-mode="Ignore">
+            <ui:Button name="board-training" text="Start lockout training" class="board__button board__button--key" />
+            <ui:Button name="board-fail" text="Fail the CNC" class="board__button" />
+            <ui:Button name="board-reset" text="Safety reset" class="board__button" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

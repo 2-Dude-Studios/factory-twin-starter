@@ -2,6 +2,7 @@ using System;
 using TwoDude.FactoryTwin.Twin;
 using Unity.XR.CoreUtils;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 namespace TwoDude.FactoryTwin.UI
@@ -9,7 +10,8 @@ namespace TwoDude.FactoryTwin.UI
     /// <summary>
     /// Training (M12): the selection panel on the left controller (VrMenu.uxml), pressed with the right controller's
     /// ray. Lockout training, Fail the CNC and Safety reset send the same bus commands as the dashboard and keys;
-    /// the Go to buttons teleport to set spots facing the right way; Exit VR hands back to the desktop.
+    /// the Go to buttons teleport to set spots facing the right way; Exit VR hands back to the desktop. The left
+    /// controller's menu button (or Y) shows and hides the panel.
     /// </summary>
     public sealed class VrMenu : MonoBehaviour
     {
@@ -31,9 +33,29 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private XROrigin origin;
         [Tooltip("Teleport spots: the button's name in VrMenu.uxml, where to stand and which way to face.")]
         [SerializeField] private Spot[] spots = Array.Empty<Spot>();
+        [Tooltip("Shows and hides the panel. Left empty, the left controller's menu button and Y are used.")]
+        [SerializeField] private InputActionProperty toggle;
 
         private VisualElement _root;
         private Action[] _goTo = Array.Empty<Action>();
+        private InputAction _ownToggle;
+        private bool _shown = true;
+
+        private InputAction Toggle
+        {
+            get
+            {
+                if (toggle.action != null && toggle.action.bindings.Count > 0)
+                    return toggle.action;
+                if (_ownToggle == null)
+                {
+                    _ownToggle = new InputAction("Toggle VR menu", InputActionType.Button);
+                    _ownToggle.AddBinding("<XRController>{LeftHand}/{MenuButton}");
+                    _ownToggle.AddBinding("<XRController>{LeftHand}/{SecondaryButton}");
+                }
+                return _ownToggle;
+            }
+        }
 
         private void OnEnable()
         {
@@ -51,12 +73,18 @@ namespace TwoDude.FactoryTwin.UI
                 _goTo[i] = () => GoTo(spot);
                 Wire(spot.Button, _goTo[i], true);
             }
+            Show(_shown);
+            Toggle.performed += OnToggle;
+            Toggle.Enable();
         }
 
         private void OnDisable()
         {
             if (_root == null)
                 return;
+            Toggle.performed -= OnToggle;
+            if (Toggle == _ownToggle)
+                _ownToggle.Disable();
             Wire("menu-training", StartTraining, false);
             Wire("menu-fail", FailCnc, false);
             Wire("menu-reset", SafetyReset, false);
@@ -65,12 +93,25 @@ namespace TwoDude.FactoryTwin.UI
                 Wire(spots[i].Button, _goTo[i], false);
         }
 
-        private void StartTraining() => Send(CellTopics.TrainingRun, 1d);
+        private void OnDestroy()
+        {
+            _ownToggle?.Dispose();
+            _ownToggle = null;
+        }
 
-        // The scenario the lockout clears: a tool-wear failure on the CNC, as the dashboard's Tool wear button injects.
-        private void FailCnc() => Send(CellTopics.PressInjectFault, (int)FaultMode.ToolWear);
+        private void OnToggle(InputAction.CallbackContext _) => Show(!_shown);
 
-        private void SafetyReset() => Send(CellTopics.SafetyReset, 1d);
+        private void Show(bool shown)
+        {
+            _shown = shown;
+            _root.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private void StartTraining() => TrainingCommands.StartTraining(context.Bus);
+
+        private void FailCnc() => TrainingCommands.FailCnc(context.Bus);
+
+        private void SafetyReset() => TrainingCommands.SafetyReset(context.Bus);
 
         private void ExitVr()
         {
@@ -87,11 +128,6 @@ namespace TwoDude.FactoryTwin.UI
             origin.RotateAroundCameraUsingOriginUp(Mathf.DeltaAngle(head.eulerAngles.y, spot.YawDegrees));
             Vector3 headPosition = head.position;
             origin.transform.position += new Vector3(spot.FloorPosition.x - headPosition.x, 0f, spot.FloorPosition.z - headPosition.z);
-        }
-
-        private void Send(TopicPath topic, double value)
-        {
-            context.Bus.Publish(topic, SignalValue.FromNumber(value), CellContext.NowUnixMs);
         }
 
         private void Wire(string buttonName, Action handler, bool wire)

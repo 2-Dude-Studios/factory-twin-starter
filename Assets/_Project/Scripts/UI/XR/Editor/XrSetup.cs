@@ -41,7 +41,7 @@ namespace TwoDude.FactoryTwin.UI
         private static readonly Vector3 RigStart = new Vector3(-2.0f, 0f, -2.6f);
         private const float VrFarClip = 60f;
 
-        // World-space UI Toolkit panels (M12). 100 panel pixels are one unit: an 800 px board at scale 0.1 is 0.8 m.
+        // World-space UI Toolkit panels (M12). 100 panel pixels are one unit: a 900 px board at scale 0.1 is 0.9 m.
         private const string WorldPanelPath = "Assets/_Project/UI/Vr/VrWorldPanel.asset";
         private const string ThemePath = "Assets/_Project/UI/DashboardTheme.tss";
         private const string BoardUxml = "Assets/_Project/UI/Vr/TrainingBoard.uxml";
@@ -311,9 +311,9 @@ namespace TwoDude.FactoryTwin.UI
             var go = new GameObject("TrainingBoard");
             Undo.RegisterCreatedObjectUndo(go, "Build VR Rig");
             go.transform.SetParent(training, false);
-            go.transform.position = (station != null ? station.position : new Vector3(1.8f, 1.1f, 2.0f)) + new Vector3(0f, 0.62f, 0.02f);
+            go.transform.position = (station != null ? station.position : new Vector3(1.8f, 1.1f, 2.0f)) + new Vector3(0f, 0.68f, 0.02f);
             go.transform.rotation = Quaternion.identity;
-            UIDocument document = Document(go, panel, BoardUxml, 800f, 480f, 0.1f);
+            UIDocument document = Document(go, panel, BoardUxml, 900f, 600f, 0.1f);
             var board = go.AddComponent<TrainingBoard>();
             var so = new SerializedObject(board);
             so.FindProperty("document").objectReferenceValue = document;
@@ -322,16 +322,17 @@ namespace TwoDude.FactoryTwin.UI
             so.ApplyModifiedProperties();
         }
 
-        // The HUD lazily follows the view: a metre ahead, a little below eye level.
+        // The HUD lazily follows the view at the top left: a metre ahead, up and to the left of centre, clear of the
+        // middle of the view where the hands and the machines are.
         private static VrHud Hud(Transform rig, Transform head, PanelSettings panel, CellContext context)
         {
             var go = new GameObject("VrHud");
             Undo.RegisterCreatedObjectUndo(go, "Build VR Rig");
             go.transform.SetParent(rig, false);
-            UIDocument document = Document(go, panel, HudUxml, 700f, 170f, 0.07f);
+            UIDocument document = Document(go, panel, HudUxml, 520f, 240f, 0.07f);
             var follow = go.AddComponent<LazyFollow>();
             follow.target = head;
-            follow.targetOffset = new Vector3(0f, -0.28f, 1.0f);
+            follow.targetOffset = new Vector3(-0.26f, 0.14f, 1.0f);
             var hud = go.AddComponent<VrHud>();
             var so = new SerializedObject(hud);
             so.FindProperty("document").objectReferenceValue = document;

@@ -24,6 +24,26 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void Current_And_Next_NameTheTaskAtHandAndTheOneAfter()
+        {
+            Assert.AreEqual("NOW · STEP 4 OF 12", VrHudText.NowLabel(4, TrainingOutcome.InProgress));
+            Assert.AreEqual("Apply your lock and tag", VrHudText.Current(4, TrainingOutcome.InProgress));
+            Assert.AreEqual(LockoutProcedure.Steps[4].Title, VrHudText.Next(4, TrainingOutcome.InProgress));
+            Assert.AreEqual("Last step", VrHudText.Next(12, TrainingOutcome.InProgress));
+        }
+
+        [Test]
+        public void Current_And_Next_OutsideARun()
+        {
+            Assert.AreEqual("LOCKOUT TRAINING", VrHudText.NowLabel(0, TrainingOutcome.Idle));
+            Assert.AreEqual("Not started: press Lockout training", VrHudText.Current(0, TrainingOutcome.Idle));
+            Assert.AreEqual(string.Empty, VrHudText.Next(0, TrainingOutcome.Idle));
+            Assert.AreEqual("LOCKOUT COMPLETE", VrHudText.NowLabel(13, TrainingOutcome.PassedWithErrors));
+            Assert.AreEqual("Done, with mistakes", VrHudText.Current(13, TrainingOutcome.PassedWithErrors));
+            Assert.AreEqual(string.Empty, VrHudText.Next(13, TrainingOutcome.Passed));
+        }
+
+        [Test]
         public void Prompt_SaysHowToUseThePoint()
         {
             Assert.AreEqual("CNC isolator: switch off  ·  pull the trigger", VrHudText.Prompt("CNC isolator: switch off"));

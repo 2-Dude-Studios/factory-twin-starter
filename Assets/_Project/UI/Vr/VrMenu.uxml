@@ -2,6 +2,7 @@
     <Style src="VrPanels.uss" />
     <ui:VisualElement name="menu" class="menu">
         <ui:Label text="Factory twin" class="menu__title" />
+        <ui:Label text="Menu button or Y: show or hide" class="menu__hint" />
         <ui:Label text="Training" class="menu__group" />
         <ui:Button name="menu-training" text="Lockout training" class="menu__button menu__button--key" />
         <ui:Button name="menu-fail" text="Fail the CNC" class="menu__button" />

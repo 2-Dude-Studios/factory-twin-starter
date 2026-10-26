@@ -3,8 +3,9 @@ using TwoDude.FactoryTwin.Twin;
 namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
-    /// Training (M12): the words on the headset HUD and the training board. The status line puts safety first: while
-    /// a protective stop or the warning zone applies, that is what the person in the headset needs to read.
+    /// Training (M12): the words on the headset HUD and the training board. The HUD leads with the task at hand and
+    /// the one after it; the status line puts safety first, because while a protective stop or the warning zone
+    /// applies, that is what the person in the headset needs to read.
     /// </summary>
     public static class VrHudText
     {
@@ -19,7 +20,46 @@ namespace TwoDude.FactoryTwin.UI
             return "Line: " + DashboardViewModel.LineStateWords(line);
         }
 
-        /// <summary>The step line under the status: empty while no lockout run is on.</summary>
+        /// <summary>The small label over the current task: which step of how many, or how the run ended.</summary>
+        public static string NowLabel(int step, TrainingOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case TrainingOutcome.InProgress:
+                    return step >= 1 && step <= LockoutProcedure.Steps.Count ? $"NOW · STEP {step} OF {LockoutProcedure.Steps.Count}" : "NOW";
+                case TrainingOutcome.Passed:
+                case TrainingOutcome.PassedWithErrors:
+                    return "LOCKOUT COMPLETE";
+                default:
+                    return "LOCKOUT TRAINING";
+            }
+        }
+
+        /// <summary>The task at hand.</summary>
+        public static string Current(int step, TrainingOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case TrainingOutcome.InProgress:
+                    return step >= 1 && step <= LockoutProcedure.Steps.Count ? LockoutProcedure.Steps[step - 1].Title : string.Empty;
+                case TrainingOutcome.Passed:
+                    return "Passed, no mistakes";
+                case TrainingOutcome.PassedWithErrors:
+                    return DashboardViewModel.TrainingResultWords(outcome);
+                default:
+                    return "Not started: press Lockout training";
+            }
+        }
+
+        /// <summary>The task after it; empty when there is none.</summary>
+        public static string Next(int step, TrainingOutcome outcome)
+        {
+            if (outcome != TrainingOutcome.InProgress)
+                return string.Empty;
+            return step >= 1 && step < LockoutProcedure.Steps.Count ? LockoutProcedure.Steps[step].Title : "Last step";
+        }
+
+        /// <summary>The step line under the status on the training board: empty while no lockout run is on.</summary>
         public static string Step(int step, TrainingOutcome outcome)
         {
             if (outcome == TrainingOutcome.Idle)

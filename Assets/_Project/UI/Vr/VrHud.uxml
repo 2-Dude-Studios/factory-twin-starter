@@ -1,8 +1,13 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="VrPanels.uss" />
     <ui:VisualElement name="hud" class="hud" picking-mode="Ignore">
+        <ui:Label name="now-label" text="LOCKOUT TRAINING" class="hud__label" />
+        <ui:Label name="current" text="" class="hud__current" />
+        <ui:VisualElement name="next-row" class="hud__next-row hidden" picking-mode="Ignore">
+            <ui:Label text="NEXT" class="hud__label" />
+            <ui:Label name="next" text="" class="hud__next" />
+        </ui:VisualElement>
         <ui:Label name="status" text="" class="hud__status" />
-        <ui:Label name="step" text="" class="hud__step hidden" />
         <ui:Label name="prompt" text="" class="hud__prompt hidden" />
     </ui:VisualElement>
 </ui:UXML>

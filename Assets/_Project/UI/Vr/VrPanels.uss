@@ -1,5 +1,5 @@
 /* World-space panels for the headset (M12): the training board, the HUD and the selection panel.
-   Sizes are in panel pixels: 100 px is one unit, and each document's transform scale sets its real size (board 0.8 m). */
+   Sizes are in panel pixels: 100 px is one unit, and each document's transform scale sets its real size (board 0.9 m). */
 .hidden {
     display: none;
 }
@@ -9,7 +9,7 @@
     width: 100%;
     height: 100%;
     padding: 24px 28px;
-    background-color: rgba(20, 24, 28, 0.92);
+    background-color: rgba(20, 24, 28, 0.96);
     border-radius: 14px;
     border-left-width: 8px;
     border-left-color: rgb(255, 174, 13);
@@ -47,31 +47,60 @@
 .board__status { font-size: 22px; color: rgb(200, 206, 212); margin-top: 14px; }
 .board__status--alert { color: rgb(255, 80, 64); -unity-font-style: bold; }
 
-/* HUD that lazily follows the view */
+.board__progress { flex-direction: row; height: 12px; margin: 6px 0 14px 0; }
+.board__seg { flex-grow: 1; margin-right: 4px; border-radius: 4px; background-color: rgb(52, 60, 68); }
+.board__seg--done { background-color: rgb(38, 217, 89); }
+.board__seg--now { background-color: rgb(255, 174, 13); }
+.board__actions { flex-direction: row; margin-top: auto; padding-top: 14px; }
+
+.board__button {
+    flex-grow: 1;
+    height: 64px;
+    margin: 0 6px 0 0;
+    font-size: 22px;
+    -unity-font-style: bold;
+    border-radius: 10px;
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+    background-color: rgb(52, 60, 68);
+    color: rgb(240, 242, 244);
+}
+
+.board__button:hover { background-color: rgb(80, 90, 100); border-color: rgb(240, 242, 244); }
+.board__button:active { background-color: rgb(110, 120, 130); }
+.board__button--key { background-color: rgb(255, 174, 13); color: rgb(29, 22, 0); }
+.board__button--key:hover { background-color: rgb(255, 196, 70); }
+
+/* HUD held at the top left of the view: the task at hand, the next one, then status */
 .hud {
     width: 100%;
     height: 100%;
     padding: 12px 18px;
-    background-color: rgba(20, 24, 28, 0.78);
+    background-color: rgba(20, 24, 28, 0.94);
     border-radius: 12px;
-    justify-content: center;
+    border-left-width: 6px;
+    border-left-color: rgb(255, 174, 13);
 }
 
-.hud__status { font-size: 26px; -unity-font-style: bold; color: rgb(240, 242, 244); }
-.hud__status--alert { color: rgb(255, 80, 64); }
-.hud__step { font-size: 22px; color: rgb(200, 206, 212); white-space: normal; margin-top: 4px; }
-.hud__prompt { font-size: 24px; -unity-font-style: bold; color: rgb(255, 174, 13); margin-top: 6px; }
+.hud__label { font-size: 15px; -unity-font-style: bold; color: rgb(160, 168, 176); letter-spacing: 1px; }
+.hud__current { font-size: 28px; -unity-font-style: bold; color: rgb(240, 242, 244); white-space: normal; margin: 2px 0 8px 0; }
+.hud__next-row { margin-bottom: 8px; }
+.hud__next { font-size: 21px; color: rgb(200, 206, 212); white-space: normal; margin-top: 2px; }
+.hud__status { font-size: 19px; color: rgb(200, 206, 212); }
+.hud__status--alert { color: rgb(255, 80, 64); -unity-font-style: bold; }
+.hud__prompt { font-size: 21px; -unity-font-style: bold; color: rgb(255, 174, 13); margin-top: 6px; white-space: normal; }
 
 /* Selection panel on the left controller */
 .menu {
     width: 100%;
     height: 100%;
     padding: 14px;
-    background-color: rgba(20, 24, 28, 0.92);
+    background-color: rgba(20, 24, 28, 0.96);
     border-radius: 14px;
 }
 
-.menu__title { font-size: 24px; -unity-font-style: bold; color: rgb(240, 242, 244); margin-bottom: 8px; }
+.menu__title { font-size: 24px; -unity-font-style: bold; color: rgb(240, 242, 244); }
+.menu__hint { font-size: 14px; color: rgb(160, 168, 176); margin-bottom: 4px; }
 .menu__group { font-size: 16px; color: rgb(160, 168, 176); margin: 8px 0 4px 0; }
 
 .menu__button {
@@ -85,7 +114,7 @@
     color: rgb(240, 242, 244);
 }
 
-.menu__button:hover { background-color: rgb(80, 90, 100); }
+.menu__button:hover { background-color: rgb(80, 90, 100); border-width: 2px; border-color: rgb(240, 242, 244); }
 .menu__button:active { background-color: rgb(110, 120, 130); }
 .menu__button--key { background-color: rgb(255, 174, 13); color: rgb(29, 22, 0); }
 .menu__button--key:hover { background-color: rgb(255, 196, 70); }

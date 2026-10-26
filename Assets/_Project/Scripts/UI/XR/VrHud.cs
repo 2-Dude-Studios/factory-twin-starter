@@ -6,9 +6,9 @@ using UnityEngine.UIElements;
 namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
-    /// Training (M12): the headset HUD (VrHud.uxml), a small world-space panel that lazily follows the view. Three
-    /// lines: safety or line status first, the lockout step due, and the prompt for the training point under the
-    /// controller ray (set by XrTrainingPoint). Read from the bus; it changes nothing.
+    /// Training (M12): the headset HUD (VrHud.uxml), a small world-space panel held at the top left of the view.
+    /// It leads with the task at hand and the next one, then safety or line status, then the prompt for the
+    /// training point under the controller ray (set by XrTrainingPoint). Read from the bus; it changes nothing.
     /// </summary>
     public sealed class VrHud : MonoBehaviour
     {
@@ -16,7 +16,8 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private CellContext context;
 
         private IDisposable _subscription;
-        private Label _status, _step, _prompt;
+        private Label _nowLabel, _current, _next, _status, _prompt;
+        private VisualElement _nextRow;
         private SafetyState _safety;
         private CellState _line;
         private int _stepNumber;
@@ -27,8 +28,11 @@ namespace TwoDude.FactoryTwin.UI
             VisualElement root = document != null ? document.rootVisualElement : null;
             if (root == null)
                 return;
+            _nowLabel = root.Q<Label>("now-label");
+            _current = root.Q<Label>("current");
+            _nextRow = root.Q("next-row");
+            _next = root.Q<Label>("next");
             _status = root.Q<Label>("status");
-            _step = root.Q<Label>("step");
             _prompt = root.Q<Label>("prompt");
 
             SignalBus bus = context.Bus;
@@ -79,11 +83,13 @@ namespace TwoDude.FactoryTwin.UI
         {
             if (_status == null)
                 return;
+            _nowLabel.text = VrHudText.NowLabel(_stepNumber, _outcome);
+            _current.text = VrHudText.Current(_stepNumber, _outcome);
+            string next = VrHudText.Next(_stepNumber, _outcome);
+            _next.text = next;
+            _nextRow.EnableInClassList("hidden", string.IsNullOrEmpty(next));
             _status.text = VrHudText.Status(_safety, _line);
             _status.EnableInClassList("hud__status--alert", _safety == SafetyState.Stopped || _safety == SafetyState.AwaitingReset);
-            string step = VrHudText.Step(_stepNumber, _outcome);
-            _step.text = step;
-            _step.EnableInClassList("hidden", string.IsNullOrEmpty(step));
         }
     }
 }
