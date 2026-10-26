@@ -275,7 +275,15 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - `XRSimpleInteractable` + `XrTrainingPoint` on all 9 training points: the controller trigger uses a point, the same `training/action` as a click.
 - [x] `VrSwitch` on `CaptureRig`: `-vr` on the command line or F11 starts OpenXR, turns the rig on and the desktop trainee, HUD, desktop camera and listener off, and lifts the 60 fps lock; F11 again or quitting gives the desktop back. New assembly `TwoDude.FactoryTwin.UI.XR` (only it and its Editor twin reference the XR packages). 287/287 EditMode.
 - [x] Smoke test without a headset (2026-10-26): OpenXR found the Meta (Oculus) runtime and stopped at `XR_ERROR_FORM_FACTOR_UNAVAILABLE` (no Quest on Link). VrSwitch reported it and left the desktop as it was; 0 console errors.
-- [ ] Step panel in the headset (decide: world-space UI Toolkit with XRI, or the panel rendered to a texture).
+- [x] Headset check in the Editor (2026-10-26, Quest 3 on Link): F11 starts OpenXR on the Meta runtime; head and both controllers track; `HeadBody` follows the head.
+  - The hall's Deferred+ pipeline ran at 15–40 fps there (up to 3,600 batches, 300 shadow casters), and you reported the PC running hot.
+  - `VR_RPAsset`, swapped in by `VrSwitch` only while VR runs (the desktop look and the videos are unchanged): Forward+ with no renderer features; no realtime shadows and no extra realtime lights (baked lighting carries the look); no HDR or post; 2x MSAA; render scale 0.9; GPU Resident Drawer with 1% small-mesh culling. The headset camera draws to 60 m with no post.
+  - Created by Configure XR, wired by Build VR Rig.
+  - Editor result: GPU 6–8 ms, frames about 20 ms (CPU, Editor overhead). The first switch compiled shaders for 19 s, the slow load you saw.
+- [x] **Windows build in VR (2026-10-26, `FactoryTwin.exe -vr -logfps`): 72.0 fps** in every 10 s window after loading (Link at 72 Hz), worst frame 27.8 ms (a single dropped frame). The same build on the desktop holds the 60 fps lock. Frame-rate part of the exit met.
+- [x] OpenXR added its Input System scripting defines (`USE_INPUT_SYSTEM_POSE_CONTROL`, `USE_STICK_CONTROL_THUMBSTICKS`) to ProjectSettings.
+- [ ] Your tip for heat: Meta Horizon Link at 72 Hz and a lower render resolution (Devices → your Quest → Graphics preferences).
+- [ ] Step panel in the headset: world-space UI Toolkit (decided).
 - [ ] Your step: both beats in the Quest 3 over Link; frame rate at 72 fps or better; the training record matches a desktop run.
 - [ ] Exit runs: end to end, a wrong-order run, the refused start logged.
 - [x] Force and scenarios:
