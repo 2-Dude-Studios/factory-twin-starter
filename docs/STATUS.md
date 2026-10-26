@@ -1,7 +1,7 @@
 # Status
 
-**Current milestone:** M11 — Lockout procedure (build plan Rev 5, workforce training and safety). M10 closed 2026-10-24. M9 — VC capture runs alongside and waits on your voiceover. M8 and M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
-**Last updated:** 2026-10-24
+**Current milestone:** M12 — Quest 3 view over Link (build plan Rev 5, workforce training and safety). M11 closed 2026-10-26, M10 closed 2026-10-24. M9 — VC capture runs alongside and waits on your voiceover. M8 and M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
+**Last updated:** 2026-10-26
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
@@ -199,7 +199,7 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - The suite passes against both logic sources: Unity 7/7 with 1 n/a, PLC 8/8.
 - Note for later: when the Editor is restarted, OpenPLC Editor needs Device > Configuration > Connect (and your runtime login) before Build and upload is available.
 
-## M11 — Lockout procedure (exit: the procedure runs end to end and the line restarts; starting the line with the lock on is refused by the PLC and logged; a wrong-order run records its errors in the training record)
+## M11 — Lockout procedure, closed 2026-10-26 (exit: the procedure runs end to end and the line restarts; starting the line with the lock on is refused by the PLC and logged; a wrong-order run records its errors in the training record)
 - [x] Decided (2026-10-24, you): a fixed demo trainee name in the training record for now ("Demo Trainee").
 - [x] `LockoutProcedure` (pure, `Scripts/Twin/Training/`, 10 tests):
   - The 1910.147 sequence for this cell in 12 steps, each with its paragraph: notify (c)(9); stop the line (d)(2); isolate the CNC (d)(3); lock and tag (d)(4); release stored energy (d)(5); verify by trying to start (d)(6); change the tool; inspect (e)(1); clear and notify (e)(2); remove the lock (e)(3); restore energy; restart.
@@ -258,7 +258,15 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - New `ScenarioCheck.Rises` (counter rise from its value at the window start, since the PLC's counter carries over; `PartsOut` now uses it, 2 tests). `CellSnapshot` gains lockout and starts refused.
   - The stimulus reset now also takes the lock off, puts the isolator on and presses start once, so a scenario that ends early cannot leave the line stopped. 287/287 EditMode.
 - [x] **Suite (2026-10-25):** Unity sequencer 8 passed, 0 failed, PLC link lost n/a (`vc_unity_20261025_164655.csv`); soft PLC **9 of 9 passed** (`vc_plc_20261025_165430.csv`; scenario 9: "2 refused").
-- [ ] Your step: a lockout by hand. Play, F5 for the trainee, arrow keys and right mouse to move and look; "Lockout training" on the dashboard starts a run; walk to the control station and the CNC's east end, aim and left-click. Then M11's exit can be closed.
+- [x] A lockout done by hand in Play (2026-10-26, you): F5 trainee, walk, aim and click. It works. No record file came from that run (the newest in `Builds/Training/` is the scripted one of 2026-10-25); a record is written only when all 12 steps finish.
+- [x] **M11 exit met (2026-10-26):**
+  - The procedure runs end to end and the line restarts: scripted on both logic sources, through the training points, and by hand.
+  - Starting the line with the lock on is refused by the PLC and logged: "Start refused: CNC locked out"; suite scenario 9 passes 9/9 on the PLC.
+  - A wrong-order run records its errors in the training record (`lockout_20261025_163642.csv`: Start before removing the lock, 1 mistake).
+
+## M12 — Quest 3 view over Link (exit: both beats, zone stop and lockout, run in the Quest 3 over Link at 72 fps or better, with no new signals, and the training record matches a desktop run)
+- [ ] Decide at start: whether world-space UI Toolkit with XRI covers the step panel, or the panel is rendered to a texture.
+- [ ] Add the approved packages (com.unity.xr.openxr, com.unity.xr.management, com.unity.xr.interaction.toolkit); licence lines in `docs/LICENSES.md` in the same commit.
 - [ ] Exit runs: end to end, a wrong-order run, the refused start logged.
 - [x] Force and scenarios:
   - Force command `safety/zone_force` (a `ForceMode`) on both zone sensors, standing in for a person; `SignalForcer` handles it.

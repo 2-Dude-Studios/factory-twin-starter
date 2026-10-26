@@ -1,6 +1,6 @@
 # Factory Twin — project blueprint
 
-As of 2026-10-24, commit `0c3b0fc`. Both use cases are built: predictive maintenance (M4–M6, video approved) and virtual commissioning (M7–M8 closed, M9 waiting on the voiceover). A third, workforce training and safety (Rev 5, M10–M13), was approved on 2026-10-24; its safety zone (M10) closed the same day, the lockout procedure (M11) is next. Written from the code, `Cell.unity` and the docs in this repo. Where they disagree, the code is described and the difference is listed in section 13.
+As of 2026-10-24, commit `0c3b0fc`. Both use cases are built: predictive maintenance (M4–M6, video approved) and virtual commissioning (M7–M8 closed, M9 waiting on the voiceover). A third, workforce training and safety (Rev 5, M10–M13), was approved on 2026-10-24; its safety zone (M10) closed the same day and the lockout procedure (M11) on 2026-10-26; the Quest 3 view (M12) is next. Written from the code, `Cell.unity` and the docs in this repo. Where they disagree, the code is described and the difference is listed in section 13.
 
 Companion documents: `docs/build-plan.md` (why and in what order, Rev 5), `docs/STATUS.md` (running log and decisions), `docs/demo-script.md` (video beats), `docs/voiceover.md` and `docs/voiceover_vc*.md` (scripts and cut plans), `docs/LICENSES.md` (what may ship), `CLAUDE.md` (rules for working in the repo).
 
@@ -52,8 +52,8 @@ It ships as a Windows build for live demos and a walkthrough video per use case 
 | M8 Commissioning suite | Six scenarios against either logic source, I/O list, seeded bug caught | Done 2026-10-23 |
 | M9 VC capture | Takes D and E, 76 s picture-only rough cut | **Waiting on your recorded voiceover** |
 | M10 Safety zone | Warning and protective zones, arm freeze, reset, PLC hold, first-person trainee, two suite scenarios | Done 2026-10-24 |
-| M11 Lockout procedure | 1910.147 steps on the CNC, PLC refuses start with the lock on, training record | **Current** (Rev 5) |
-| M12 Quest 3 view | OpenXR + XR Interaction Toolkit over Link, same signals | Planned |
+| M11 Lockout procedure | 1910.147 steps on the CNC, PLC refuses start with the lock on, training record, trainee points and step panel | Done 2026-10-26 |
+| M12 Quest 3 view | OpenXR + XR Interaction Toolkit over Link, same signals | **Current** (Rev 5) |
 | M13 Training capture | Training clip | Planned |
 
 ---
@@ -106,7 +106,7 @@ Three ideas hold the design together:
 - QoS 0, not retained. A client that connects mid-run sees a signal only when it next changes.
 - Enumerations travel as numbers: `line/state` 0 feeding, 1 transferring, 2 stalled, 3 held; `press/health` 0 ok, 1 warning, 2 fault; `plc/source` 0 Unity, 1 PLC.
 
-### Topic catalogue (68 topics)
+### Topic catalogue (83 topics)
 
 **out** is state leaving the cell; **in** is a command or stimulus the cell obeys. Commands are visible on the broker too. The station is called `press` in topics and code; on screen it is a CNC machining centre (AI4I models milling).
 
@@ -132,7 +132,7 @@ Three ideas hold the design together:
 
 | Topic | Type | Dir | Written by | Meaning |
 |---|---|---|---|---|
-| `line/state` | number | out | Logic source | 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop (M10) |
+| `line/state` | number | out | Logic source | 0 feeding, 1 transferring, 2 stalled, 3 held, 4 protective stop (M10), 5 stopped (M11) |
 | `line/stalled` | bool | out | Logic source | State 2 |
 | `line/parts_out` | number | out | Logic source | Parts that left the cell this run |
 | `line/cycle_time_s` | number | out | Logic source | Seconds between the last two exits, held time left out |
@@ -189,6 +189,22 @@ Three ideas hold the design together:
 | `safety/reset` | bool | in | Dashboard, F6, suite | Each true is one press; accepted only with the protective zone clear |
 | `arm/speed_scale` | number | in | SafetyZoneController | Arm speed fraction: 1, 0.25 in the warning zone, 0 on the stop |
 | `safety/zone_force` | number | in | Commissioning suite | ForceMode on both zone sensors (a person) |
+
+**Lockout training (M11)**, a training demo, not certified training:
+
+| Topic | Type | Dir | Written by | Meaning |
+|---|---|---|---|---|
+| `line/start`, `line/stop` | bool | in | Training, dashboard, F7/F8, suite | Each true is one press |
+| `line/start_count`, `line/stop_count` | number | out | LineCommands | Press counts both logic sources read; a press is +1 (to the PLC as `%MW6`, `%MW7`) |
+| `line/starts_refused` | number | out | Logic source | Starts refused while the CNC was locked out or isolated (`%QW4`) |
+| `press/isolator_cmd`, `press/lock_cmd` | number | in | TrainingController | 1 off / apply, 0 on / remove, under the hasp rules |
+| `press/isolated`, `press/lockout` | bool | out | PressIsolation | Isolator off; lock and tag on (to the PLC as `%MW8`, `%MW9`) |
+| `training/run` | bool | in | Dashboard button | Starts a lockout run |
+| `training/action` | number | in | TrainingPoint (a click) | A LockoutAction |
+| `training/step` | number | out | TrainingController | Step due, 1–12 (0 before a run, 13 when done) |
+| `training/errors` | number | out | TrainingController | Mistakes so far |
+| `training/mistake` | number | out | TrainingController | The LockoutAction just judged a mistake, published before the count |
+| `training/result` | number | out | TrainingController | TrainingOutcome: 0 idle, 1 in progress, 2 passed, 3 passed with mistakes |
 
 ---
 
