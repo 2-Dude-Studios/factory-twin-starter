@@ -283,7 +283,12 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 - [x] **Windows build in VR (2026-10-26, `FactoryTwin.exe -vr -logfps`): 72.0 fps** in every 10 s window after loading (Link at 72 Hz), worst frame 27.8 ms (a single dropped frame). The same build on the desktop holds the 60 fps lock. Frame-rate part of the exit met.
 - [x] OpenXR added its Input System scripting defines (`USE_INPUT_SYSTEM_POSE_CONTROL`, `USE_STICK_CONTROL_THUMBSTICKS`) to ProjectSettings.
 - [ ] Your tip for heat: Meta Horizon Link at 72 Hz and a lower render resolution (Devices → your Quest → Graphics preferences).
-- [ ] Step panel in the headset: world-space UI Toolkit (decided).
+- [x] Headset panels (2026-10-26, you asked for a VR HUD and a selection panel too), all world-space UI Toolkit (`Assets/_Project/UI/Vr/`, shared `VrWorldPanel.asset` with a trigger collider so controller rays can press buttons; `XRUIToolkitManager` on the rig turns XRI's UI Toolkit support on). Built by Build VR Rig.
+  - **Training board** (`TrainingBoard`, `Cell/Training/TrainingBoard`, 0.8 m, above the line control station): trainee and trainer, step n of 12, the step due with its paragraph, mistakes, result, and the safety/line status. Shown on the desktop too.
+  - **VR HUD** (`VrHud`, 0.5 m, LazyFollow 1 m ahead and 0.28 m below the eyes): safety or line status first, the step due, and the prompt of the training point under the ray ("CNC isolator: switch off · pull the trigger"), set by `XrTrainingPoint` on hover. Wording in the pure `VrHudText` (3 tests).
+  - **Selection panel** (`VrMenu`, 18 cm, on the left controller, pressed with the right ray): Lockout training, Fail the CNC (tool-wear failure), Safety reset, Go to cell overview / control station / CNC isolator (teleport, facing the right way), Exit VR.
+  - Checked: the board reads in the desktop trainee's view; in the headset the HUD shows status and step. The selection panel is not checked yet: the controllers were not tracking at that moment.
+  - 290/290 EditMode.
 - [ ] Your step: both beats in the Quest 3 over Link; frame rate at 72 fps or better; the training record matches a desktop run.
 - [ ] Exit runs: end to end, a wrong-order run, the refused start logged.
 - [x] Force and scenarios:

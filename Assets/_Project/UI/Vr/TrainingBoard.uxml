@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="VrPanels.uss" />
+    <ui:VisualElement name="board" class="board" picking-mode="Ignore">
+        <ui:VisualElement class="board__header" picking-mode="Ignore">
+            <ui:Label text="Lockout training" class="board__title" />
+            <ui:Label name="result" text="Not started" class="board__chip" />
+        </ui:VisualElement>
+        <ui:Label name="who" text="" class="board__who" />
+        <ui:Label name="step" text="" class="board__step" />
+        <ui:Label name="next" text="" class="board__next" />
+        <ui:Label name="mistakes" text="" class="board__mistakes" />
+        <ui:Label name="status" text="" class="board__status" />
+    </ui:VisualElement>
+</ui:UXML>

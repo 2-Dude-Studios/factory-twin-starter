@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="VrPanels.uss" />
+    <ui:VisualElement name="hud" class="hud" picking-mode="Ignore">
+        <ui:Label name="status" text="" class="hud__status" />
+        <ui:Label name="step" text="" class="hud__step hidden" />
+        <ui:Label name="prompt" text="" class="hud__prompt hidden" />
+    </ui:VisualElement>
+</ui:UXML>

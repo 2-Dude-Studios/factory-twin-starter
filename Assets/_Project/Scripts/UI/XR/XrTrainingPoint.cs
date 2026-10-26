@@ -12,6 +12,9 @@ namespace TwoDude.FactoryTwin.UI
     [RequireComponent(typeof(TrainingPoint), typeof(XRSimpleInteractable))]
     public sealed class XrTrainingPoint : MonoBehaviour
     {
+        [Tooltip("The headset HUD that shows this point's prompt while a ray is on it.")]
+        [SerializeField] private VrHud hud;
+
         private TrainingPoint _point;
         private XRSimpleInteractable _interactable;
 
@@ -35,10 +38,26 @@ namespace TwoDude.FactoryTwin.UI
             _interactable.selectEntered.RemoveListener(OnSelectEntered);
         }
 
-        private void OnHoverEntered(HoverEnterEventArgs args) => _point.SetHovered(true);
+        private void OnHoverEntered(HoverEnterEventArgs args)
+        {
+            _point.SetHovered(true);
+            if (hud != null)
+                hud.SetPrompt(_point.Prompt);
+        }
 
-        private void OnHoverExited(HoverExitEventArgs args) => _point.SetHovered(_interactable.isHovered);
+        private void OnHoverExited(HoverExitEventArgs args)
+        {
+            _point.SetHovered(_interactable.isHovered);
+            if (hud != null && !_interactable.isHovered)
+                hud.SetPrompt(string.Empty);
+        }
 
-        private void OnSelectEntered(SelectEnterEventArgs args) => _point.Use();
+        // The prompt changes with the point's state (isolator off, then on), so it is refreshed after each use.
+        private void OnSelectEntered(SelectEnterEventArgs args)
+        {
+            _point.Use();
+            if (hud != null)
+                hud.SetPrompt(_point.Prompt);
+        }
     }
 }

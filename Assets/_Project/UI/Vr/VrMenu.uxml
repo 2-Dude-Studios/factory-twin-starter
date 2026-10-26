@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="VrPanels.uss" />
+    <ui:VisualElement name="menu" class="menu">
+        <ui:Label text="Factory twin" class="menu__title" />
+        <ui:Label text="Training" class="menu__group" />
+        <ui:Button name="menu-training" text="Lockout training" class="menu__button menu__button--key" />
+        <ui:Button name="menu-fail" text="Fail the CNC" class="menu__button" />
+        <ui:Button name="menu-reset" text="Safety reset" class="menu__button" />
+        <ui:Label text="Go to" class="menu__group" />
+        <ui:Button name="menu-go-cell" text="Cell overview" class="menu__button" />
+        <ui:Button name="menu-go-station" text="Control station" class="menu__button" />
+        <ui:Button name="menu-go-cnc" text="CNC isolator" class="menu__button" />
+        <ui:Button name="menu-exit" text="Exit VR" class="menu__button menu__button--exit" />
+    </ui:VisualElement>
+</ui:UXML>
