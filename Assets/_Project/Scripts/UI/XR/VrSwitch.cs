@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 using UnityEngine.XR.Management;
 
 namespace TwoDude.FactoryTwin.UI
@@ -10,7 +11,8 @@ namespace TwoDude.FactoryTwin.UI
     /// Training (M12): switches between the desktop view and the Quest 3 over Link. XR is never started at launch
     /// (the desktop demo and the videos stay as they are); <c>-vr</c> on the command line, or F11, starts OpenXR,
     /// turns the XR rig on and the desktop trainee and desktop camera off. F11 again, or quitting, stops XR and gives
-    /// the desktop back. The frame-rate lock is lifted while in VR so the headset runs at its own rate.
+    /// the desktop back. The frame-rate lock is lifted while in VR so the headset runs at its own rate, and a lighter
+    /// render pipeline (forward, no extra-light shadows, no SSAO) replaces the hall's Deferred+ one until VR stops.
     /// </summary>
     public sealed class VrSwitch : MonoBehaviour
     {
@@ -23,6 +25,8 @@ namespace TwoDude.FactoryTwin.UI
         [Tooltip("The desktop camera and its audio listener. Off while VR runs: the headset camera mirrors to the window.")]
         [SerializeField] private Camera desktopCamera;
         [SerializeField] private AudioListener desktopListener;
+        [Tooltip("Render pipeline used while VR runs (Assets/_Project/Settings/VR_RPAsset). Empty keeps the desktop one.")]
+        [SerializeField] private RenderPipelineAsset vrPipeline;
 
         [Header("Status (play mode, read-only)")]
         [SerializeField] private bool vrRunning;
@@ -30,6 +34,7 @@ namespace TwoDude.FactoryTwin.UI
 
         private bool _switching;
         private int _frameRateBefore;
+        private RenderPipelineAsset _pipelineBefore;
 
         public bool VrRunning => vrRunning;
 
@@ -85,6 +90,11 @@ namespace TwoDude.FactoryTwin.UI
             manager.StartSubsystems();
             _frameRateBefore = Application.targetFrameRate;
             Application.targetFrameRate = -1;
+            if (vrPipeline != null)
+            {
+                _pipelineBefore = QualitySettings.renderPipeline;
+                QualitySettings.renderPipeline = vrPipeline;
+            }
             SetDesktop(false);
             if (xrRig != null)
                 xrRig.SetActive(true);
@@ -105,6 +115,8 @@ namespace TwoDude.FactoryTwin.UI
                 manager.DeinitializeLoader();
             }
             Application.targetFrameRate = _frameRateBefore;
+            if (vrPipeline != null)
+                QualitySettings.renderPipeline = _pipelineBefore;
             SetDesktop(true);
             vrRunning = false;
             Debug.Log("[VrSwitch] VR off; desktop view back.", this);

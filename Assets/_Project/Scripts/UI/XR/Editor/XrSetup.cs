@@ -7,6 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEditor.XR.Management;
 using UnityEditor.XR.Management.Metadata;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors.Casters;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation;
@@ -31,8 +32,11 @@ namespace TwoDude.FactoryTwin.UI
         private const string RigPrefabSuffix = "Starter Assets/Prefabs/XR Origin (XR Rig).prefab";
         private const string SettingsPath = "Assets/XR/XRGeneralSettingsPerBuildTarget.asset";
         private const string OpenXRLoaderType = "UnityEngine.XR.OpenXR.OpenXRLoader";
+        private const string VrPipelinePath = "Assets/_Project/Settings/VR_RPAsset.asset";
+        private const string VrRendererPath = "Assets/_Project/Settings/VR_Renderer.asset";
 
         private static readonly Vector3 RigStart = new Vector3(-2.0f, 0f, -2.6f);
+        private const float VrFarClip = 60f;
 
         [MenuItem("Tools/Factory Twin/Configure XR (OpenXR, off at start)")]
         private static void Configure()
@@ -58,6 +62,7 @@ namespace TwoDude.FactoryTwin.UI
             AssetDatabase.SaveAssets();
 
             ImportStarterAssets();
+            VrPipeline();
             Debug.Log("[XrSetup] OpenXR on Windows: loader assigned, not started at launch; Oculus Touch and Meta Quest Touch Plus profiles on.");
         }
 
@@ -97,6 +102,18 @@ namespace TwoDude.FactoryTwin.UI
             XROrigin origin = rig.GetComponent<XROrigin>();
             Body(rig.transform, origin.Camera.transform);
 
+            // The headset camera draws the cell and its surroundings, not the far end of the hall, and no post.
+            Camera eye = origin.Camera;
+            Undo.RecordObject(eye, "Build VR Rig");
+            eye.farClipPlane = VrFarClip;
+            var eyeData = eye.GetComponent<UniversalAdditionalCameraData>();
+            if (eyeData != null)
+            {
+                Undo.RecordObject(eyeData, "Build VR Rig");
+                eyeData.renderPostProcessing = false;
+                eyeData.renderShadows = false;
+            }
+
             Camera desktopCamera = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)
                 .FirstOrDefault(c => c.CompareTag("MainCamera") && !c.transform.IsChildOf(rig.transform));
 
@@ -110,6 +127,7 @@ namespace TwoDude.FactoryTwin.UI
                 desktopOnly.GetArrayElementAtIndex(1).objectReferenceValue = hud;
             so.FindProperty("desktopCamera").objectReferenceValue = desktopCamera;
             so.FindProperty("desktopListener").objectReferenceValue = desktopCamera != null ? desktopCamera.GetComponent<AudioListener>() : null;
+            so.FindProperty("vrPipeline").objectReferenceValue = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(VrPipelinePath);
             so.ApplyModifiedProperties();
 
             TeleportFloor(cell.transform);
@@ -125,6 +143,46 @@ namespace TwoDude.FactoryTwin.UI
             Undo.CollapseUndoOperations(undoGroup);
             EditorSceneManager.MarkSceneDirty(cell.scene);
             Debug.Log($"[XrSetup] VR rig built (inactive until F11 or -vr); {points} training points usable by controller; desktop camera '{(desktopCamera != null ? desktopCamera.name : "none")}'.", rig);
+        }
+
+        // The pipeline VrSwitch uses while VR runs. The hall's Deferred+ asset (SSAO, decals, shadows on every extra
+        // light, each point light rendering six shadow faces) ran at 15–40 fps in the headset, and main-light shadows
+        // alone still cast from 1,300 objects. This one is Forward+ with no renderer features, no realtime shadows and
+        // no extra realtime lights (the hall's baked lighting carries the look), no HDR or post, 2x MSAA, render scale
+        // 0.9, and the GPU Resident Drawer: low enough to keep the PC cool over Link.
+        private static void VrPipeline()
+        {
+            var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(VrRendererPath);
+            if (renderer == null)
+            {
+                renderer = ScriptableObject.CreateInstance<UniversalRendererData>();
+                renderer.renderingMode = RenderingMode.ForwardPlus;
+                AssetDatabase.CreateAsset(renderer, VrRendererPath);
+            }
+            var pipeline = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(VrPipelinePath);
+            if (pipeline == null)
+            {
+                pipeline = UniversalRenderPipelineAsset.Create(renderer);
+                AssetDatabase.CreateAsset(pipeline, VrPipelinePath);
+            }
+            var so = new SerializedObject(pipeline);
+            so.FindProperty("m_MSAA").intValue = 2;
+            so.FindProperty("m_RenderScale").floatValue = 0.9f;
+            so.FindProperty("m_SupportsHDR").boolValue = false;
+            so.FindProperty("m_MainLightShadowsSupported").boolValue = false;
+            so.FindProperty("m_AdditionalLightsRenderingMode").intValue = 0;
+            so.FindProperty("m_AdditionalLightShadowsSupported").boolValue = false;
+            so.FindProperty("m_SoftShadowsSupported").boolValue = false;
+            so.FindProperty("m_ShadowDistance").floatValue = 0f;
+            so.FindProperty("m_RequireDepthTexture").boolValue = false;
+            so.FindProperty("m_RequireOpaqueTexture").boolValue = false;
+            // GPU Resident Drawer, as the hall's own pipeline uses: draw submission moves to the GPU, the CPU cost that
+            // was left once shadows were gone. Meshes under 1% of the screen are culled.
+            so.FindProperty("m_GPUResidentDrawerMode").intValue = 1;
+            so.FindProperty("m_SmallMeshScreenPercentage").floatValue = 1f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(pipeline);
+            AssetDatabase.SaveAssets();
         }
 
         private static XRGeneralSettingsPerBuildTarget FindPerTarget()
