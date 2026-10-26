@@ -1,0 +1,21 @@
+{
+    "name": "TwoDude.FactoryTwin.UI.XR",
+    "rootNamespace": "TwoDude.FactoryTwin.UI",
+    "references": [
+        "TwoDude.FactoryTwin.Twin",
+        "TwoDude.FactoryTwin.UI",
+        "Unity.InputSystem",
+        "Unity.XR.Management",
+        "Unity.XR.CoreUtils",
+        "Unity.XR.Interaction.Toolkit"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -265,8 +265,18 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - A wrong-order run records its errors in the training record (`lockout_20261025_163642.csv`: Start before removing the lock, 1 mistake).
 
 ## M12 — Quest 3 view over Link (exit: both beats, zone stop and lockout, run in the Quest 3 over Link at 72 fps or better, with no new signals, and the training record matches a desktop run)
-- [ ] Decide at start: whether world-space UI Toolkit with XRI covers the step panel, or the panel is rendered to a texture.
-- [ ] Add the approved packages (com.unity.xr.openxr, com.unity.xr.management, com.unity.xr.interaction.toolkit); licence lines in `docs/LICENSES.md` in the same commit.
+- [x] Decided (2026-10-26): world-space UI Toolkit. XR Interaction Toolkit 3.6 supports it (its World Space UI sample is built on UI Toolkit panel settings), and the panel only displays, it takes no input.
+- [x] Approved packages added (2026-10-26): com.unity.xr.openxr 1.18.0, com.unity.xr.management 4.6.1, com.unity.xr.interaction.toolkit 3.6.1 (with core-utils 2.6.0, legacyinputhelpers 2.1.13); licence lines in `docs/LICENSES.md`. Your UnitySkills bump in the same two files stays uncommitted.
+- [x] `Tools > Factory Twin > Configure XR (OpenXR, off at start)` (`XrSetup`, re-runnable): OpenXR loader on Windows (Standalone), `InitManagerOnStart` off so the desktop demo and the videos stay as they are; Oculus Touch and Meta Quest Touch Plus profiles on. Settings in `Assets/XR` and `Assets/XRI` (Unity's fixed paths). Also imports the XRI Starter Assets sample (`Assets/Samples/…`, Unity Companion License, on the register).
+- [x] `Tools > Factory Twin > Build VR Rig`:
+  - The Starter Assets XR Origin under `CaptureRig`, inactive, at the trainee start; its ray casters hit trigger colliders.
+  - A `HeadBody` (kinematic capsule on the Trainee layer that follows the headset) so the safety zones see the person in the headset.
+  - A teleport floor around the cell (`Cell/Training/TeleportFloor`).
+  - `XRSimpleInteractable` + `XrTrainingPoint` on all 9 training points: the controller trigger uses a point, the same `training/action` as a click.
+- [x] `VrSwitch` on `CaptureRig`: `-vr` on the command line or F11 starts OpenXR, turns the rig on and the desktop trainee, HUD, desktop camera and listener off, and lifts the 60 fps lock; F11 again or quitting gives the desktop back. New assembly `TwoDude.FactoryTwin.UI.XR` (only it and its Editor twin reference the XR packages). 287/287 EditMode.
+- [x] Smoke test without a headset (2026-10-26): OpenXR found the Meta (Oculus) runtime and stopped at `XR_ERROR_FORM_FACTOR_UNAVAILABLE` (no Quest on Link). VrSwitch reported it and left the desktop as it was; 0 console errors.
+- [ ] Step panel in the headset (decide: world-space UI Toolkit with XRI, or the panel rendered to a texture).
+- [ ] Your step: both beats in the Quest 3 over Link; frame rate at 72 fps or better; the training record matches a desktop run.
 - [ ] Exit runs: end to end, a wrong-order run, the refused start logged.
 - [x] Force and scenarios:
   - Force command `safety/zone_force` (a `ForceMode`) on both zone sensors, standing in for a person; `SignalForcer` handles it.
