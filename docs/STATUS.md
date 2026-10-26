@@ -293,6 +293,10 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
   - **VR HUD** now at the top left of the view (LazyFollow 1 m ahead, 0.26 m left, 0.14 m up; 36 × 17 cm): "NOW · STEP n OF 12" with the task at hand, "NEXT" with the one after it, then safety or line status and the point prompt. `VrHudText.NowLabel/Current/Next`, 2 more tests.
   - **Training board** is pressable (0.9 m): a 12-segment step bar (done green, due amber) and three buttons for the controller ray: Start lockout training, Fail the CNC, Safety reset. Same bus commands as the dashboard, shared with the left-controller panel through `TrainingCommands`.
   - **Left-controller panel**: the menu button or Y shows and hides it; buttons outline on hover.
+- [x] Simulated workers (2026-10-26, you approved the Quaternius "Animated Human Low Poly" pack, CC0, licence line in `docs/LICENSES.md`):
+  - `Tools > Factory Twin > Build Simulated Workers` (`WorkersSetup`, re-runnable) sets the FBX to a Generic rig with looping Idle/Walk/Working clips, builds `Assets/_Project/Art/Workers/SimulatedWorker.controller` and two hi-vis looks (our own palette textures, orange and yellow shirts), and places them under `Cell/Training/Workers`.
+  - `SimulatedWorker` walks between stops and plays each stop's animation. **Worker_Infeed** stands and works by turns at the infeed start (x 0.95, east of the warning zone); **Worker_Outfeed** works at the outfeed end (x -5.4, west of it) and walks to the aisle and back. Neither enters the robot zone, has a collider or sits on the Trainee layer, so the zone sensors never see them.
+  - Height 1.60 m to the top of the head (you found 1.69 m a little big beside the cell: belts are about 0.5 m high and the CNC about 2.0 m).
 - [ ] Your step: both beats in the Quest 3 over Link; frame rate at 72 fps or better; the training record matches a desktop run.
 - [ ] Exit runs: end to end, a wrong-order run, the refused start logged.
 - [x] Force and scenarios:
