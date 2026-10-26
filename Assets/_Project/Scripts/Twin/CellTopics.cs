@@ -117,6 +117,11 @@ namespace TwoDude.FactoryTwin.Twin
         // the protective zone (and so in the warning zone too); Off blinds both sensors; None hands them back.
         public static readonly TopicPath SafetyZoneForce = new TopicPath("safety", "zone_force");
 
+        // Commissioning stimulus (M12): where the suite sends the zone walker, a simulated worker on the Trainee layer
+        // whom the real zone sensors see (a WorkerWalk: 0 home outside both zones, 1 into the warning zone only,
+        // 2 into the protective zone). Unlike zone_force, nothing is forced.
+        public static readonly TopicPath SafetyWorkerWalk = new TopicPath("safety", "worker_walk");
+
         // The arm's speed as a fraction of full speed (0–1), written by the safety zone and read by the arm through
         // its realvirtual signal: 1 normal, reduced in the warning zone, 0 on a protective stop.
         public static readonly TopicPath ArmSpeedScale = new TopicPath("arm", "speed_scale");

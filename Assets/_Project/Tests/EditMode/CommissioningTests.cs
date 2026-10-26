@@ -185,10 +185,10 @@ namespace TwoDude.FactoryTwin.Tests
     public sealed class CommissioningScenariosTests
     {
         [Test]
-        public void DefaultSuite_HasNineScenarios_OnlyThePlcLossOneNeedsThePlc()
+        public void DefaultSuite_HasTenScenarios_OnlyThePlcLossOneNeedsThePlc()
         {
             IReadOnlyList<CommissioningScenario> suite = CommissioningScenarios.Default();
-            Assert.AreEqual(9, suite.Count);
+            Assert.AreEqual(10, suite.Count);
             CollectionAssert.AreEqual(new[] { "PLC link lost" }, suite.Where(s => s.PlcOnly).Select(s => s.Name).ToArray());
         }
 
@@ -221,6 +221,25 @@ namespace TwoDude.FactoryTwin.Tests
                     Assert.Less(action.At, scenario.DurationSeconds, $"{scenario.Name}: {action.Topic} resets too late");
                 }
             }
+        }
+
+        [Test]
+        public void WorkerScenario_UsesTheRealSensors_ForcesNothing()
+        {
+            CommissioningScenario walker = CommissioningScenarios.Default().Single(s => s.Name == "Worker walks into the robot zone");
+            CollectionAssert.DoesNotContain(walker.Actions.Select(a => a.Topic).ToArray(), CellTopics.SafetyZoneForce);
+            CollectionAssert.AreEqual(
+                new[] { (double)WorkerWalk.WarningZone, (double)WorkerWalk.ProtectiveZone, (double)WorkerWalk.Home },
+                walker.Actions.Where(a => a.Topic == CellTopics.SafetyWorkerWalk).Select(a => a.Value.AsNumber).ToArray());
+        }
+
+        [Test]
+        public void WorkerWalk_ParsesItsCommand_UnknownMeansHome()
+        {
+            Assert.AreEqual(WorkerWalk.WarningZone, ZoneWalker.Parse(1d));
+            Assert.AreEqual(WorkerWalk.ProtectiveZone, ZoneWalker.Parse(2d));
+            Assert.AreEqual(WorkerWalk.Home, ZoneWalker.Parse(0d));
+            Assert.AreEqual(WorkerWalk.Home, ZoneWalker.Parse(7d));
         }
 
         [Test]

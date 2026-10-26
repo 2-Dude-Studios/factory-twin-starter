@@ -7,7 +7,8 @@
         "TwoDude.FactoryTwin.Robot",
         "TwoDude.FactoryTwin.UI",
         "realvirtual.base",
-        "Unity.Cinemachine"
+        "Unity.Cinemachine",
+        "Unity.AI.Navigation"
     ],
     "includePlatforms": [
         "Editor"

@@ -4,8 +4,9 @@ using System.Collections.Generic;
 namespace TwoDude.FactoryTwin.Twin
 {
     /// <summary>
-    /// Commissioning: the cell's acceptance suite. Nine scenarios (six from M8, two for the safety zone from M10, one for
-    /// the lockout interlock from M11), each with the stimuli a commissioning engineer
+    /// Commissioning: the cell's acceptance suite. Ten scenarios (six from M8, two for the safety zone from M10, one for
+    /// the lockout interlock from M11, one with a simulated worker on the real zone sensors from M12), each with the
+    /// stimuli a commissioning engineer
     /// would apply on site and the behaviour the line must show. Every scenario also checks the two conveyor
     /// interlocks and that the plant ran in real time, since the soft PLC's timers count wall-clock time.
     /// </summary>
@@ -130,6 +131,29 @@ namespace TwoDude.FactoryTwin.Twin
                     ScenarioCheck.Never("Nothing moves while locked out", 7.5d, 14d, c => c.Running || c.InfeedRun || c.OutfeedRun, 0.1d),
                     ScenarioCheck.Rises("Both starts refused and counted", 7.5d, 13d, c => c.StartsRefused, 2, "refused"),
                     ScenarioCheck.Within("Line runs again once the lock is off", 16d, 5d, c => c.Running && !c.Lockout)),
+
+                // Safety zone on its real sensors (M12): no force; the zone walker, a simulated worker on the Trainee
+                // layer, walks in and the zone sensors see them as they would the trainee.
+                Scenario("Worker walks into the robot zone", "A simulated worker walks into the warning zone, where the arm must slow, then into the protective zone, where the arm and the line must stop; a reset pressed while they are inside is refused, and one pressed after they walk out restarts the line. The real zone sensors, nothing forced.", 50d,
+                    new[]
+                    {
+                        Act(1d, CellTopics.SafetyWorkerWalk, SignalValue.FromNumber((int)WorkerWalk.WarningZone), c => c.ArmBusy),
+                        Act(9d, CellTopics.SafetyWorkerWalk, SignalValue.FromNumber((int)WorkerWalk.ProtectiveZone)),
+                        Act(13d, CellTopics.SafetyReset, SignalValue.FromBool(true)),
+                        Act(13.5d, CellTopics.SafetyReset, SignalValue.FromBool(false)),
+                        Act(17d, CellTopics.SafetyWorkerWalk, SignalValue.FromNumber((int)WorkerWalk.Home)),
+                        Act(27d, CellTopics.SafetyReset, SignalValue.FromBool(true)),
+                        Act(27.5d, CellTopics.SafetyReset, SignalValue.FromBool(false)),
+                    },
+                    ScenarioCheck.Within("Arm slows in the warning zone", 1d, 7d, c => c.ArmSpeedScale > 0d && c.ArmSpeedScale < 1d),
+                    ScenarioCheck.Never("No stop in the warning zone", 1d, 9d, c => c.ProtectiveStop, 0d),
+                    ScenarioCheck.Within("Protective stop when the worker steps in", 9d, 3d, c => c.ProtectiveStop && c.ZoneOccupied),
+                    ScenarioCheck.Never("Arm stops within one physics tick", 0d, 50d, c => c.ZoneOccupied && c.ArmSpeedScale > 0d, OnePhysicsTick),
+                    ScenarioCheck.Never("Conveyors stop while the worker is inside", 0d, 50d, c => c.ZoneOccupied && (c.InfeedRun || c.OutfeedRun), 0.1d),
+                    ScenarioCheck.Never("Reset refused while the worker is inside", 13.5d, 17d, c => !c.ProtectiveStop, 0d),
+                    ScenarioCheck.Never("No restart without a reset", 18.5d, 27d, c => c.Running || c.InfeedRun || c.OutfeedRun || c.ArmSpeedScale > 0d, 0.1d),
+                    ScenarioCheck.Within("Line runs again after the reset", 27d, 6d, c => c.Running && c.ArmSpeedScale >= 1d),
+                    ScenarioCheck.PartsOut("Parts flow after the reset", 27d, 50d, 1)),
             };
         }
 
