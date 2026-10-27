@@ -4,6 +4,7 @@
         <ui:Label name="now-label" text="LOCKOUT TRAINING" class="hud__label" />
         <ui:Label name="current" text="" class="hud__current" />
         <ui:Label name="where" text="" class="hud__where hidden" />
+        <ui:Label name="refusal" text="" class="hud__refusal hidden" />
         <ui:VisualElement name="next-row" class="hud__next-row hidden" picking-mode="Ignore">
             <ui:Label text="NEXT" class="hud__label" />
             <ui:Label name="next" text="" class="hud__next" />

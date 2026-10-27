@@ -34790,6 +34790,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: TwoDude.FactoryTwin.UI.XR::TwoDude.FactoryTwin.UI.VrHud
   document: {fileID: 943161925}
   context: {fileID: 1633254721}
+  refusalSeconds: 5
 --- !u!114 &943161924
 MonoBehaviour:
   m_ObjectHideFlags: 0

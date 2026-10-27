@@ -107,6 +107,9 @@ namespace TwoDude.FactoryTwin.Twin
         public int Done { get; private set; }
         public int Errors { get; private set; }
         public bool IsRunning { get; private set; }
+
+        /// <summary>True if the last attempt repeated a mistake already made on the same step: refused, not counted.</summary>
+        public bool LastWasRepeat { get; private set; }
         public bool IsComplete => Done == Steps.Count;
         public IReadOnlyList<TrainingEvent> Events => _events;
 
@@ -140,10 +143,13 @@ namespace TwoDude.FactoryTwin.Twin
 
         /// <summary>
         /// The trainee did <paramref name="action"/> at <paramref name="atSeconds"/> from the start. True if it was
-        /// the step due; false if it was a mistake (counted) or no run is in progress.
+        /// the step due; false if it was a mistake or no run is in progress. A mistake is counted and recorded once
+        /// per step: doing the same wrong thing again on the same step is refused but not counted again
+        /// (<see cref="LastWasRepeat"/>), so one misunderstanding costs one mistake, not one per try.
         /// </summary>
         public bool Attempt(LockoutAction action, double atSeconds)
         {
+            LastWasRepeat = false;
             if (!IsRunning || IsComplete || action == LockoutAction.None)
                 return false;
 
@@ -157,6 +163,14 @@ namespace TwoDude.FactoryTwin.Twin
                 return true;
             }
 
+            foreach (TrainingEvent e in _events)
+            {
+                if (e.Mistake && e.Step == Done + 1 && e.Action == action)
+                {
+                    LastWasRepeat = true;
+                    return false;
+                }
+            }
             Errors++;
             _events.Add(new TrainingEvent(atSeconds, Done + 1, action, true, $"{Describe(action)} before: {due.Title}"));
             return false;

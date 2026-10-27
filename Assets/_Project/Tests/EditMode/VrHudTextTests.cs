@@ -66,6 +66,14 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void Refusal_SaysWhatIsDueAndWhere()
+        {
+            Assert.AreEqual("Not yet: Remove lock and tag. First: Clear the area and notify employees (Control station: white all-clear button).",
+                VrHudText.Refusal(LockoutAction.RemoveLock, 9, TrainingOutcome.InProgress));
+            Assert.AreEqual(string.Empty, VrHudText.Refusal(LockoutAction.Start, 0, TrainingOutcome.Idle));
+        }
+
+        [Test]
         public void Prompt_SaysHowToUseThePoint()
         {
             Assert.AreEqual("CNC isolator: switch off  ·  pull the trigger", VrHudText.Prompt("CNC isolator: switch off"));

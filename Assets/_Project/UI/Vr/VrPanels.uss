@@ -85,6 +85,7 @@
 .hud__label { font-size: 15px; -unity-font-style: bold; color: rgb(160, 168, 176); letter-spacing: 1px; }
 .hud__current { font-size: 28px; -unity-font-style: bold; color: rgb(240, 242, 244); white-space: normal; margin: 2px 0 8px 0; }
 .hud__where { font-size: 19px; color: rgb(255, 174, 13); white-space: normal; margin: -4px 0 8px 0; }
+.hud__refusal { font-size: 19px; -unity-font-style: bold; color: rgb(255, 80, 64); white-space: normal; margin: 0 0 8px 0; }
 .hud__next-row { margin-bottom: 8px; }
 .hud__next { font-size: 21px; color: rgb(200, 206, 212); white-space: normal; margin-top: 2px; }
 .hud__status { font-size: 19px; color: rgb(200, 206, 212); }

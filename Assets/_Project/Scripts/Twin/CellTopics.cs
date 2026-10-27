@@ -139,9 +139,10 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath PressLockCommand = new TopicPath("press", "lock_cmd");
         public static readonly TopicPath TrainingRun = new TopicPath("training", "run");
 
-        // The LockoutAction the trainee just got wrong, published before training/errors goes up. Subscribers see the
-        // count before they see training/action itself (the controller reacts inside that delivery), so the event
-        // log names the mistake from here.
+        // The LockoutAction the trainee just got wrong, published for every refused action, before training/errors
+        // goes up (it does not for a repeat of a mistake already made on that step). Subscribers see the count
+        // before they see training/action itself (the controller reacts inside that delivery), so the event log
+        // names the mistake from here, and the headset HUD says what is due instead.
         public static readonly TopicPath TrainingMistake = new TopicPath("training", "mistake");
         public static readonly TopicPath TrainingAction = new TopicPath("training", "action");
         public static readonly TopicPath TrainingStep = new TopicPath("training", "step");

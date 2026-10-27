@@ -8,15 +8,19 @@ namespace TwoDude.FactoryTwin.UI
     /// <summary>
     /// Training (M12): the headset HUD (VrHud.uxml), a small world-space panel held at the top left of the view.
     /// It leads with the task at hand, where to do it, and the next one, then safety or line status, then the prompt
-    /// for the training point under the controller ray (set by XrTrainingPoint). Read from the bus; it changes nothing.
+    /// for the training point under the controller ray (set by XrTrainingPoint). When an action is refused it says, for
+    /// a few seconds, what is due instead. Read from the bus; it changes nothing.
     /// </summary>
     public sealed class VrHud : MonoBehaviour
     {
         [SerializeField] private UIDocument document;
         [SerializeField] private CellContext context;
+        [Tooltip("How long the HUD says what is due after an action is refused.")]
+        [SerializeField] private float refusalSeconds = 5f;
 
         private IDisposable _subscription;
-        private Label _nowLabel, _current, _where, _next, _status, _prompt;
+        private Label _nowLabel, _current, _where, _refusal, _next, _status, _prompt;
+        private float _refusalUntil;
         private VisualElement _nextRow;
         private SafetyState _safety;
         private CellState _line;
@@ -31,6 +35,7 @@ namespace TwoDude.FactoryTwin.UI
             _nowLabel = root.Q<Label>("now-label");
             _current = root.Q<Label>("current");
             _where = root.Q<Label>("where");
+            _refusal = root.Q<Label>("refusal");
             _nextRow = root.Q("next-row");
             _next = root.Q<Label>("next");
             _status = root.Q<Label>("status");
@@ -64,8 +69,29 @@ namespace TwoDude.FactoryTwin.UI
 
         private void OnMessage(SignalMessage message)
         {
+            // The step due has not moved yet when a refusal arrives, so it names the step still to do.
+            if (message.Topic == CellTopics.TrainingMistake && _refusal != null)
+            {
+                string text = VrHudText.Refusal((LockoutAction)(int)message.Value.AsNumber, _stepNumber, _outcome);
+                _refusal.text = text;
+                _refusal.EnableInClassList("hidden", string.IsNullOrEmpty(text));
+                _refusalUntil = Time.time + refusalSeconds;
+                return;
+            }
+            // The right step done: the hint has served its purpose.
+            if (message.Topic == CellTopics.TrainingStep && _refusalUntil > 0f)
+                _refusalUntil = Time.time;
             if (Read(message))
                 Show();
+        }
+
+        private void Update()
+        {
+            if (_refusalUntil > 0f && Time.time >= _refusalUntil)
+            {
+                _refusalUntil = 0f;
+                _refusal.EnableInClassList("hidden", true);
+            }
         }
 
         private bool Read(SignalMessage message)

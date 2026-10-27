@@ -56,6 +56,27 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void TheSameMistakeOnTheSameStep_IsCountedOnce()
+        {
+            LockoutProcedure run = Started();
+            run.Attempt(LockoutAction.Notify, 1d);
+            for (int i = 0; i < 5; i++)
+                Assert.IsFalse(run.Attempt(LockoutAction.ChangeTool, 2d + i));
+            Assert.IsTrue(run.LastWasRepeat);
+            Assert.AreEqual(1, run.Errors);
+            Assert.AreEqual(2, run.Events.Count(e => e.Mistake || e.Step == 1));
+
+            Assert.IsFalse(run.Attempt(LockoutAction.Inspect, 10d));
+            Assert.IsFalse(run.LastWasRepeat, "a different wrong action is a new mistake");
+            Assert.AreEqual(2, run.Errors);
+
+            run.Attempt(LockoutAction.Stop, 11d);
+            Assert.IsFalse(run.Attempt(LockoutAction.ChangeTool, 12d));
+            Assert.IsFalse(run.LastWasRepeat, "the same wrong action on a later step counts again");
+            Assert.AreEqual(3, run.Errors);
+        }
+
+        [Test]
         public void OutOfOrder_IsCountedNamedAndDoesNotMoveTheProcedureOn()
         {
             LockoutProcedure run = Started();

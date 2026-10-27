@@ -69,6 +69,19 @@ namespace TwoDude.FactoryTwin.UI
                 : string.Empty;
         }
 
+        /// <summary>
+        /// What the HUD says when an action is refused: what was refused, and the step due with where to do it;
+        /// empty outside a run.
+        /// </summary>
+        public static string Refusal(LockoutAction refused, int step, TrainingOutcome outcome)
+        {
+            if (outcome != TrainingOutcome.InProgress || step < 1 || step > LockoutProcedure.Steps.Count)
+                return string.Empty;
+            LockoutStep due = LockoutProcedure.Steps[step - 1];
+            string where = TrainingPoints.TryKindFor(due.Action, out TrainingPointKind kind) ? " (" + TrainingPoints.Where(kind) + ")" : string.Empty;
+            return $"Not yet: {LockoutProcedure.Describe(refused)}. First: {due.Title}{where}.";
+        }
+
         /// <summary>How to use a point in the headset, in a sentence, for the HUD's where line.</summary>
         public static string How(TrainingPointKind kind)
         {
