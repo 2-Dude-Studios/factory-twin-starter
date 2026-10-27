@@ -38,11 +38,17 @@ namespace TwoDude.FactoryTwin.Twin
         private static readonly Color Amber = new Color(1f, 0.68f, 0.05f);
         private static readonly Color Red = new Color(1f, 0.12f, 0.08f);
 
-        // Props from the Factory Training sample (placed, never edited). The conveyors cross the protective zone's
-        // east and west edges, so the fence closes the north edge (the CNC side) and the south edge, the trainee's
-        // side, stays open with a cone at each end: the opening the zone sensor guards.
+        // Props from the Factory Training sample (placed, never edited). The protective zone's south edge, the
+        // trainee's side, stays open with a cone at each end: the opening the zone sensor guards. The walkway fence
+        // goes round the press in whole pieces, never stretched: one run along its back (north: chip conveyor and
+        // coolant tank), one along the arm zone's north edge from the press's door face westward. The door, screen
+        // and tool shelves face west, toward the arm, so that run is the south side of an operator aisle in front of
+        // them, the hall's water barriers its north side; it opens west onto the walkway. The spindle side and the
+        // east end (isolator, air valve, inspection door) stay open for the lockout.
         private const string FencePrefabPath = "Assets/ThirdParty/FactoryTraining/Prefabs/env/walkway_Fence_prefab.prefab";
         private const string ConePrefabPath = "Assets/ThirdParty/FactoryTraining/Prefabs/env/koneSmall_prefab.prefab";
+        private const string PressPath = "Cell/Press/PressMachine";
+        private const float FenceClearance = 0.35f;
 
         private static readonly Vector3 TraineeStart = new Vector3(-2.0f, 0f, -2.6f);
         private const float EyeHeight = 1.65f;
@@ -233,36 +239,55 @@ namespace TwoDude.FactoryTwin.Twin
                 return;
             }
 
-            // Measure one fence piece, lay its long side along x, and tile it across the north edge.
-            GameObject probe = Place(fence, props, Vector3.zero, 0f);
-            Bounds size = WorldBounds(probe);
-            bool alongZ = size.size.z > size.size.x;
-            float pieceLength = Mathf.Max(size.size.x, size.size.z);
-            Undo.DestroyObjectImmediate(probe);
-
-            float edge = ProtectiveHalfSize * 2f;
-            int pieces = Mathf.Max(1, Mathf.RoundToInt(edge / pieceLength));
-            float step = edge / pieces;
-            float northZ = ArmBase.z + ProtectiveHalfSize + 0.1f;
-            for (int i = 0; i < pieces; i++)
-            {
-                float x = ArmBase.x - ProtectiveHalfSize + step * (i + 0.5f);
-                GameObject piece = Place(fence, props, new Vector3(x, 0f, northZ), alongZ ? 90f : 0f);
-                // Stretch or shrink along the rail so the pieces end at the zone's corners.
-                Vector3 scale = piece.transform.localScale;
-                if (alongZ)
-                    scale.z *= step / pieceLength;
-                else
-                    scale.x *= step / pieceLength;
-                piece.transform.localScale = scale;
-                // Centre the piece on its slot whatever its pivot.
-                Vector3 offset = new Vector3(x, 0f, northZ) - WorldBounds(piece).center;
-                piece.transform.position += new Vector3(offset.x, 0f, offset.z);
-            }
+            GameObject press = GameObject.Find(PressPath);
+            if (press == null)
+                Debug.LogWarning($"[SafetyZoneSetup] No {PressPath}; press fence skipped.");
+            else
+                PressFence(fence, props, WorldBounds(press));
 
             float southZ = ArmBase.z - ProtectiveHalfSize - 0.15f;
             Place(cone, props, new Vector3(ArmBase.x - ProtectiveHalfSize - 0.15f, 0f, southZ), 0f);
             Place(cone, props, new Vector3(ArmBase.x + ProtectiveHalfSize + 0.15f, 0f, southZ), 0f);
+        }
+
+        // The back run, FenceClearance off the machine, east from its north-west corner past the north-east one; the
+        // aisle's run along the arm zone's north edge, west from just off the door face past the zone's west edge.
+        // Each run is as many whole pieces as fill it best.
+        private static void PressFence(GameObject fence, Transform props, Bounds press)
+        {
+            // Measure one piece: its long side and which yaw lays it along x.
+            GameObject probe = Place(fence, props, Vector3.zero, 0f);
+            Bounds size = WorldBounds(probe);
+            Undo.DestroyObjectImmediate(probe);
+            bool alongZ = size.size.z > size.size.x;
+            float length = Mathf.Max(size.size.x, size.size.z);
+            float depth = Mathf.Min(size.size.x, size.size.z);
+
+            float backX = press.min.x - FenceClearance;
+            float backZ = press.max.z + FenceClearance + depth / 2f;
+            int back = Run(fence, props, new Vector3(backX, 0f, backZ), Vector3.right, press.max.x + FenceClearance - backX, length, alongZ);
+
+            float aisleX = press.min.x - 0.1f;
+            float aisleZ = ArmBase.z + ProtectiveHalfSize + 0.05f + depth / 2f;
+            int aisle = Run(fence, props, new Vector3(aisleX, 0f, aisleZ), Vector3.left, aisleX - (ArmBase.x - ProtectiveHalfSize), length, alongZ);
+            Debug.Log($"[SafetyZoneSetup] Press fence: {back} piece(s) along the back, {aisle} along the aisle, round press bounds {press.min:F2} to {press.max:F2}.");
+        }
+
+        private static int Run(GameObject fence, Transform props, Vector3 corner, Vector3 direction, float span, float length,
+            bool alongZ)
+        {
+            int count = Mathf.Max(1, Mathf.RoundToInt(span / length));
+            bool alongX = Mathf.Abs(direction.x) > 0.5f;
+            float yaw = alongX == alongZ ? 90f : 0f;
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 centre = corner + direction * (length * (i + 0.5f));
+                GameObject piece = Place(fence, props, centre, yaw);
+                // Centre the piece on its slot whatever its pivot.
+                Vector3 offset = centre - WorldBounds(piece).center;
+                piece.transform.position += new Vector3(offset.x, 0f, offset.z);
+            }
+            return count;
         }
 
         private static GameObject Place(GameObject prefab, Transform parent, Vector3 position, float yaw)
