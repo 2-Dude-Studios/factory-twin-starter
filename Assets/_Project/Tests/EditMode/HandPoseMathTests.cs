@@ -76,6 +76,31 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void ControllerInPalm_FingersForwardAndThumbUp_OnTheController()
+        {
+            foreach (bool left in new[] { true, false })
+            {
+                // The palm joint's frame as seen from the controller: the inverse of the controller in the palm.
+                Quaternion palmInController = Quaternion.Inverse(HandPoseMath.ControllerInPalm(left).rotation);
+                Assert.AreEqual(1f, Vector3.Dot(palmInController * Vector3.forward, Vector3.forward), Tolerance, "fingers");
+                Vector3 thumbward = left ? Vector3.right : Vector3.left;
+                Assert.AreEqual(1f, Vector3.Dot(palmInController * thumbward, Vector3.up), Tolerance, "thumb");
+            }
+        }
+
+        [Test]
+        public void ControllerAttach_LinesThePropsGripUpWithTheHandsGrip()
+        {
+            // A prop held by its controller attach sits in a hand exactly as its grip frame says.
+            var gripInProp = new Pose(new Vector3(0f, -0.05f, 0f), Quaternion.LookRotation(Vector3.up, Vector3.right));
+            Pose attach = HandPoseMath.ControllerAttach(gripInProp);
+            // With the attach on the controller, the prop's grip sits at inverse(attach) * grip in the controller's frame.
+            Pose gripInController = HandPoseMath.Multiply(HandPoseMath.Inverse(attach), gripInProp);
+            Assert.AreEqual(0f, gripInController.position.magnitude, Tolerance);
+            Assert.AreEqual(1f, Mathf.Abs(Quaternion.Dot(gripInController.rotation, HandPoseMath.GripInController)), Tolerance);
+        }
+
+        [Test]
         public void AnchorFor_TurnsTheLeftHandHalfAboutTheFist()
         {
             Quaternion right = Quaternion.LookRotation(Vector3.up, Vector3.back);

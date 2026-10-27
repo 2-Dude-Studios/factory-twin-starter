@@ -85,7 +85,7 @@ namespace TwoDude.FactoryTwin.Twin
                 case TrainingPointKind.LockHasp: return "CNC, east end: the hasp under the isolator; your lock is on the board beside it";
                 case TrainingPointKind.AirDumpValve: return "CNC, east end, low down: the air-dump valve lever";
                 case TrainingPointKind.ToolChange: return "CNC, front: the spindle; the new tool is on the cart";
-                case TrainingPointKind.Inspection: return "CNC, east end: white inspection plate";
+                case TrainingPointKind.Inspection: return "CNC, east end: inspection door above the air valve";
                 default: return string.Empty;
             }
         }

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using TMPro;
 using TwoDude.FactoryTwin.UI;
 using Unity.Cinemachine;
 using UnityEditor;
@@ -11,7 +13,9 @@ namespace TwoDude.FactoryTwin.Twin
     /// Training (M11): builds the lockout training points around the CNC, repeatably, from the machine's measured
     /// bounds. A line control station east of the CNC (Start, Stop, intercom Notify and All clear), the isolator, its
     /// lock hasp, the air dump valve and the inspection plate on the CNC's east end, the tool change on its front.
-    /// Also gives the trainee the interactor and the HUD. Running it again rebuilds the points in place.
+    /// Also gives the trainee the interactor and the HUD. Running it again rebuilds the points in place. Parts with
+    /// a model of the same name in Assets/_Project/Art/Training (tools/blender/training_details.py) use its mesh;
+    /// the rest are placeholder primitives. The buttons stay primitive caps, so their lit colours are unchanged.
     /// </summary>
     internal static class TrainingPointsSetup
     {
@@ -19,6 +23,11 @@ namespace TwoDude.FactoryTwin.Twin
         private const string PoleMaterialPath = "Assets/_Project/Materials/StackLightPole.mat";
         private const string HudUxmlPath = "Assets/_Project/UI/TraineeHud.uxml";
         private const string PanelSettingsPath = "Assets/_Project/UI/DashboardPanelSettings.asset";
+        private const string ModelFolder = "Assets/_Project/Art/Training";
+        // The station's legends and header: about 11 mm capitals, read from an arm's length.
+        private const float LegendSize = 0.15f;
+
+        private static Dictionary<string, Transform> _models = new Dictionary<string, Transform>();
 
         private static readonly Color Green = new Color(0.15f, 0.85f, 0.35f);
         private static readonly Color Red = new Color(1f, 0.12f, 0.08f);
@@ -50,6 +59,7 @@ namespace TwoDude.FactoryTwin.Twin
                 return;
             }
 
+            _models = LoadModels();
             var lamp = AssetDatabase.LoadAssetAtPath<Material>(LampMaterialPath);
             var pole = AssetDatabase.LoadAssetAtPath<Material>(PoleMaterialPath);
             Bounds b = MachineBounds(cnc);
@@ -61,15 +71,30 @@ namespace TwoDude.FactoryTwin.Twin
             for (int i = points.childCount - 1; i >= 0; i--)
                 Undo.DestroyObjectImmediate(points.GetChild(i).gameObject);
 
-            // Line control station east of the CNC, its panel facing the cell (south), clear of both safety zones.
+            // Line control station east of the CNC, its panel facing the cell (south), clear of both safety zones: a
+            // 440 x 300 mm enclosure on a post, four buttons in chrome bezels, each with its legend beside it.
             var stationBase = new Vector3(b.max.x + 0.9f, 0f, b.min.z - 0.3f);
             Part(points, "ControlStation_Post", PrimitiveType.Cube, stationBase + new Vector3(0f, 0.5f, 0f), new Vector3(0.1f, 1f, 0.1f), pole);
-            Part(points, "ControlStation_Panel", PrimitiveType.Cube, stationBase + new Vector3(0f, 1.1f, 0f), new Vector3(0.34f, 0.24f, 0.06f), pole);
+            Part(points, "ControlStation_Panel", PrimitiveType.Cube, stationBase + new Vector3(0f, 1.1f, 0f), new Vector3(0.44f, 0.3f, 0.07f), pole);
             Vector3 face = stationBase + new Vector3(0f, 1.1f, -0.035f);
-            Button(points, "StartButton", TrainingPointKind.StartButton, face + new Vector3(-0.11f, 0.05f, 0f), Green, lamp, context);
-            Button(points, "StopButton", TrainingPointKind.StopButton, face + new Vector3(-0.11f, -0.05f, 0f), Red, lamp, context);
-            Button(points, "NotifyButton", TrainingPointKind.NotifyButton, face + new Vector3(0.09f, 0.05f, 0f), Blue, lamp, context);
-            Button(points, "AllClearButton", TrainingPointKind.AllClearButton, face + new Vector3(0.09f, -0.05f, 0f), White, lamp, context);
+            var buttons = new (string name, TrainingPointKind kind, Vector2 at, Color color, string legend)[]
+            {
+                ("StartButton", TrainingPointKind.StartButton, new Vector2(-0.14f, 0.065f), Green, "START"),
+                ("StopButton", TrainingPointKind.StopButton, new Vector2(-0.14f, -0.065f), Red, "STOP"),
+                ("NotifyButton", TrainingPointKind.NotifyButton, new Vector2(0.07f, 0.065f), Blue, "NOTIFY"),
+                ("AllClearButton", TrainingPointKind.AllClearButton, new Vector2(0.07f, -0.065f), White, "ALL CLEAR"),
+            };
+            foreach (var button in buttons)
+            {
+                Vector3 at = face + new Vector3(button.at.x, button.at.y, 0f);
+                Button(points, button.name, button.kind, at, button.color, lamp, context);
+                if (_models.ContainsKey("PushButton_Bezel"))
+                    Part(points, button.name + "_Bezel", PrimitiveType.Cylinder, at, Vector3.one, pole, "PushButton_Bezel");
+                Label(points, button.name + "_Legend", button.legend, at + new Vector3(0.054f, 0.0095f, -0.0006f), Quaternion.identity,
+                    new Vector2(0.09f, 0.02f), Color.white, LegendSize);
+            }
+            Label(points, "ControlStation_Header", "LINE CONTROL  -  CELL 1", face + new Vector3(-0.17f, 0.128f, -0.0006f), Quaternion.identity,
+                new Vector2(0.34f, 0.022f), Color.white, LegendSize);
 
             // On the CNC's east end, outside both safety zones: isolator with the lock hasp under it, the air dump
             // valve, and the inspection plate at the back.
@@ -80,8 +105,15 @@ namespace TwoDude.FactoryTwin.Twin
             // The procedure card above the isolator, read first.
             Vector3 card = new Vector3(east, 1.62f, b.center.z - 0.5f);
             Point(points, "ProcedureCard", TrainingPointKind.ProcedureCard, PrimitiveType.Cube, card, new Vector3(0.02f, 0.36f, 0.30f), Yellow, lamp, context);
-            Label(points, "ProcedureCard_Text", ProcedureText, card + new Vector3(0.012f, 0.16f, -0.135f), 0.0026f, Color.black);
-            Point(points, "Inspection", TrainingPointKind.Inspection, PrimitiveType.Cube, new Vector3(b.max.x + 0.02f, 1.0f, b.center.z + 0.6f), new Vector3(0.02f, 0.2f, 0.2f), White, lamp, context);
+            Label(points, "ProcedureCard_Text", ProcedureText, card + new Vector3(0.0105f, 0.165f, -0.14f), Quaternion.Euler(0f, -90f, 0f),
+                new Vector2(0.28f, 0.33f), Color.black);
+            // The inspection access door, a window onto the tool area with the guard interlock and its checklist,
+            // flush on the east end above the air valve: further north the machine's side steps in and it floated.
+            var inspection = new Vector3(b.max.x + 0.011f, 1.2f, b.center.z + 0.1f);
+            Point(points, "Inspection", TrainingPointKind.Inspection, PrimitiveType.Cube, inspection, new Vector3(0.02f, 0.2f, 0.2f), White, lamp, context);
+            if (_models.ContainsKey("Inspection"))
+                Label(points, "Inspection_Checklist", "INSPECT BEFORE RESTART\n- tools removed\n- guards closed\n- area clear",
+                    inspection + new Vector3(0.0032f, -0.027f, -0.078f), Quaternion.Euler(0f, -90f, 0f), new Vector2(0.126f, 0.056f), Color.black);
 
             // The tool change at the east corner of the CNC's front: most of the front is behind the fence, and standing
             // further west would put the trainee in the protective zone.
@@ -148,10 +180,11 @@ namespace TwoDude.FactoryTwin.Twin
             Vector3 size, Color color, Material material, CellContext context)
         {
             GameObject go = Part(parent, name, shape, position, size, material);
-            // A trigger box a little larger than the part, so it is easy to aim at; never in the way of anything.
+            // A trigger box a little larger than the part, so it is easy to aim at; never in the way of anything. A
+            // primitive is scaled to the size; a model is at its real size.
             var box = Undo.AddComponent<BoxCollider>(go);
             box.isTrigger = true;
-            box.size = Vector3.one * 1.6f;
+            box.size = _models.ContainsKey(name) ? size * 1.6f : Vector3.one * 1.6f;
 
             var point = Undo.AddComponent<TrainingPoint>(go);
             var so = new SerializedObject(point);
@@ -165,38 +198,83 @@ namespace TwoDude.FactoryTwin.Twin
             return go;
         }
 
-        // Plain text on a part's +X face (the CNC's east end), read from the east; upper-left anchored at the position.
-        private static void Label(Transform parent, string name, string text, Vector3 position, float characterSize, Color color)
+        // Text on a part's face, its upper-left corner at the position, sized to fit the box (metres). The rotation
+        // turns it to face its reader: identity reads from the south, (0, -90, 0) from the east. TextMeshPro, not
+        // TextMesh: the legacy font material ignores depth and showed through the card from behind. A plain transform
+        // carries the place, since a RectTransform under a non-UI parent keeps only its anchored position.
+        private static void Label(Transform parent, string name, string text, Vector3 position, Quaternion rotation, Vector2 box, Color color,
+            float fontSize = 0f)
         {
             var go = new GameObject(name);
             Undo.RegisterCreatedObjectUndo(go, "Build Training Points");
             go.transform.SetParent(parent, false);
-            go.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, -90f, 0f));
-            var mesh = go.AddComponent<TextMesh>();
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            mesh.font = font;
-            mesh.text = text;
-            mesh.fontSize = 64;
-            mesh.characterSize = characterSize;
-            mesh.anchor = TextAnchor.UpperLeft;
-            mesh.color = color;
-            go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
+            go.transform.SetPositionAndRotation(position, rotation);
+            var words = new GameObject("Text");
+            words.transform.SetParent(go.transform, false);
+            var tmp = words.AddComponent<TextMeshPro>();
+            tmp.rectTransform.pivot = new Vector2(0f, 1f);
+            tmp.rectTransform.sizeDelta = box;
+            tmp.rectTransform.anchoredPosition = Vector2.zero;
+            tmp.text = text;
+            // A fixed size keeps a set of labels alike; without one the text fits its box.
+            tmp.enableAutoSizing = fontSize <= 0f;
+            tmp.fontSize = fontSize > 0f ? fontSize : 0.1f;
+            tmp.fontSizeMin = 0.01f;
+            tmp.fontSizeMax = 0.3f;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.alignment = TextAlignmentOptions.TopLeft;
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            tmp.color = color;
         }
 
-        private static GameObject Part(Transform parent, string name, PrimitiveType shape, Vector3 position, Vector3 size, Material material)
+        // A part: the model of that name (or of model) at its real size when there is one, else a placeholder
+        // primitive scaled to the size.
+        private static GameObject Part(Transform parent, string name, PrimitiveType shape, Vector3 position, Vector3 size, Material material,
+            string model = null)
         {
-            GameObject go = GameObject.CreatePrimitive(shape);
-            go.name = name;
-            Object.DestroyImmediate(go.GetComponent<Collider>());
+            GameObject go;
+            if (_models.TryGetValue(model ?? name, out Transform source))
+            {
+                go = new GameObject(name);
+                go.AddComponent<MeshFilter>().sharedMesh = source.GetComponent<MeshFilter>().sharedMesh;
+                go.AddComponent<MeshRenderer>().sharedMaterials = source.GetComponent<MeshRenderer>().sharedMaterials;
+                go.transform.localScale = source.localScale;
+                go.transform.rotation = source.localRotation;
+            }
+            else
+            {
+                go = GameObject.CreatePrimitive(shape);
+                go.name = name;
+                Object.DestroyImmediate(go.GetComponent<Collider>());
+                go.transform.localScale = size;
+                go.GetComponent<MeshRenderer>().sharedMaterial = material;
+            }
             Undo.RegisterCreatedObjectUndo(go, "Build Training Points");
-            go.transform.SetParent(parent, false);
+            go.transform.SetParent(parent, true);
             go.transform.position = position;
-            go.transform.localScale = size;
             go.layer = 0;
-            var renderer = go.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            go.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             return go;
+        }
+
+        // Every object in the models under Assets/_Project/Art/Training, by name, that carries a mesh.
+        private static Dictionary<string, Transform> LoadModels()
+        {
+            var models = new Dictionary<string, Transform>();
+            if (!AssetDatabase.IsValidFolder(ModelFolder))
+                return models;
+            foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { ModelFolder }))
+            {
+                var root = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+                if (root == null)
+                    continue;
+                foreach (MeshFilter filter in root.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    if (filter.sharedMesh != null && filter.GetComponent<MeshRenderer>() != null && !models.ContainsKey(filter.name))
+                        models.Add(filter.name, filter.transform);
+                }
+            }
+            return models;
         }
 
         private static void WireTrainee(GameObject trainee)

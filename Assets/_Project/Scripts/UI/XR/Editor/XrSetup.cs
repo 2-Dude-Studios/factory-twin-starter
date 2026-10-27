@@ -567,7 +567,8 @@ namespace TwoDude.FactoryTwin.UI
                 var grab = new GameObject("Grab");
                 Transform palm = FindDeep(tracked.transform, prefix + "Palm");
                 grab.transform.SetParent(palm, false);
-                Pose grip = HandPoseMath.GripInPalm(left);
+                // The grab's attach sits where a controller's frame would in this palm, so props hold the same in both.
+                Pose grip = HandPoseMath.ControllerInPalm(left);
                 grab.transform.SetLocalPositionAndRotation(grip.position, grip.rotation);
                 var sphere = grab.AddComponent<SphereCollider>();
                 sphere.isTrigger = true;

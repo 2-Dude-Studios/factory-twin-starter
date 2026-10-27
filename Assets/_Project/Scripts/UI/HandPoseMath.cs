@@ -95,6 +95,29 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         /// <summary>
+        /// The grip frame in the controller's own frame (the Quest controller's pose as the rig tracks it). Taking the
+        /// controller's pose for the grip frame drew the hands pointing at the floor, a quarter turn down from the
+        /// trainee's real hand (seen in the headset, 2026-10-27); a quarter turn about the palm's normal brings the
+        /// fingers forward and the thumb up.
+        /// </summary>
+        public static readonly Quaternion GripInController = Quaternion.Euler(-90f, 0f, 0f);
+
+        /// <summary>The controller's frame in the palm joint's frame: where a held prop's attach point sits in a hand.</summary>
+        public static Pose ControllerInPalm(bool left)
+        {
+            return Multiply(GripInPalm(left), new Pose(Vector3.zero, Quaternion.Inverse(GripInController)));
+        }
+
+        /// <summary>
+        /// The attach pose (lined up with the controller's frame by XRI) for a prop whose grip frame, in the prop's
+        /// own space, is gripInProp; sockets use the same pose, so the prop's origin lands on the socket.
+        /// </summary>
+        public static Pose ControllerAttach(Pose gripInProp)
+        {
+            return Multiply(gripInProp, new Pose(Vector3.zero, Quaternion.Inverse(GripInController)));
+        }
+
+        /// <summary>
         /// A grip frame set on a fixed handle for the right hand, turned for the left: half a turn about the fist's
         /// axis, so the left palm faces the handle from the same side.
         /// </summary>

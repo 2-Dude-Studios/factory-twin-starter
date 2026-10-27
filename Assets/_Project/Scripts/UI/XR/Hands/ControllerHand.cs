@@ -32,6 +32,7 @@ namespace TwoDude.FactoryTwin.UI
         private readonly Transform[,] _joints = new Transform[HandPoseMath.Fingers, 3];
         private readonly Quaternion[,] _bind = new Quaternion[HandPoseMath.Fingers, 3];
         private Pose _rootInGrip;
+        private Pose _rootInController;
         private FingerCurls _curls = FingerCurls.Relaxed;
         private HandGrip _held;
         private Transform _anchor;
@@ -56,12 +57,15 @@ namespace TwoDude.FactoryTwin.UI
                 Debug.LogWarning($"[ControllerHand] {name}: no {prefix}Palm joint, or not a child of its controller; the hand stays where it is.", this);
                 return;
             }
-            // Where the root must sit so the palm closes round the grip pose: grip * inverse(grip in palm) * inverse(palm in root).
+            // Where the root must sit so the palm closes round a frame: frame * inverse(frame in palm) * inverse(palm in root).
             var root = new Pose(transform.position, transform.rotation);
             var palmPose = new Pose(palm.position, palm.rotation);
             Pose palmInRoot = HandPoseMath.Multiply(HandPoseMath.Inverse(root), palmPose);
+            // On a handle the anchor is a grip frame; on the controller the hand goes where the controller's own frame
+            // sits in the palm (HandPoseMath.ControllerInPalm).
             _rootInGrip = HandPoseMath.Multiply(HandPoseMath.Inverse(HandPoseMath.GripInPalm(leftHand)), HandPoseMath.Inverse(palmInRoot));
-            transform.SetLocalPositionAndRotation(_rootInGrip.position, _rootInGrip.rotation);
+            _rootInController = HandPoseMath.Multiply(HandPoseMath.Inverse(HandPoseMath.ControllerInPalm(leftHand)), HandPoseMath.Inverse(palmInRoot));
+            transform.SetLocalPositionAndRotation(_rootInController.position, _rootInController.rotation);
             _ready = true;
         }
 
@@ -88,7 +92,7 @@ namespace TwoDude.FactoryTwin.UI
             _anchor = null;
             _onAnchor = 0f;
             if (_ready)
-                transform.SetLocalPositionAndRotation(_rootInGrip.position, _rootInGrip.rotation);
+                transform.SetLocalPositionAndRotation(_rootInController.position, _rootInController.rotation);
         }
 
         // A fixed part (a handle, a lever): the hand leaves the controller and closes on the part, turning with it.
@@ -134,10 +138,10 @@ namespace TwoDude.FactoryTwin.UI
                 return;
             if (_anchor == null)
             {
-                transform.SetLocalPositionAndRotation(_rootInGrip.position, _rootInGrip.rotation);
+                transform.SetLocalPositionAndRotation(_rootInController.position, _rootInController.rotation);
                 return;
             }
-            Pose onController = HandPoseMath.Multiply(new Pose(controller.position, controller.rotation), _rootInGrip);
+            Pose onController = HandPoseMath.Multiply(new Pose(controller.position, controller.rotation), _rootInController);
             var anchorPose = new Pose(_anchor.position, HandPoseMath.AnchorFor(leftHand, _anchor.rotation));
             Pose onAnchor = HandPoseMath.Multiply(anchorPose, _rootInGrip);
             float t = Mathf.SmoothStep(0f, 1f, _onAnchor);

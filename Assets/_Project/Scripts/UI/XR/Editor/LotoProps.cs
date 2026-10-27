@@ -134,7 +134,7 @@ namespace TwoDude.FactoryTwin.UI
             XRSimpleInteractable interactable = Interactable<XRSimpleInteractable>(lever.gameObject);
             Turn(lever, interactable, point, context, TurnBinding.AirValve);
             Prompt(lever.gameObject, interactable, point, hud);
-            HandOn(lever, new Vector3(0.012f, 0.06f, 0f), new FingerCurls(0.55f, 0.78f, 0.82f, 0.85f, 0.85f));
+            HandOn(lever, new Vector3(0.008f, 0.075f, 0f), new FingerCurls(0.55f, 0.78f, 0.82f, 0.85f, 0.85f));
             Highlight(point, Red, lever);
         }
 
@@ -285,7 +285,8 @@ namespace TwoDude.FactoryTwin.UI
             grab.useDynamicAttach = false;
             var attach = new GameObject("Grip");
             attach.transform.SetParent(go.transform, false);
-            attach.transform.SetLocalPositionAndRotation(grip.position, grip.rotation);
+            Pose pose = HandPoseMath.ControllerAttach(grip);
+            attach.transform.SetLocalPositionAndRotation(pose.position, pose.rotation);
             grab.attachTransform = attach.transform;
             SetCurls(go.AddComponent<HandGrip>(), curls, null);
             Set(go.AddComponent<SocketKey>(), ("key", key));
@@ -304,7 +305,8 @@ namespace TwoDude.FactoryTwin.UI
             go.transform.SetLocalPositionAndRotation(at, rotation);
             var attach = new GameObject("Attach");
             attach.transform.SetParent(go.transform, false);
-            attach.transform.SetLocalPositionAndRotation(grip.position, grip.rotation);
+            Pose pose = HandPoseMath.ControllerAttach(grip);
+            attach.transform.SetLocalPositionAndRotation(pose.position, pose.rotation);
             var sphere = go.AddComponent<SphereCollider>();
             sphere.isTrigger = true;
             sphere.radius = radius;
