@@ -48,7 +48,6 @@ namespace TwoDude.FactoryTwin.UI
         private const string WorldPanelPath = "Assets/_Project/UI/Vr/VrWorldPanel.asset";
         private const string ThemePath = "Assets/_Project/UI/DashboardTheme.tss";
         private const string BoardUxml = "Assets/_Project/UI/Vr/TrainingBoard.uxml";
-        private const string HudUxml = "Assets/_Project/UI/Vr/VrHud.uxml";
         private const string MenuUxml = "Assets/_Project/UI/Vr/VrMenu.uxml";
 
         [MenuItem("Tools/Factory Twin/Configure XR (OpenXR, off at start)")]
@@ -156,8 +155,7 @@ namespace TwoDude.FactoryTwin.UI
             var panelInput = Undo.AddComponent<PanelInputConfiguration>(rig);
             panelInput.panelInputRedirection = PanelInputConfiguration.PanelInputRedirection.Never;
             Board(cell.transform, worldPanel, context);
-            VrHud vrHud = Hud(rig.transform, origin.Camera.transform, worldPanel, context);
-            Menu(origin, vrSwitch, worldPanel, context, cell.transform);
+            VrHud vrHud = Tablet(origin, vrSwitch, worldPanel, context, cell.transform);
 
             LotoProps.Build(cell.transform, vrHud, context);
             int points = 0;
@@ -356,41 +354,29 @@ namespace TwoDude.FactoryTwin.UI
             so.ApplyModifiedProperties();
         }
 
-        // The HUD lazily follows the view at the top left: a metre ahead, up and to the left of centre, clear of the
-        // middle of the view where the hands and the machines are.
-        private static VrHud Hud(Transform rig, Transform head, PanelSettings panel, CellContext context)
-        {
-            var go = new GameObject("VrHud");
-            Undo.RegisterCreatedObjectUndo(go, "Build VR Rig");
-            go.transform.SetParent(rig, false);
-            UIDocument document = Document(go, panel, HudUxml, 520f, 290f, 0.07f);
-            var follow = go.AddComponent<LazyFollow>();
-            follow.target = head;
-            follow.targetOffset = new Vector3(-0.26f, 0.14f, 1.0f);
-            var hud = go.AddComponent<VrHud>();
-            var so = new SerializedObject(hud);
-            so.FindProperty("document").objectReferenceValue = document;
-            so.FindProperty("context").objectReferenceValue = context;
-            so.ApplyModifiedProperties();
-            return hud;
-        }
-
-        // The selection panel above the left controller, tilted toward the eyes; the right controller's ray presses it.
-        private static void Menu(XROrigin origin, VrSwitch vrSwitch, PanelSettings panel, CellContext context, Transform cell)
+        // The tablet held in the left hand, tilted toward the eyes (24 x 18 cm): its screen shows the training display
+        // (VrHud: the task at hand, where, the next one, status, the prompt) beside the options (VrMenu), which the
+        // right controller's ray or a fingertip presses. It replaces the HUD that floated in the view.
+        private static VrHud Tablet(XROrigin origin, VrSwitch vrSwitch, PanelSettings panel, CellContext context, Transform cell)
         {
             Transform left = origin.transform.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "Left Controller");
             if (left == null)
             {
-                Debug.LogWarning("[XrSetup] No Left Controller on the rig; selection panel skipped.");
-                return;
+                Debug.LogWarning("[XrSetup] No Left Controller on the rig; tablet skipped.");
+                return null;
             }
-            var go = new GameObject("VrMenu");
+            var go = new GameObject("VrTablet");
             Undo.RegisterCreatedObjectUndo(go, "Build VR Rig");
             go.transform.SetParent(left, false);
-            go.transform.localPosition = new Vector3(0f, 0.14f, 0.06f);
+            go.transform.localPosition = new Vector3(0f, 0.12f, 0.08f);
             go.transform.localRotation = Quaternion.Euler(45f, 0f, 0f);
-            UIDocument document = Document(go, panel, MenuUxml, 360f, 600f, 0.05f);
-            Pressable(go, 360f, 600f);
+            UIDocument document = Document(go, panel, MenuUxml, 800f, 600f, 0.03f);
+            Pressable(go, 800f, 600f);
+            var hud = go.AddComponent<VrHud>();
+            var hudSo = new SerializedObject(hud);
+            hudSo.FindProperty("document").objectReferenceValue = document;
+            hudSo.FindProperty("context").objectReferenceValue = context;
+            hudSo.ApplyModifiedProperties();
             var menu = go.AddComponent<VrMenu>();
             var so = new SerializedObject(menu);
             so.FindProperty("document").objectReferenceValue = document;
@@ -418,6 +404,7 @@ namespace TwoDude.FactoryTwin.UI
                 entry.FindPropertyRelative("yawDegrees").floatValue = spots[i].yaw;
             }
             so.ApplyModifiedProperties();
+            return hud;
         }
 
         // A thin invisible floor around the cell that teleport rays land on.

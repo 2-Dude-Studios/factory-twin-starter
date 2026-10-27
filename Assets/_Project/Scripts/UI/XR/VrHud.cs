@@ -6,10 +6,11 @@ using UnityEngine.UIElements;
 namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
-    /// Training (M12): the headset HUD (VrHud.uxml), a small world-space panel held at the top left of the view.
-    /// It leads with the task at hand, where to do it, and the next one, then safety or line status, then the prompt
-    /// for the training point under the controller ray (set by XrTrainingPoint). When an action is refused it says, for
-    /// a few seconds, what is due instead. Read from the bus; it changes nothing.
+    /// Training (M12): the training display on the screen of the tablet in the left hand (VrMenu.uxml, beside the
+    /// options). It leads with the task at hand, where to do it, and the next one, with safety or line status in the
+    /// screen's top bar, then the prompt for the training point under a controller (set by XrTrainingPoint and
+    /// XrPrompt). When an action is refused it says, for a few seconds, what is due instead. Read from the bus; it
+    /// changes nothing.
     /// </summary>
     public sealed class VrHud : MonoBehaviour
     {
@@ -81,11 +82,13 @@ namespace TwoDude.FactoryTwin.UI
                 string text = VrHudText.Refusal((LockoutAction)(int)message.Value.AsNumber, _stepNumber, _outcome, _areaOccupied);
                 _refusal.text = text;
                 _refusal.EnableInClassList("hidden", string.IsNullOrEmpty(text));
-                _refusalUntil = Time.time + refusalSeconds;
+                _refusalUntil = string.IsNullOrEmpty(text) ? 0f : Time.time + refusalSeconds;
+                Show();
                 return;
             }
-            // The right step done: the hint has served its purpose.
-            if (message.Topic == CellTopics.TrainingStep && _refusalUntil > 0f)
+            // The right step done (the step number moves on): the hint has served its purpose. The controller
+            // republishes the step after every action, so an unchanged number leaves the hint up.
+            if (message.Topic == CellTopics.TrainingStep && _refusalUntil > 0f && (int)message.Value.AsNumber != _stepNumber)
                 _refusalUntil = Time.time;
             if (Read(message))
                 Show();
@@ -97,6 +100,7 @@ namespace TwoDude.FactoryTwin.UI
             {
                 _refusalUntil = 0f;
                 _refusal.EnableInClassList("hidden", true);
+                Show();
             }
         }
 
@@ -120,7 +124,8 @@ namespace TwoDude.FactoryTwin.UI
             _current.text = VrHudText.Current(_stepNumber, _outcome);
             string where = VrHudText.Where(_stepNumber, _outcome);
             _where.text = where;
-            _where.EnableInClassList("hidden", string.IsNullOrEmpty(where));
+            // While a refusal is up it says where to go instead; one line of directions at a time.
+            _where.EnableInClassList("hidden", string.IsNullOrEmpty(where) || _refusalUntil > 0f);
             string next = VrHudText.Next(_stepNumber, _outcome);
             _next.text = next;
             _nextRow.EnableInClassList("hidden", string.IsNullOrEmpty(next));

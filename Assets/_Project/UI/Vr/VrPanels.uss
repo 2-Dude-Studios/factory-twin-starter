@@ -1,4 +1,4 @@
-/* World-space panels for the headset (M12): the training board, the HUD and the selection panel.
+/* World-space panels for the headset (M12): the training board and the tablet in the left hand.
    Sizes are in panel pixels: 100 px is one unit, and each document's transform scale sets its real size (board 0.9 m). */
 .hidden {
     display: none;
@@ -71,38 +71,56 @@
 .board__button--key { background-color: rgb(255, 174, 13); color: rgb(29, 22, 0); }
 .board__button--key:hover { background-color: rgb(255, 196, 70); }
 
-/* HUD held at the top left of the view: the task at hand, the next one, then status */
-.hud {
+/* Training display (VrHud), on the tablet's screen: the task at hand, where to do it, the next one, the prompt */
+.hud__label { font-size: 15px; -unity-font-style: bold; color: rgb(160, 168, 176); letter-spacing: 1px; }
+.hud__current { font-size: 26px; -unity-font-style: bold; color: rgb(240, 242, 244); white-space: normal; margin: 2px 0 10px 0; }
+.hud__where { font-size: 17px; color: rgb(255, 174, 13); white-space: normal; margin: -4px 0 10px 0; }
+.hud__refusal { font-size: 17px; -unity-font-style: bold; color: rgb(255, 80, 64); white-space: normal; margin: 0 0 10px 0; }
+.hud__next-row { margin-bottom: 10px; }
+.hud__next { font-size: 18px; color: rgb(200, 206, 212); white-space: normal; margin-top: 2px; }
+.hud__status { font-size: 17px; color: rgb(200, 206, 212); }
+.hud__status--alert { color: rgb(255, 80, 64); -unity-font-style: bold; }
+.hud__prompt { font-size: 17px; -unity-font-style: bold; color: rgb(255, 174, 13); margin-top: auto; padding-top: 8px; white-space: normal; border-top-width: 1px; border-top-color: rgb(52, 60, 68); }
+
+/* The tablet in the left hand: a dark bezel, a screen, a status bar, the display beside the options */
+.tablet {
     width: 100%;
     height: 100%;
-    padding: 12px 18px;
-    background-color: rgba(20, 24, 28, 0.94);
-    border-radius: 12px;
-    border-left-width: 6px;
-    border-left-color: rgb(255, 174, 13);
+    padding: 16px;
+    background-color: rgb(14, 16, 18);
+    border-radius: 28px;
+    border-width: 2px;
+    border-color: rgb(58, 62, 68);
 }
 
-.hud__label { font-size: 15px; -unity-font-style: bold; color: rgb(160, 168, 176); letter-spacing: 1px; }
-.hud__current { font-size: 28px; -unity-font-style: bold; color: rgb(240, 242, 244); white-space: normal; margin: 2px 0 8px 0; }
-.hud__where { font-size: 19px; color: rgb(255, 174, 13); white-space: normal; margin: -4px 0 8px 0; }
-.hud__refusal { font-size: 19px; -unity-font-style: bold; color: rgb(255, 80, 64); white-space: normal; margin: 0 0 8px 0; }
-.hud__next-row { margin-bottom: 8px; }
-.hud__next { font-size: 21px; color: rgb(200, 206, 212); white-space: normal; margin-top: 2px; }
-.hud__status { font-size: 19px; color: rgb(200, 206, 212); }
-.hud__status--alert { color: rgb(255, 80, 64); -unity-font-style: bold; }
-.hud__prompt { font-size: 21px; -unity-font-style: bold; color: rgb(255, 174, 13); margin-top: 6px; white-space: normal; }
-
-/* Selection panel on the left controller */
-.menu {
-    width: 100%;
-    height: 100%;
-    padding: 14px;
-    background-color: rgba(20, 24, 28, 0.96);
+.tablet__screen {
+    flex-grow: 1;
+    padding: 14px 16px 10px 16px;
+    background-color: rgb(24, 28, 33);
     border-radius: 14px;
 }
 
-.menu__title { font-size: 24px; -unity-font-style: bold; color: rgb(240, 242, 244); }
-.menu__hint { font-size: 14px; color: rgb(160, 168, 176); margin-bottom: 4px; }
+.tablet__bar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(52, 60, 68);
+}
+
+.tablet__brand { font-size: 14px; -unity-font-style: bold; color: rgb(255, 174, 13); letter-spacing: 2px; }
+.tablet__status { -unity-text-align: middle-right; max-width: 70%; white-space: normal; }
+.tablet__body { flex-direction: row; flex-grow: 1; }
+.tablet__display { flex-grow: 1; flex-basis: 0; padding-right: 16px; margin-right: 16px; border-right-width: 1px; border-right-color: rgb(52, 60, 68); }
+.tablet__options { width: 290px; }
+.tablet__row { flex-direction: row; }
+.tablet__half { flex-grow: 1; flex-basis: 0; }
+.tablet__half:first-child { margin-right: 6px; }
+.tablet__hint { font-size: 12px; color: rgb(120, 128, 136); -unity-text-align: middle-center; margin-top: 8px; }
+
+/* The tablet's option buttons */
 .menu__group { font-size: 16px; color: rgb(160, 168, 176); margin: 8px 0 4px 0; }
 
 .menu__button {

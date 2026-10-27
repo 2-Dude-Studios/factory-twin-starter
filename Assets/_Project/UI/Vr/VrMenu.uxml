@@ -1,16 +1,41 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="VrPanels.uss" />
-    <ui:VisualElement name="menu" class="menu">
-        <ui:Label text="Factory twin" class="menu__title" />
-        <ui:Label text="Menu button or Y: show or hide" class="menu__hint" />
-        <ui:Label text="Training" class="menu__group" />
-        <ui:Button name="menu-training" text="Lockout training" class="menu__button menu__button--key" />
-        <ui:Button name="menu-fail" text="Fail the CNC" class="menu__button" />
-        <ui:Button name="menu-reset" text="Safety reset" class="menu__button" />
-        <ui:Label text="Go to" class="menu__group" />
-        <ui:Button name="menu-go-cell" text="Cell overview" class="menu__button" />
-        <ui:Button name="menu-go-station" text="Control station" class="menu__button" />
-        <ui:Button name="menu-go-cnc" text="CNC isolator" class="menu__button" />
-        <ui:Button name="menu-exit" text="Exit VR" class="menu__button menu__button--exit" />
+    <!-- The tablet in the left hand: a bezel round a screen; the training display on the left, the options on the right. -->
+    <ui:VisualElement name="tablet" class="tablet">
+        <ui:VisualElement name="screen" class="tablet__screen">
+            <ui:VisualElement class="tablet__bar" picking-mode="Ignore">
+                <ui:Label text="FACTORY TWIN" class="tablet__brand" />
+                <ui:Label name="status" text="" class="hud__status tablet__status" />
+            </ui:VisualElement>
+            <ui:VisualElement class="tablet__body">
+                <ui:VisualElement name="hud" class="tablet__display" picking-mode="Ignore">
+                    <ui:Label name="now-label" text="LOCKOUT TRAINING" class="hud__label" />
+                    <ui:Label name="current" text="" class="hud__current" />
+                    <ui:Label name="where" text="" class="hud__where hidden" />
+                    <ui:Label name="refusal" text="" class="hud__refusal hidden" />
+                    <ui:VisualElement name="next-row" class="hud__next-row hidden" picking-mode="Ignore">
+                        <ui:Label text="NEXT" class="hud__label" />
+                        <ui:Label name="next" text="" class="hud__next" />
+                    </ui:VisualElement>
+                    <ui:Label name="prompt" text="" class="hud__prompt hidden" />
+                </ui:VisualElement>
+                <ui:VisualElement class="tablet__options">
+                    <ui:Label text="TRAINING" class="menu__group" />
+                    <ui:Button name="menu-training" text="Lockout training" class="menu__button menu__button--key" />
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="menu-fail" text="Fail the CNC" class="menu__button tablet__half" />
+                        <ui:Button name="menu-reset" text="Safety reset" class="menu__button tablet__half" />
+                    </ui:VisualElement>
+                    <ui:Label text="GO TO" class="menu__group" />
+                    <ui:Button name="menu-go-cell" text="Cell overview" class="menu__button" />
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="menu-go-station" text="Station" class="menu__button tablet__half" />
+                        <ui:Button name="menu-go-cnc" text="CNC isolator" class="menu__button tablet__half" />
+                    </ui:VisualElement>
+                    <ui:Button name="menu-exit" text="Exit VR" class="menu__button menu__button--exit" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label text="Menu button or Y: show or hide the tablet" class="tablet__hint" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

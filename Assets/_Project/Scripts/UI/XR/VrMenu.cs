@@ -8,10 +8,10 @@ using UnityEngine.UIElements;
 namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
-    /// Training (M12): the selection panel on the left controller (VrMenu.uxml), pressed with the right controller's
-    /// ray. Lockout training, Fail the CNC and Safety reset send the same bus commands as the dashboard and keys;
-    /// the Go to buttons teleport to set spots facing the right way; Exit VR hands back to the desktop. The left
-    /// controller's menu button (or Y) shows and hides the panel.
+    /// Training (M12): the options on the tablet in the left hand (VrMenu.uxml), pressed with the right controller's
+    /// ray or a fingertip. Lockout training, Fail the CNC and Safety reset send the same bus commands as the dashboard
+    /// and keys; the Go to buttons teleport to set spots facing the right way; Exit VR hands back to the desktop. The
+    /// left controller's menu button (or Y) shows and hides the tablet, display and options together.
     /// </summary>
     public sealed class VrMenu : MonoBehaviour
     {
