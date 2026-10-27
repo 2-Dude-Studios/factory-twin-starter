@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using TwoDude.FactoryTwin.Twin;
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
     /// Training (M12): builds the hands-on lockout props on the training points, for Build VR Rig. The CNC isolator
-    /// (grip and twist), the hasp with a lock board and a padlock and tag (hang the lock in the hasp), the air-dump
+    /// (grip and twist), the hasp with a lock board and a padlock and tag (open the lock, hang it in the hasp), the air-dump
     /// valve (grip and twist) and the spindle with two tools and a cart (swap the tool). Every part is named as in
     /// the modelling brief with its origin on its pivot. When a model in Assets/_Project/Art/LOTO holds an object of
     /// the same name, its mesh is used; otherwise a placeholder primitive stands in. Run Build VR Rig again after
@@ -35,6 +36,12 @@ namespace TwoDude.FactoryTwin.UI
         private static readonly Color Grey = new Color(0.3f, 0.32f, 0.34f);
         private static readonly Color Blue = new Color(0.15f, 0.35f, 0.75f);
         private static readonly Color White = new Color(0.94f, 0.94f, 0.92f);
+
+        // Where each grabbed prop sits in the palm (grip frames: +Z through the fist toward the thumb, +X the palm's
+        // normal). The padlock: body in the palm, broad face against it, shackle out past the thumb. A tool: the
+        // holder in the fist, the tool's top toward the thumb.
+        private static readonly Pose PadlockGrip = new Pose(new Vector3(0f, -0.0535f, 0f), Quaternion.LookRotation(Vector3.up, Vector3.right));
+        private static readonly Pose ToolGrip = new Pose(new Vector3(0f, -0.07f, 0f), Quaternion.LookRotation(Vector3.up, Vector3.back));
 
         private static Dictionary<string, Transform> _models;
         private static Dictionary<Color, Material> _materials;
@@ -77,33 +84,40 @@ namespace TwoDude.FactoryTwin.UI
             XRSimpleInteractable interactable = Interactable<XRSimpleInteractable>(handle.gameObject);
             Turn(handle, interactable, point, context, TurnBinding.Isolator);
             Prompt(handle.gameObject, interactable, point, hud);
+            HandOn(handle, new Vector3(0.018f, 0.045f, 0f), FingerCurls.Handle);
             Highlight(point, Red, handle);
         }
 
-        // The hasp hangs from the isolator's lock tab; the lock board with its peg is on the CNC's face just south of
-        // the isolator; the padlock, its tag on the shackle, starts on the peg.
+        // The hasp hangs from the isolator's lock tab, a steel plate facing east with three lock holes along its foot;
+        // the lock board with its peg is on the CNC's face just south of the isolator; the padlock, its tag tied to the
+        // shackle, starts on the peg. The padlock's origin is the top of its shackle: in the hasp's middle hole the
+        // shackle's wire runs through the hole (3 mm above it), the body hanging below the plate.
         private static void Hasp(Transform prop, TrainingPoint point, Transform isolator, VrHud hud, CellContext context)
         {
             Vector3 tab = prop.InverseTransformPoint(isolator.TransformPoint(new Vector3(0.065f, -0.075f, 0f)));
-            Part(prop, "Hasp_Jaw", tab, PrimitiveType.Cube, new Vector3(0.006f, 0.03f, 0.025f), new Vector3(0f, -0.015f, 0f), Steel, collider: false);
-            Transform body = Part(prop, "Hasp_Body", tab, PrimitiveType.Cube, new Vector3(0.008f, 0.10f, 0.045f), new Vector3(0f, -0.06f, 0f), Red);
-            KeyedSocket haspSocket = Socket(prop, "Hasp_Socket", tab + new Vector3(0.02f, -0.075f, 0f), "padlock", 0.05f);
+            Part(prop, "Hasp_Jaw", tab, PrimitiveType.Cube, new Vector3(0.004f, 0.02f, 0.02f), new Vector3(0f, -0.009f, 0f), Steel, collider: false);
+            Transform body = Part(prop, "Hasp_Body", tab, PrimitiveType.Cube, new Vector3(0.004f, 0.085f, 0.045f), new Vector3(0f, -0.0625f, 0f), Red);
+            KeyedSocket haspSocket = Socket(prop, "Hasp_Socket", tab + new Vector3(0f, -0.087f, 0f), Quaternion.identity, "padlock", 0.05f, PadlockGrip);
 
             Vector3 board = tab + new Vector3(-0.05f, 0.04f, -0.3f);
             Part(prop, "LockBoard", board, PrimitiveType.Cube, new Vector3(0.01f, 0.18f, 0.14f), Vector3.zero, Grey, collider: false);
-            KeyedSocket peg = Socket(prop, "LockBoard_Peg", board + new Vector3(0.03f, 0.03f, 0f), "padlock", 0.05f);
+            // The peg sticks out east; the lock hangs on it turned a quarter, its shackle round the peg.
+            KeyedSocket peg = Socket(prop, "LockBoard_Peg", board + new Vector3(0.03f, 0.03f, 0f), Quaternion.Euler(0f, 90f, 0f), "padlock", 0.05f, PadlockGrip);
 
             var padlock = new GameObject("Padlock");
             padlock.transform.SetParent(prop, false);
-            padlock.transform.localPosition = peg.transform.localPosition;
-            Part(padlock.transform, "Padlock_Shackle", Vector3.zero, PrimitiveType.Cube, new Vector3(0.006f, 0.03f, 0.028f), new Vector3(0f, -0.012f, 0f), Steel);
+            padlock.transform.SetLocalPositionAndRotation(peg.transform.localPosition, peg.transform.localRotation);
+            Transform shackle = Part(padlock.transform, "Padlock_Shackle", Vector3.zero, PrimitiveType.Cube, new Vector3(0.031f, 0.03f, 0.006f), new Vector3(0f, -0.012f, 0f), Steel);
             Transform lockBody = Part(padlock.transform, "Padlock_Body", new Vector3(0f, -0.03f, 0f), PrimitiveType.Cube,
-                new Vector3(0.02f, 0.045f, 0.038f), new Vector3(0f, -0.0225f, 0f), Red);
-            Transform tag = Part(padlock.transform, "Tag", new Vector3(0f, -0.075f, 0f), PrimitiveType.Cube, new Vector3(0.002f, 0.145f, 0.075f), new Vector3(0f, -0.0725f, 0f), White);
+                new Vector3(0.038f, 0.045f, 0.02f), new Vector3(0f, -0.0225f, 0f), Red);
+            Part(padlock.transform, "Tag_Tie", Vector3.zero, PrimitiveType.Cube, new Vector3(0.002f, 0.07f, 0.002f), new Vector3(0.022f, -0.05f, 0f), White, collider: false);
+            Transform tag = Part(padlock.transform, "Tag", new Vector3(0.024f, -0.08f, 0f), PrimitiveType.Cube, new Vector3(0.002f, 0.145f, 0.075f), new Vector3(0f, -0.0725f, 0f), White);
             TagText(tag);
-            XRGrabInteractable grab = Grabbable(padlock, "padlock", peg);
+            XRGrabInteractable grab = Grabbable(padlock, "padlock", peg, PadlockGrip, new FingerCurls(0.6f, 0.72f, 0.8f, 0.85f, 0.85f));
             peg.startingSelectedInteractable = grab;
             Prompt(padlock, grab, point, hud);
+            var shackleMotion = padlock.AddComponent<PadlockShackle>();
+            Set(shackleMotion, ("grab", grab), ("shackle", shackle));
 
             var lockSocket = prop.gameObject.AddComponent<XrLockSocket>();
             Set(lockSocket, ("context", context), ("point", point), ("lockSocket", haspSocket), ("homeSocket", peg), ("padlock", grab));
@@ -120,6 +134,7 @@ namespace TwoDude.FactoryTwin.UI
             XRSimpleInteractable interactable = Interactable<XRSimpleInteractable>(lever.gameObject);
             Turn(lever, interactable, point, context, TurnBinding.AirValve);
             Prompt(lever.gameObject, interactable, point, hud);
+            HandOn(lever, new Vector3(0.012f, 0.06f, 0f), new FingerCurls(0.55f, 0.78f, 0.82f, 0.85f, 0.85f));
             Highlight(point, Red, lever);
         }
 
@@ -128,13 +143,13 @@ namespace TwoDude.FactoryTwin.UI
         private static void ToolChange(Transform prop, TrainingPoint point, VrHud hud)
         {
             Part(prop, "Spindle_Nose", new Vector3(0f, 0.12f, -0.09f), PrimitiveType.Cylinder, new Vector3(0.07f, 0.015f, 0.07f), Vector3.zero, Steel, collider: false);
-            KeyedSocket spindle = Socket(prop, "Spindle_Socket", new Vector3(0f, 0.105f, -0.09f), "tool", 0.06f);
+            KeyedSocket spindle = Socket(prop, "Spindle_Socket", new Vector3(0f, 0.105f, -0.09f), Quaternion.identity, "tool", 0.06f, ToolGrip);
 
             Vector3 cart = new Vector3(0.5f, -prop.position.y, -0.55f);
             Part(prop, "ToolCart", cart, PrimitiveType.Cube, new Vector3(0.45f, 0.9f, 0.3f), new Vector3(0f, 0.45f, 0f), Grey, collider: false);
             // A tool's origin is at its top; a slot holds it standing on the cart's top, 0.9 m up.
-            KeyedSocket slotA = Socket(prop, "Cart_SlotA", cart + new Vector3(-0.1f, 0.9f + 0.14f, 0f), "tool", 0.05f);
-            KeyedSocket slotB = Socket(prop, "Cart_SlotB", cart + new Vector3(0.1f, 0.9f + 0.14f, 0f), "tool", 0.05f);
+            KeyedSocket slotA = Socket(prop, "Cart_SlotA", cart + new Vector3(-0.1f, 0.9f + 0.14f, 0f), Quaternion.identity, "tool", 0.05f, ToolGrip);
+            KeyedSocket slotB = Socket(prop, "Cart_SlotB", cart + new Vector3(0.1f, 0.9f + 0.14f, 0f), Quaternion.identity, "tool", 0.05f, ToolGrip);
 
             XRGrabInteractable worn = Tool(prop, "Tool_A", spindle.transform.localPosition, slotA, hud, point, out Transform wornHolder);
             XRGrabInteractable fresh = Tool(prop, "Tool_B", slotB.transform.localPosition, slotB, hud, point, out Transform freshHolder);
@@ -146,22 +161,30 @@ namespace TwoDude.FactoryTwin.UI
             Highlight(point, new Color(0.1f, 0.8f, 0.85f), wornHolder, freshHolder);
         }
 
-        // The tag's words on its east face (DANGER, DO NOT OPERATE, the trainee's name), set at run time by TagLabel.
+        // The tag's words on its east face below the red header (DANGER, DO NOT OPERATE, the trainee's name), set at
+        // run time by TagLabel. TextMeshPro, not TextMesh: the legacy font material ignores depth, so the words
+        // showed through the card, mirrored, from behind.
         private static void TagText(Transform tag)
         {
-            var go = new GameObject("Tag_Text");
-            go.transform.SetParent(tag, false);
-            go.transform.localPosition = new Vector3(0.0015f, -0.012f, -0.033f);
-            go.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
-            var mesh = go.AddComponent<TextMesh>();
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            mesh.font = font;
-            mesh.text = TagLabel.Words(string.Empty);
-            mesh.fontSize = 64;
-            mesh.characterSize = 0.0022f;
-            mesh.anchor = TextAnchor.UpperLeft;
-            mesh.color = new Color(0.7f, 0.05f, 0.03f);
-            go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
+            // A plain transform carries the place on the card: a RectTransform under a non-UI parent keeps only its
+            // anchored position, which put the words inside the card.
+            var holder = new GameObject("Tag_Text");
+            holder.transform.SetParent(tag, false);
+            holder.transform.SetLocalPositionAndRotation(new Vector3(0.0012f, -0.023f, -0.033f), Quaternion.Euler(0f, -90f, 0f));
+            var go = new GameObject("Words");
+            go.transform.SetParent(holder.transform, false);
+            var text = go.AddComponent<TextMeshPro>();
+            text.rectTransform.pivot = new Vector2(0f, 1f);
+            text.rectTransform.sizeDelta = new Vector2(0.066f, 0.112f);
+            text.rectTransform.anchoredPosition = Vector2.zero;
+            text.text = TagLabel.Words("Trainee Name");
+            text.enableAutoSizing = true;
+            text.fontSizeMin = 0.02f;
+            text.fontSizeMax = 0.32f;
+            text.fontStyle = FontStyles.Bold;
+            text.alignment = TextAlignmentOptions.TopLeft;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.color = new Color(0.7f, 0.05f, 0.03f);
             var label = go.AddComponent<TagLabel>();
             Set(label, ("training", Object.FindAnyObjectByType<TrainingController>()));
         }
@@ -172,7 +195,7 @@ namespace TwoDude.FactoryTwin.UI
             tool.transform.SetParent(prop, false);
             tool.transform.localPosition = at;
             holder = Part(tool.transform, "Tool_Holder", Vector3.zero, PrimitiveType.Cylinder, new Vector3(0.04f, 0.07f, 0.04f), new Vector3(0f, -0.07f, 0f), Steel);
-            XRGrabInteractable grab = Grabbable(tool, "tool", home);
+            XRGrabInteractable grab = Grabbable(tool, "tool", home, ToolGrip, new FingerCurls(0.5f, 0.62f, 0.66f, 0.7f, 0.72f));
             Prompt(tool, grab, point, hud);
             return grab;
         }
@@ -249,7 +272,9 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         // Grabbed with the grip, moved instantly with the hand, never thrown; floats until it goes home if dropped.
-        private static XRGrabInteractable Grabbable(GameObject go, string key, XRSocketInteractor home)
+        // It sits in the palm by its "Grip" child (a grip frame, HandPoseMath.GripInPalm), the same for the controller
+        // hands and the tracked hands, and the fingers close on it with the given curls (HandGrip).
+        private static XRGrabInteractable Grabbable(GameObject go, string key, XRSocketInteractor home, Pose grip, FingerCurls curls)
         {
             var body = go.AddComponent<Rigidbody>();
             body.isKinematic = true;
@@ -257,7 +282,12 @@ namespace TwoDude.FactoryTwin.UI
             XRGrabInteractable grab = Interactable<XRGrabInteractable>(go);
             grab.movementType = XRBaseInteractable.MovementType.Instantaneous;
             grab.throwOnDetach = false;
-            grab.useDynamicAttach = true;
+            grab.useDynamicAttach = false;
+            var attach = new GameObject("Grip");
+            attach.transform.SetParent(go.transform, false);
+            attach.transform.SetLocalPositionAndRotation(grip.position, grip.rotation);
+            grab.attachTransform = attach.transform;
+            SetCurls(go.AddComponent<HandGrip>(), curls, null);
             Set(go.AddComponent<SocketKey>(), ("key", key));
             Set(go.AddComponent<ReturnHome>(), ("grab", grab), ("home", home));
             return grab;
@@ -265,15 +295,21 @@ namespace TwoDude.FactoryTwin.UI
 
         // A socket on the Ignore Raycast layer: its trigger sphere catches the prop, and the controller rays (which
         // skip that layer) reach the prop inside it.
-        private static KeyedSocket Socket(Transform parent, string name, Vector3 at, string key, float radius)
+        // A socket lines the prop's grip frame up with its own attach, so the attach carries the same grip pose:
+        // the prop's origin then lands on the socket itself.
+        private static KeyedSocket Socket(Transform parent, string name, Vector3 at, Quaternion rotation, string key, float radius, Pose grip)
         {
             var go = new GameObject(name) { layer = LayerMask.NameToLayer(SocketLayer) };
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = at;
+            go.transform.SetLocalPositionAndRotation(at, rotation);
+            var attach = new GameObject("Attach");
+            attach.transform.SetParent(go.transform, false);
+            attach.transform.SetLocalPositionAndRotation(grip.position, grip.rotation);
             var sphere = go.AddComponent<SphereCollider>();
             sphere.isTrigger = true;
             sphere.radius = radius;
             var socket = go.AddComponent<KeyedSocket>();
+            socket.attachTransform = attach.transform;
             Set(socket, ("key", key));
             return socket;
         }
@@ -290,6 +326,29 @@ namespace TwoDude.FactoryTwin.UI
             so.FindProperty("normalAngle").floatValue = 0f;
             so.FindProperty("turnedAngle").floatValue = -90f;
             so.FindProperty("binding").enumValueIndex = (int)binding;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        // A hand on a fixed part: the controller hand moves onto this anchor while it holds the part, a right-hand grip
+        // frame round the vertical bar (thumb up, palm toward the CNC, the trainee standing east of it).
+        private static void HandOn(Transform part, Vector3 at, FingerCurls curls)
+        {
+            var anchor = new GameObject("Hand_Anchor");
+            anchor.transform.SetParent(part, false);
+            anchor.transform.SetLocalPositionAndRotation(at, Quaternion.LookRotation(Vector3.up, Vector3.back));
+            SetCurls(part.gameObject.AddComponent<HandGrip>(), curls, anchor.transform);
+        }
+
+        private static void SetCurls(HandGrip grip, FingerCurls curls, Transform anchor)
+        {
+            var so = new SerializedObject(grip);
+            SerializedProperty c = so.FindProperty("curls");
+            c.FindPropertyRelative("thumb").floatValue = curls.thumb;
+            c.FindPropertyRelative("index").floatValue = curls.index;
+            c.FindPropertyRelative("middle").floatValue = curls.middle;
+            c.FindPropertyRelative("ring").floatValue = curls.ring;
+            c.FindPropertyRelative("little").floatValue = curls.little;
+            so.FindProperty("anchor").objectReferenceValue = anchor;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

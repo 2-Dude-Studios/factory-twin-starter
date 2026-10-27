@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using TwoDude.FactoryTwin.Twin;
 using Unity.XR.CoreUtils;
@@ -9,12 +10,16 @@ using UnityEditor.XR.Management.Metadata;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UIElements;
+using UnityEngine.XR.Hands;
+using UnityEngine.XR.Hands.OpenXR;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Filtering;
 using UnityEngine.XR.Interaction.Toolkit.Gaze;
 using UnityEngine.XR.Interaction.Toolkit.Interactors.Casters;
+using UnityEngine.XR.Interaction.Toolkit.Inputs;
+using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation;
 using UnityEngine.XR.Management;
 using UnityEngine.XR.OpenXR;
@@ -35,6 +40,10 @@ namespace TwoDude.FactoryTwin.UI
     {
         private const string XriPackage = "com.unity.xr.interaction.toolkit";
         private const string StarterAssets = "Starter Assets";
+        private const string HandsPackage = "com.unity.xr.hands";
+        private const string HandVisualizer = "HandVisualizer";
+        private const string HandMaterialPath = "Assets/_Project/Art/Hands/VrHand.mat";
+        private const string UiLayer = "UI";
         private const string RigPrefabSuffix = "Starter Assets/Prefabs/XR Origin (XR Rig).prefab";
         private const string SettingsPath = "Assets/XR/XRGeneralSettingsPerBuildTarget.asset";
         private const string OpenXRLoaderType = "UnityEngine.XR.OpenXR.OpenXRLoader";
@@ -49,6 +58,8 @@ namespace TwoDude.FactoryTwin.UI
         private const string ThemePath = "Assets/_Project/UI/DashboardTheme.tss";
         private const string BoardUxml = "Assets/_Project/UI/Vr/TrainingBoard.uxml";
         private const string MenuUxml = "Assets/_Project/UI/Vr/VrMenu.uxml";
+        private const string TabletName = "VrTablet";
+        private const string TabletControllerMount = "Tablet Mount";
 
         [MenuItem("Tools/Factory Twin/Configure XR (OpenXR, off at start)")]
         private static void Configure()
@@ -70,12 +81,16 @@ namespace TwoDude.FactoryTwin.UI
             OpenXRSettings openXr = OpenXRSettings.GetSettingsForBuildTargetGroup(target);
             Enable<OculusTouchControllerProfile>(openXr);
             Enable<MetaQuestTouchPlusControllerProfile>(openXr);
+            // Hand joints (XR_EXT_hand_tracking) for the tracked hands; over Link it needs the Link app's developer
+            // runtime features on. The controllers work as before without it.
+            Enable<HandTracking>(openXr);
             EditorUtility.SetDirty(openXr);
             AssetDatabase.SaveAssets();
 
-            ImportStarterAssets();
+            ImportSample(XriPackage, StarterAssets);
+            ImportSample(HandsPackage, HandVisualizer);
             VrPipeline();
-            Debug.Log("[XrSetup] OpenXR on Windows: loader assigned, not started at launch; Oculus Touch and Meta Quest Touch Plus profiles on.");
+            Debug.Log("[XrSetup] OpenXR on Windows: loader assigned, not started at launch; Oculus Touch and Meta Quest Touch Plus profiles and hand tracking on.");
         }
 
         [MenuItem("Tools/Factory Twin/Build VR Rig")]
@@ -189,6 +204,7 @@ namespace TwoDude.FactoryTwin.UI
             }
 
             OnePointer(rig);
+            Hands(rig, origin);
             rig.SetActive(false);
             Undo.CollapseUndoOperations(undoGroup);
             EditorSceneManager.MarkSceneDirty(cell.scene);
@@ -262,12 +278,12 @@ namespace TwoDude.FactoryTwin.UI
             }
         }
 
-        private static void ImportStarterAssets()
+        private static void ImportSample(string package, string displayName)
         {
-            Sample sample = Sample.FindByPackage(XriPackage, string.Empty).FirstOrDefault(s => s.displayName == StarterAssets);
+            Sample sample = Sample.FindByPackage(package, string.Empty).FirstOrDefault(s => s.displayName == displayName);
             if (string.IsNullOrEmpty(sample.displayName))
             {
-                Debug.LogError("[XrSetup] XR Interaction Toolkit's Starter Assets sample not found.");
+                Debug.LogError($"[XrSetup] {package}'s {displayName} sample not found.");
                 return;
             }
             if (!sample.isImported)
@@ -346,6 +362,7 @@ namespace TwoDude.FactoryTwin.UI
             go.transform.rotation = Quaternion.identity;
             UIDocument document = Document(go, panel, BoardUxml, 900f, 600f, 0.1f);
             Pressable(go, 900f, 600f);
+            Backing(go, 900f, 600f, 12f, 0.02f);
             var board = go.AddComponent<TrainingBoard>();
             var so = new SerializedObject(board);
             so.FindProperty("document").objectReferenceValue = document;
@@ -365,13 +382,17 @@ namespace TwoDude.FactoryTwin.UI
                 Debug.LogWarning("[XrSetup] No Left Controller on the rig; tablet skipped.");
                 return null;
             }
-            var go = new GameObject("VrTablet");
-            Undo.RegisterCreatedObjectUndo(go, "Build VR Rig");
-            go.transform.SetParent(left, false);
-            go.transform.localPosition = new Vector3(0f, 0.12f, 0.08f);
-            go.transform.localRotation = Quaternion.Euler(45f, 0f, 0f);
+            var mount = new GameObject(TabletControllerMount);
+            Undo.RegisterCreatedObjectUndo(mount, "Build VR Rig");
+            mount.transform.SetParent(left, false);
+            mount.transform.localPosition = new Vector3(0f, 0.12f, 0.08f);
+            mount.transform.localRotation = Quaternion.Euler(45f, 0f, 0f);
+            // On the UI layer, which the hands' near grab leaves out: the tablet is always within reach of a hand.
+            var go = new GameObject(TabletName) { layer = LayerMask.NameToLayer(UiLayer) };
+            go.transform.SetParent(mount.transform, false);
             UIDocument document = Document(go, panel, MenuUxml, 800f, 600f, 0.03f);
             Pressable(go, 800f, 600f);
+            Backing(go, 800f, 600f, 8f, 0.012f);
             var hud = go.AddComponent<VrHud>();
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("document").objectReferenceValue = document;
@@ -442,12 +463,32 @@ namespace TwoDude.FactoryTwin.UI
         {
             foreach (Transform t in rig.GetComponentsInChildren<Transform>(true))
             {
-                bool leftRay = t.name == "Near-Far Interactor" && t.parent != null && t.parent.name == "Left Controller";
-                if (t.name == "Gaze Interactor" || leftRay)
+                if (t.name == "Gaze Interactor")
                 {
                     Undo.RecordObject(t.gameObject, "Build VR Rig");
                     t.gameObject.SetActive(false);
                 }
+                // The left hand grabs what it touches (the padlock, a tool) but casts no ray and presses no UI.
+                if (t.name == "Near-Far Interactor" && t.parent != null && t.parent.name == "Left Controller")
+                {
+                    var nearFar = t.GetComponent<NearFarInteractor>();
+                    Undo.RecordObject(nearFar, "Build VR Rig");
+                    nearFar.enableFarCasting = false;
+                    nearFar.enableUIInteraction = false;
+                    foreach (LineRenderer line in t.GetComponentsInChildren<LineRenderer>(true))
+                    {
+                        Undo.RecordObject(line, "Build VR Rig");
+                        line.enabled = false;
+                    }
+                }
+            }
+            // No near grab reaches the tablet (UI layer) or a body: the left hand holds the tablet, and the right
+            // hand's grab would otherwise take it when it comes close to press a button.
+            foreach (SphereInteractionCaster near in rig.GetComponentsInChildren<SphereInteractionCaster>(true))
+            {
+                var nearSo = new SerializedObject(near);
+                nearSo.FindProperty("m_PhysicsLayerMask").intValue = ~LayerMask.GetMask(UiLayer, "Ignore Raycast", "Trainee", "SafetyZone");
+                nearSo.ApplyModifiedProperties();
             }
             var gazeAssistance = rig.GetComponent<XRGazeAssistance>();
             if (gazeAssistance != null)
@@ -455,6 +496,173 @@ namespace TwoDude.FactoryTwin.UI
                 Undo.RecordObject(gazeAssistance, "Build VR Rig");
                 gazeAssistance.enabled = false;
             }
+        }
+
+        // Hands (M12): on each controller a hand in place of the controller model, curled by the grip and trigger and
+        // closed round whatever it holds (ControllerHand); and a tracked hand for when the controllers are put down
+        // (hand tracking over Link), driven joint by joint by XR Hands, with a fingertip poke and a fist-or-pinch
+        // grab. XRInputModalityManager shows one pair or the other. Both use the XR Hands sample's hand model; a glove
+        // model with the same L_/R_ joint names can replace it.
+        private static void Hands(GameObject rig, XROrigin origin)
+        {
+            Material material = HandMaterial();
+            var modality = rig.GetComponentInChildren<XRInputModalityManager>(true);
+            Transform cameraOffset = origin.CameraFloorOffsetObject.transform;
+            Transform tabletHandMount = null;
+            foreach (bool left in new[] { true, false })
+            {
+                string side = left ? "Left" : "Right";
+                GameObject model = HandModel(left);
+                Transform controller = rig.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == side + " Controller");
+                if (model == null || controller == null)
+                {
+                    Debug.LogWarning($"[XrSetup] No {side} hand model (run Configure XR to import the XR Hands sample) or no {side} Controller; hands skipped.");
+                    return;
+                }
+                string prefix = left ? "L_" : "R_";
+
+                // The controller model gives way to the hand.
+                Transform visual = controller.Find(side + " Controller Visual");
+                if (visual != null)
+                {
+                    Undo.RecordObject(visual.gameObject, "Build VR Rig");
+                    visual.gameObject.SetActive(false);
+                }
+                var nearFar = controller.GetComponentInChildren<NearFarInteractor>(true);
+                GameObject held = InstantiateHand(model, controller, side + " Hand (Controller)", material);
+                var hand = held.AddComponent<ControllerHand>();
+                var handSo = new SerializedObject(hand);
+                handSo.FindProperty("leftHand").boolValue = left;
+                handSo.FindProperty("interactor").objectReferenceValue = nearFar;
+                handSo.FindProperty("controller").objectReferenceValue = controller;
+                handSo.ApplyModifiedPropertiesWithoutUndo();
+                // The controller's poke follows the index fingertip, so buttons are pressed with the finger drawn.
+                var poke = controller.GetComponentInChildren<XRPokeInteractor>(true);
+                Transform heldTip = FindDeep(held.transform, prefix + "IndexTip");
+                if (poke != null && heldTip != null)
+                {
+                    Undo.RecordObject(poke, "Build VR Rig");
+                    poke.attachTransform = heldTip;
+                }
+
+                // The tracked hand, under the camera offset where XR Hands puts its joints.
+                GameObject tracked = InstantiateHand(model, cameraOffset, side + " Hand (Tracked)", material);
+                var events = tracked.AddComponent<XRHandTrackingEvents>();
+                events.handedness = left ? Handedness.Left : Handedness.Right;
+                events.updateType = XRHandTrackingEvents.UpdateTypes.Dynamic | XRHandTrackingEvents.UpdateTypes.BeforeRender;
+                var driver = tracked.AddComponent<XRHandSkeletonDriver>();
+                driver.handTrackingEvents = events;
+                driver.rootTransform = FindDeep(tracked.transform, prefix + "Wrist");
+                // Added from code the list is not created yet; FindJointsFromRoot fills it.
+                driver.jointTransformReferences = new List<JointToTransformReference>();
+                var missing = new List<string>();
+                driver.FindJointsFromRoot(missing);
+                if (missing.Count > 0)
+                    Debug.LogWarning($"[XrSetup] {side} tracked hand is missing joints: {string.Join(", ", missing)}");
+
+                var tip = new GameObject("Poke") { layer = rig.layer };
+                tip.transform.SetParent(FindDeep(tracked.transform, prefix + "IndexTip"), false);
+                tip.AddComponent<XRPokeInteractor>();
+
+                var grab = new GameObject("Grab");
+                Transform palm = FindDeep(tracked.transform, prefix + "Palm");
+                grab.transform.SetParent(palm, false);
+                Pose grip = HandPoseMath.GripInPalm(left);
+                grab.transform.SetLocalPositionAndRotation(grip.position, grip.rotation);
+                var sphere = grab.AddComponent<SphereCollider>();
+                sphere.isTrigger = true;
+                sphere.radius = 0.06f;
+                var grasp = grab.AddComponent<HandGrasp>();
+                var graspSo = new SerializedObject(grasp);
+                graspSo.FindProperty("trackingEvents").objectReferenceValue = events;
+                graspSo.ApplyModifiedPropertiesWithoutUndo();
+                var direct = grab.AddComponent<XRDirectInteractor>();
+                direct.improveAccuracyWithSphereCollider = true;
+                direct.physicsLayerMask = ~LayerMask.GetMask(UiLayer, "Ignore Raycast", "Trainee", "SafetyZone");
+                direct.selectInput.inputSourceMode = XRInputButtonReader.InputSourceMode.ObjectReference;
+                direct.selectInput.SetObjectReference(grasp);
+                direct.activateInput.inputSourceMode = XRInputButtonReader.InputSourceMode.ObjectReference;
+                direct.activateInput.SetObjectReference(grasp);
+
+                if (left)
+                {
+                    // On the tracked left hand the tablet lies along the forearm behind the wrist, its screen on the
+                    // side of the back of the hand and its top toward the thumb.
+                    var mount = new GameObject("Tablet Mount (Hand)");
+                    mount.transform.SetParent(driver.rootTransform, false);
+                    mount.transform.SetLocalPositionAndRotation(new Vector3(0f, 0.04f, -0.13f), Quaternion.LookRotation(Vector3.down, Vector3.right));
+                    tabletHandMount = mount.transform;
+                }
+                tracked.SetActive(false);
+
+                if (modality != null)
+                {
+                    var modalitySo = new SerializedObject(modality);
+                    modalitySo.FindProperty(left ? "m_LeftHand" : "m_RightHand").objectReferenceValue = tracked;
+                    modalitySo.ApplyModifiedProperties();
+                }
+            }
+
+            Transform tablet = rig.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == TabletName);
+            if (tablet != null && modality != null)
+            {
+                var mountSwitch = GetOrAdd<TabletMount>(rig);
+                var so = new SerializedObject(mountSwitch);
+                so.FindProperty("modality").objectReferenceValue = modality;
+                so.FindProperty("tablet").objectReferenceValue = tablet;
+                so.FindProperty("controllerMount").objectReferenceValue = tablet.parent;
+                so.FindProperty("handMount").objectReferenceValue = tabletHandMount;
+                so.ApplyModifiedProperties();
+            }
+        }
+
+        private static GameObject HandModel(bool left)
+        {
+            string file = left ? "LeftHand.fbx" : "RightHand.fbx";
+            return AssetDatabase.FindAssets("t:Model " + (left ? "LeftHand" : "RightHand"), new[] { "Assets/Samples/XR Hands" })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(p => p.Replace('\\', '/').EndsWith("/Models/" + file))
+                .Select(AssetDatabase.LoadAssetAtPath<GameObject>)
+                .FirstOrDefault();
+        }
+
+        private static GameObject InstantiateHand(GameObject model, Transform parent, string name, Material material)
+        {
+            var go = (GameObject)Object.Instantiate(model, parent, false);
+            go.name = name;
+            go.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            foreach (SkinnedMeshRenderer skin in go.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                skin.sharedMaterial = material;
+                skin.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                // The fingers move outside the bind pose's bounds; never cull the hand by them.
+                skin.updateWhenOffscreen = true;
+            }
+            foreach (Collider c in go.GetComponentsInChildren<Collider>(true))
+                Object.DestroyImmediate(c);
+            return go;
+        }
+
+        // A work glove: dark grey fabric, matte. Kept under Art/Hands so a glove model's own material can replace it.
+        private static Material HandMaterial()
+        {
+            if (!AssetDatabase.IsValidFolder("Assets/_Project/Art/Hands"))
+                AssetDatabase.CreateFolder("Assets/_Project/Art", "Hands");
+            var material = AssetDatabase.LoadAssetAtPath<Material>(HandMaterialPath);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                AssetDatabase.CreateAsset(material, HandMaterialPath);
+            }
+            material.SetColor("_BaseColor", new Color(0.24f, 0.26f, 0.29f));
+            material.SetFloat("_Smoothness", 0.18f);
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        private static Transform FindDeep(Transform parent, string name)
+        {
+            return parent.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == name);
         }
 
         // A station button pressed with a fingertip: the poke runs along the button's own +Y, which faces into the
@@ -489,6 +697,35 @@ namespace TwoDude.FactoryTwin.UI
             poke.pokeCollider = box;
             EditorUtility.SetDirty(interactable);
             EditorUtility.SetDirty(poke);
+        }
+
+        // A solid slab behind a panel: the board's back and the tablet's body. World-space UI draws in the transparent
+        // pass, so without it the hall, the safety-zone volumes and the decals showed through the panels in the headset.
+        // The slab sits just behind the document (whose front faces -Z), a margin larger all round, with no collider.
+        private static void Backing(GameObject panel, float width, float height, float margin, float depth)
+        {
+            const string materialPath = "Assets/_Project/UI/Vr/PanelBacking.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                AssetDatabase.CreateAsset(material, materialPath);
+            }
+            material.SetColor("_BaseColor", new Color(0.035f, 0.04f, 0.045f));
+            material.SetFloat("_Smoothness", 0.45f);
+            EditorUtility.SetDirty(material);
+
+            GameObject slab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            slab.name = "Backing";
+            Object.DestroyImmediate(slab.GetComponent<Collider>());
+            slab.transform.SetParent(panel.transform, false);
+            float scale = panel.transform.localScale.x;
+            float thick = depth / scale;
+            slab.transform.localPosition = new Vector3(0f, 0f, 0.002f / scale + thick * 0.5f);
+            slab.transform.localScale = new Vector3((width + 2f * margin) / 100f, (height + 2f * margin) / 100f, thick);
+            var renderer = slab.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
         private static T GetOrAdd<T>(GameObject go) where T : Component

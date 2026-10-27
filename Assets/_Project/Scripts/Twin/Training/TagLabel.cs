@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 namespace TwoDude.FactoryTwin.Twin
@@ -7,7 +8,7 @@ namespace TwoDude.FactoryTwin.Twin
     /// employee who applied it and to warn against energizing, so it reads DANGER, DO NOT OPERATE and the trainee's
     /// name from the training controller.
     /// </summary>
-    [RequireComponent(typeof(TextMesh))]
+    [RequireComponent(typeof(TextMeshPro))]
     public sealed class TagLabel : MonoBehaviour
     {
         [SerializeField] private TrainingController training;
@@ -15,7 +16,7 @@ namespace TwoDude.FactoryTwin.Twin
         private void Start()
         {
             string name = training != null ? training.TraineeName : string.Empty;
-            GetComponent<TextMesh>().text = Words(name);
+            GetComponent<TextMeshPro>().text = Words(name);
         }
 
         public static string Words(string trainee) =>

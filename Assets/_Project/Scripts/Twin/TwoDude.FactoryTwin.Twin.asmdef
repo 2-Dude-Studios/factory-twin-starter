@@ -1,7 +1,9 @@
 {
     "name": "TwoDude.FactoryTwin.Twin",
     "rootNamespace": "TwoDude.FactoryTwin.Twin",
-    "references": [],
+    "references": [
+        "Unity.TextMeshPro"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
