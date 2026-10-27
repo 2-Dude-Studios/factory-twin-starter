@@ -68,7 +68,7 @@ namespace TwoDude.FactoryTwin.Tests
 
             log.Observe(Num(CellTopics.TrainingStep, 1));
             log.Observe(Num(CellTopics.TrainingResult, (int)TrainingOutcome.InProgress));
-            log.Observe(Num(CellTopics.TrainingAction, (int)LockoutAction.Notify));
+            log.Observe(Num(CellTopics.TrainingAction, (int)LockoutAction.ReviewProcedure));
             log.Observe(Num(CellTopics.TrainingStep, 2));
             // The controller reacts inside the action's delivery: the mistake and the count arrive before the action.
             log.Observe(Num(CellTopics.TrainingMistake, (int)LockoutAction.ChangeTool));
@@ -77,9 +77,9 @@ namespace TwoDude.FactoryTwin.Tests
             log.Observe(Num(CellTopics.PressIsolated, 1));
 
             Assert.AreEqual("CNC isolated at its main isolator", log.Entries[0].Text);
-            Assert.AreEqual("Mistake: Change tool before: Stop the line", log.Entries[1].Text);
+            Assert.AreEqual("Mistake: Change tool before: Notify affected employees", log.Entries[1].Text);
             Assert.AreEqual(LogSeverity.Warning, log.Entries[1].Severity);
-            Assert.AreEqual("Step 1 done: Notify affected employees", log.Entries[2].Text);
+            Assert.AreEqual("Step 1 done: Prepare: read the CNC's energy control procedure", log.Entries[2].Text);
             Assert.AreEqual("Lockout training started", log.Entries[3].Text);
         }
 

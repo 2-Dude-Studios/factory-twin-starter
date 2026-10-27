@@ -19,17 +19,17 @@ namespace TwoDude.FactoryTwin.Tests
         public void Step_NamesTheStepDueOnlyWhileARunIsOn()
         {
             Assert.AreEqual(string.Empty, VrHudText.Step(0, TrainingOutcome.Idle));
-            Assert.AreEqual("Step 4 of 12: Apply your lock and tag", VrHudText.Step(4, TrainingOutcome.InProgress));
-            Assert.AreEqual("Lockout done, with mistakes", VrHudText.Step(13, TrainingOutcome.PassedWithErrors));
+            Assert.AreEqual("Step 5 of 14: Apply your lock and tag", VrHudText.Step(5, TrainingOutcome.InProgress));
+            Assert.AreEqual("Lockout done, with mistakes", VrHudText.Step(15, TrainingOutcome.PassedWithErrors));
         }
 
         [Test]
         public void Current_And_Next_NameTheTaskAtHandAndTheOneAfter()
         {
-            Assert.AreEqual("NOW · STEP 4 OF 12", VrHudText.NowLabel(4, TrainingOutcome.InProgress));
-            Assert.AreEqual("Apply your lock and tag", VrHudText.Current(4, TrainingOutcome.InProgress));
-            Assert.AreEqual(LockoutProcedure.Steps[4].Title, VrHudText.Next(4, TrainingOutcome.InProgress));
-            Assert.AreEqual("Last step", VrHudText.Next(12, TrainingOutcome.InProgress));
+            Assert.AreEqual("NOW · STEP 5 OF 14", VrHudText.NowLabel(5, TrainingOutcome.InProgress));
+            Assert.AreEqual("Apply your lock and tag", VrHudText.Current(5, TrainingOutcome.InProgress));
+            Assert.AreEqual(LockoutProcedure.Steps[5].Title, VrHudText.Next(5, TrainingOutcome.InProgress));
+            Assert.AreEqual("Last step", VrHudText.Next(14, TrainingOutcome.InProgress));
         }
 
         [Test]
@@ -38,9 +38,9 @@ namespace TwoDude.FactoryTwin.Tests
             Assert.AreEqual("LOCKOUT TRAINING", VrHudText.NowLabel(0, TrainingOutcome.Idle));
             Assert.AreEqual("Not started: press Lockout training", VrHudText.Current(0, TrainingOutcome.Idle));
             Assert.AreEqual(string.Empty, VrHudText.Next(0, TrainingOutcome.Idle));
-            Assert.AreEqual("LOCKOUT COMPLETE", VrHudText.NowLabel(13, TrainingOutcome.PassedWithErrors));
-            Assert.AreEqual("Done, with mistakes", VrHudText.Current(13, TrainingOutcome.PassedWithErrors));
-            Assert.AreEqual(string.Empty, VrHudText.Next(13, TrainingOutcome.Passed));
+            Assert.AreEqual("LOCKOUT COMPLETE", VrHudText.NowLabel(15, TrainingOutcome.PassedWithErrors));
+            Assert.AreEqual("Done, with mistakes", VrHudText.Current(15, TrainingOutcome.PassedWithErrors));
+            Assert.AreEqual(string.Empty, VrHudText.Next(15, TrainingOutcome.Passed));
         }
 
         [Test]
@@ -58,19 +58,43 @@ namespace TwoDude.FactoryTwin.Tests
         [Test]
         public void Where_SaysWhichPointAndHowToUseIt_OnlyDuringARun()
         {
-            Assert.AreEqual("Control station: blue intercom button. Press it with your finger, or point and pull the trigger.", VrHudText.Where(1, TrainingOutcome.InProgress));
-            Assert.AreEqual("CNC, east end: red handle on the yellow isolator. Grip the handle and twist it a quarter turn.", VrHudText.Where(3, TrainingOutcome.InProgress));
-            Assert.AreEqual("CNC, east end: the hasp under the isolator; your lock is on the board beside it. Grip your lock and hang it on the hasp; take it off the same way.", VrHudText.Where(4, TrainingOutcome.InProgress));
+            Assert.AreEqual("Control station: blue intercom button. Press it with your finger, or point and pull the trigger.", VrHudText.Where(2, TrainingOutcome.InProgress));
+            Assert.AreEqual("CNC, east end: red handle on the yellow isolator. Grip the handle and twist it a quarter turn.", VrHudText.Where(4, TrainingOutcome.InProgress));
+            Assert.AreEqual("CNC, east end: the hasp under the isolator; your lock is on the board beside it. Grip your lock and hang it on the hasp; take it off the same way.", VrHudText.Where(5, TrainingOutcome.InProgress));
             Assert.AreEqual(string.Empty, VrHudText.Where(0, TrainingOutcome.Idle));
-            Assert.AreEqual(string.Empty, VrHudText.Where(13, TrainingOutcome.Passed));
+            Assert.AreEqual(string.Empty, VrHudText.Where(15, TrainingOutcome.Passed));
         }
 
         [Test]
         public void Refusal_SaysWhatIsDueAndWhere()
         {
-            Assert.AreEqual("Not yet: Remove lock and tag. First: Clear the area and notify employees (Control station: white all-clear button).",
-                VrHudText.Refusal(LockoutAction.RemoveLock, 9, TrainingOutcome.InProgress));
+            Assert.AreEqual("Not yet: Remove lock and tag. First: Check the work area: everyone clear (Control station: white area-clear button).",
+                VrHudText.Refusal(LockoutAction.RemoveLock, 10, TrainingOutcome.InProgress));
+            StringAssert.StartsWith("Not clear: someone is still in the work area.",
+                VrHudText.Refusal(LockoutAction.CheckArea, 10, TrainingOutcome.InProgress, areaOccupied: true));
             Assert.AreEqual(string.Empty, VrHudText.Refusal(LockoutAction.Start, 0, TrainingOutcome.Idle));
+        }
+
+        [Test]
+        public void Crew_StandsClearFromTheFirstNoticeToTheLast_AndTheColleagueComesBackAfterServicing()
+        {
+            Assert.AreEqual(2, CrewRules.FirstNotifyStep);
+            Assert.AreEqual(12, CrewRules.LastNotifyStep);
+            Assert.IsFalse(CrewRules.StandClear(2, TrainingOutcome.InProgress), "not notified yet");
+            Assert.IsTrue(CrewRules.StandClear(3, TrainingOutcome.InProgress));
+            Assert.IsTrue(CrewRules.StandClear(12, TrainingOutcome.InProgress), "still clear until told the lock is off");
+            Assert.IsFalse(CrewRules.StandClear(13, TrainingOutcome.InProgress));
+            Assert.IsFalse(CrewRules.StandClear(5, TrainingOutcome.Idle));
+            Assert.IsFalse(CrewRules.ColleagueInArea(8, TrainingOutcome.InProgress), "servicing still due");
+            Assert.IsTrue(CrewRules.ColleagueInArea(9, TrainingOutcome.InProgress));
+            Assert.IsTrue(CrewRules.ColleagueInArea(10, TrainingOutcome.InProgress), "there for the area check");
+            Assert.IsFalse(CrewRules.ColleagueInArea(11, TrainingOutcome.InProgress));
+        }
+
+        [Test]
+        public void Tag_WarnsAndNamesWhoAppliedIt()
+        {
+            Assert.AreEqual("DANGER\nDO NOT\nOPERATE\n\nApoorv Garg", TagLabel.Words("Apoorv Garg"));
         }
 
         [Test]

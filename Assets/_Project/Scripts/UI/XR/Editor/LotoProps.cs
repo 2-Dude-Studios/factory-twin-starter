@@ -99,7 +99,8 @@ namespace TwoDude.FactoryTwin.UI
             Part(padlock.transform, "Padlock_Shackle", Vector3.zero, PrimitiveType.Cube, new Vector3(0.006f, 0.03f, 0.028f), new Vector3(0f, -0.012f, 0f), Steel);
             Transform lockBody = Part(padlock.transform, "Padlock_Body", new Vector3(0f, -0.03f, 0f), PrimitiveType.Cube,
                 new Vector3(0.02f, 0.045f, 0.038f), new Vector3(0f, -0.0225f, 0f), Red);
-            Part(padlock.transform, "Tag", new Vector3(0f, -0.075f, 0f), PrimitiveType.Cube, new Vector3(0.002f, 0.145f, 0.075f), new Vector3(0f, -0.0725f, 0f), White);
+            Transform tag = Part(padlock.transform, "Tag", new Vector3(0f, -0.075f, 0f), PrimitiveType.Cube, new Vector3(0.002f, 0.145f, 0.075f), new Vector3(0f, -0.0725f, 0f), White);
+            TagText(tag);
             XRGrabInteractable grab = Grabbable(padlock, "padlock", peg);
             peg.startingSelectedInteractable = grab;
             Prompt(padlock, grab, point, hud);
@@ -143,6 +144,26 @@ namespace TwoDude.FactoryTwin.UI
             var change = prop.gameObject.AddComponent<XrToolChange>();
             Set(change, ("point", point), ("spindle", spindle));
             Highlight(point, new Color(0.1f, 0.8f, 0.85f), wornHolder, freshHolder);
+        }
+
+        // The tag's words on its east face (DANGER, DO NOT OPERATE, the trainee's name), set at run time by TagLabel.
+        private static void TagText(Transform tag)
+        {
+            var go = new GameObject("Tag_Text");
+            go.transform.SetParent(tag, false);
+            go.transform.localPosition = new Vector3(0.0015f, -0.012f, -0.033f);
+            go.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
+            var mesh = go.AddComponent<TextMesh>();
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            mesh.font = font;
+            mesh.text = TagLabel.Words(string.Empty);
+            mesh.fontSize = 64;
+            mesh.characterSize = 0.0022f;
+            mesh.anchor = TextAnchor.UpperLeft;
+            mesh.color = new Color(0.7f, 0.05f, 0.03f);
+            go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
+            var label = go.AddComponent<TagLabel>();
+            Set(label, ("training", Object.FindAnyObjectByType<TrainingController>()));
         }
 
         private static XRGrabInteractable Tool(Transform prop, string name, Vector3 at, XRSocketInteractor home, VrHud hud, TrainingPoint point, out Transform holder)

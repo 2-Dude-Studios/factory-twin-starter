@@ -5,7 +5,9 @@ namespace TwoDude.FactoryTwin.Twin
 {
     /// <summary>
     /// Training: one thing the trainee does at the CNC or the line. Published as a number on cell/training/action.
-    /// Start is pressed twice in a lockout: once to verify the isolation (nothing may move) and once to restart.
+    /// Start is pressed twice in a lockout: once to verify the isolation (nothing may move) and once to restart;
+    /// Notify twice: before the lock goes on and after it comes off. The numbers never change (records and the
+    /// bus carry them); new actions are added at the end.
     /// </summary>
     public enum LockoutAction
     {
@@ -18,9 +20,13 @@ namespace TwoDude.FactoryTwin.Twin
         Start = 6,
         ChangeTool = 7,
         Inspect = 8,
-        ClearAndNotify = 9,
+        CheckArea = 9,
         RemoveLock = 10,
         IsolatorOn = 11,
+        ReviewProcedure = 12,
+
+        /// <summary>Asking a colleague to stand clear of the work area: something the trainee does, not a step.</summary>
+        AskStandClear = 13,
     }
 
     /// <summary>Training: how a lockout run stands. Published as a number on cell/training/result.</summary>
@@ -79,6 +85,7 @@ namespace TwoDude.FactoryTwin.Twin
         /// <summary>The cell's procedure, in order.</summary>
         public static readonly IReadOnlyList<LockoutStep> Steps = new[]
         {
+            new LockoutStep(LockoutAction.ReviewProcedure, "Prepare: read the CNC's energy control procedure", "1910.147(d)(1)"),
             new LockoutStep(LockoutAction.Notify, "Notify affected employees", "1910.147(c)(9)"),
             new LockoutStep(LockoutAction.Stop, "Stop the line", "1910.147(d)(2)"),
             new LockoutStep(LockoutAction.IsolatorOff, "Isolate the CNC at its main isolator", "1910.147(d)(3)"),
@@ -87,8 +94,9 @@ namespace TwoDude.FactoryTwin.Twin
             new LockoutStep(LockoutAction.Start, "Verify the isolation: try to start, nothing may move", "1910.147(d)(6)"),
             new LockoutStep(LockoutAction.ChangeTool, "Change the tool", "Servicing"),
             new LockoutStep(LockoutAction.Inspect, "Inspect: tools removed, guards back on", "1910.147(e)(1)"),
-            new LockoutStep(LockoutAction.ClearAndNotify, "Clear the area and notify employees", "1910.147(e)(2)"),
+            new LockoutStep(LockoutAction.CheckArea, "Check the work area: everyone clear", "1910.147(e)(2)(i)"),
             new LockoutStep(LockoutAction.RemoveLock, "Remove your lock and tag", "1910.147(e)(3)"),
+            new LockoutStep(LockoutAction.Notify, "Notify affected employees: lock and tag removed", "1910.147(e)(2)(ii)"),
             new LockoutStep(LockoutAction.IsolatorOn, "Restore energy at the isolator", "1910.147(e)"),
             new LockoutStep(LockoutAction.Start, "Restart the line", "1910.147(e)"),
         };
@@ -147,13 +155,16 @@ namespace TwoDude.FactoryTwin.Twin
         /// per step: doing the same wrong thing again on the same step is refused but not counted again
         /// (<see cref="LastWasRepeat"/>), so one misunderstanding costs one mistake, not one per try.
         /// </summary>
-        public bool Attempt(LockoutAction action, double atSeconds)
+        public bool Attempt(LockoutAction action, double atSeconds, bool workAreaClear = true)
         {
             LastWasRepeat = false;
-            if (!IsRunning || IsComplete || action == LockoutAction.None)
+            if (!IsRunning || IsComplete || !IsProcedureAction(action))
                 return false;
 
             LockoutStep due = Steps[Done];
+            // The area check is the step due but someone is still in the work area: 1910.147(e)(2)(i) is not met.
+            if (action == LockoutAction.CheckArea && due.Action == LockoutAction.CheckArea && !workAreaClear)
+                return Mistake(action, atSeconds, "Area checked with someone still in the work area");
             if (action == due.Action)
             {
                 Done++;
@@ -163,6 +174,18 @@ namespace TwoDude.FactoryTwin.Twin
                 return true;
             }
 
+            return Mistake(action, atSeconds, $"{Describe(action)} before: {due.Title}");
+        }
+
+        /// <summary>
+        /// True for the actions the procedure is made of; asking a colleague to stand clear is something the trainee
+        /// does along the way, neither a step nor a mistake.
+        /// </summary>
+        public static bool IsProcedureAction(LockoutAction action) =>
+            action != LockoutAction.None && action != LockoutAction.AskStandClear;
+
+        private bool Mistake(LockoutAction action, double atSeconds, string text)
+        {
             foreach (TrainingEvent e in _events)
             {
                 if (e.Mistake && e.Step == Done + 1 && e.Action == action)
@@ -172,7 +195,7 @@ namespace TwoDude.FactoryTwin.Twin
                 }
             }
             Errors++;
-            _events.Add(new TrainingEvent(atSeconds, Done + 1, action, true, $"{Describe(action)} before: {due.Title}"));
+            _events.Add(new TrainingEvent(atSeconds, Done + 1, action, true, text));
             return false;
         }
 
@@ -202,7 +225,9 @@ namespace TwoDude.FactoryTwin.Twin
                 case LockoutAction.Start: return "Start";
                 case LockoutAction.ChangeTool: return "Change tool";
                 case LockoutAction.Inspect: return "Inspect";
-                case LockoutAction.ClearAndNotify: return "Clear and notify";
+                case LockoutAction.CheckArea: return "Area check";
+                case LockoutAction.ReviewProcedure: return "Read the procedure";
+                case LockoutAction.AskStandClear: return "Ask to stand clear";
                 case LockoutAction.RemoveLock: return "Remove lock and tag";
                 case LockoutAction.IsolatorOn: return "Isolator on";
                 default: return "Nothing";

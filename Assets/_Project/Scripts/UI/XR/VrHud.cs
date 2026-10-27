@@ -21,6 +21,7 @@ namespace TwoDude.FactoryTwin.UI
         private IDisposable _subscription;
         private Label _nowLabel, _current, _where, _refusal, _next, _status, _prompt;
         private float _refusalUntil;
+        private bool _areaOccupied;
         private VisualElement _nextRow;
         private SafetyState _safety;
         private CellState _line;
@@ -70,9 +71,14 @@ namespace TwoDude.FactoryTwin.UI
         private void OnMessage(SignalMessage message)
         {
             // The step due has not moved yet when a refusal arrives, so it names the step still to do.
+            if (message.Topic == CellTopics.TrainingAreaOccupied)
+            {
+                _areaOccupied = message.Value.AsNumber != 0d;
+                return;
+            }
             if (message.Topic == CellTopics.TrainingMistake && _refusal != null)
             {
-                string text = VrHudText.Refusal((LockoutAction)(int)message.Value.AsNumber, _stepNumber, _outcome);
+                string text = VrHudText.Refusal((LockoutAction)(int)message.Value.AsNumber, _stepNumber, _outcome, _areaOccupied);
                 _refusal.text = text;
                 _refusal.EnableInClassList("hidden", string.IsNullOrEmpty(text));
                 _refusalUntil = Time.time + refusalSeconds;

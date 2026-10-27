@@ -11,14 +11,16 @@ using UnityEngine.AI;
 namespace TwoDude.FactoryTwin.Twin
 {
     /// <summary>
-    /// Training (M12): places three simulated co-workers beside the cell from the Quaternius "Animated Human" model
-    /// (CC0, Assets/ThirdParty/Quaternius). One tends the infeed, east of the warning zone, standing and working by
-    /// turns; one works the outfeed end, west of it, and walks to the aisle and back; neither ever enters the robot
-    /// zone. The third, the zone walker, waits south of the zone on the Trainee layer until the commissioning suite
-    /// sends them in, so the real zone sensors see them; a NavMesh baked over the cell's floor (Cell/Training/
-    /// WalkArea) takes them round the conveyors and props, and each spot is snapped to it and checked against the
-    /// zone it is meant to be in. Their clothes are our own palette textures (hi-vis shirts, a blue one for the zone
-    /// walker), so nothing in ThirdParty is edited beyond its import settings. Running it again rebuilds them in place.
+    /// Training (M12): places four simulated co-workers beside the cell from the Quaternius "Animated Human" model
+    /// (CC0, Assets/ThirdParty/Quaternius). Two operators, the affected employees of a lockout: one tends the infeed,
+    /// east of the warning zone, standing and working by turns, one works the outfeed end, west of it, and walks to the
+    /// aisle and back; when notified of a lockout both stand clear until told the lock is off. A maintenance colleague
+    /// comes into the CNC's work area after the tool change, so the trainee's area check finds them (WorkArea). The
+    /// zone walker waits south of the robot zone on the Trainee layer until the commissioning suite sends them in, so
+    /// the real zone sensors see them; a NavMesh baked over the cell's floor (Cell/Training/WalkArea) takes them round
+    /// the conveyors and props, and each spot is snapped to it and checked against the zone it is meant to be in.
+    /// Their clothes are our own palette textures, so nothing in ThirdParty is edited beyond its import settings.
+    /// Run Build Training Points first (the colleague joins its guide). Running it again rebuilds them in place.
     /// </summary>
     internal static class WorkersSetup
     {
@@ -66,6 +68,7 @@ namespace TwoDude.FactoryTwin.Twin
             Material loader = Look("WorkerA", new Color32(255, 209, 159, 255), new Color32(124, 88, 35, 255), new Color32(255, 112, 16, 255), new Color32(32, 42, 64, 255));
             Material carrier = Look("WorkerB", new Color32(141, 85, 54, 255), new Color32(30, 26, 24, 255), new Color32(214, 232, 40, 255), new Color32(64, 66, 72, 255));
             Material technician = Look("WorkerC", new Color32(198, 134, 66, 255), new Color32(20, 18, 16, 255), new Color32(36, 104, 196, 255), new Color32(40, 44, 52, 255));
+            Material maintenance = Look("WorkerD", new Color32(232, 180, 140, 255), new Color32(90, 60, 40, 255), new Color32(120, 120, 128, 255), new Color32(36, 52, 90, 255));
 
             Undo.SetCurrentGroupName("Build Simulated Workers");
             int undoGroup = Undo.GetCurrentGroup();
@@ -78,13 +81,25 @@ namespace TwoDude.FactoryTwin.Twin
 
             // Warning zone: x -4.2 to 0.2, z -1.0 to 3.4 (SafetyZoneSetup). The infeed starts at x 0.25, the outfeed
             // ends at x -4.85, both on the cell's long axis.
+            // Each operator is an affected employee: notified of a lockout, they stand clear at a spot facing the cell.
             var infeed = new Vector3(0.95f, 0f, 0.35f);
-            Worker(workers.transform, "Worker_Infeed", loader, controller,
+            Transform infeedWorker = Worker(workers.transform, "Worker_Infeed", loader, controller, context,
+                (new Vector3(2.4f, 0f, -0.5f), -120f, 0f, "Idle"),
                 (infeed, -90f, 7f, "Idle"),
                 (infeed, -90f, 9f, "Working"));
-            Worker(workers.transform, "Worker_Outfeed", carrier, controller,
+            Transform outfeedWorker = Worker(workers.transform, "Worker_Outfeed", carrier, controller, context,
+                (new Vector3(-6.1f, 0f, -0.6f), 70f, 0f, "Idle"),
                 (new Vector3(-5.4f, 0f, 1.2f), 90f, 10f, "Working"),
                 (new Vector3(-5.4f, 0f, -1.7f), 200f, 6f, "Idle"));
+
+            // The maintenance colleague waits north-east of the CNC, comes into its work area (east of the machine, by the
+            // isolator and the inspection plate) after the tool change, and stands clear when asked.
+            Transform colleague = Colleague(workers.transform, maintenance, controller, context,
+                (new Vector3(3.1f, 0f, 5.0f), -110f, "Idle"),
+                (new Vector3(1.45f, 0f, 4.3f), -90f, "Idle"),
+                (new Vector3(3.0f, 0f, 3.0f), -100f, "Idle"));
+            Area(workers.transform, context, new Bounds(new Vector3(1.5f, 1f, 3.9f), new Vector3(1.4f, 2f, 3.0f)),
+                infeedWorker, outfeedWorker, colleague);
 
             // The zone walker comes in through the zone's open south side (protective zone z 0 to 2.4, x -3.2 to
             // -0.8), clear of the trainee's start at (-2, -2.6): home outside both zones, a spot in the warning zone
@@ -98,7 +113,7 @@ namespace TwoDude.FactoryTwin.Twin
 
             Undo.CollapseUndoOperations(undoGroup);
             EditorSceneManager.MarkSceneDirty(training.scene);
-            Debug.Log("[WorkersSetup] Three simulated workers built under Cell/Training/Workers: two outside the robot zone, the zone walker for the suite.");
+            Debug.Log("[WorkersSetup] Four simulated workers built under Cell/Training/Workers: two operators who stand clear during a lockout, the maintenance colleague for the area check, and the zone walker for the suite.");
         }
 
         // Generic rig, our materials, the four clips named plainly and looping; the pack's two unnamed actions dropped.
@@ -190,7 +205,9 @@ namespace TwoDude.FactoryTwin.Twin
             return material;
         }
 
-        private static void Worker(Transform parent, string name, Material material, AnimatorController controller,
+        // An operator: the first entry is where they stand clear during a lockout, the rest their working stops.
+        private static Transform Worker(Transform parent, string name, Material material, AnimatorController controller, CellContext context,
+            (Vector3 position, float yaw, float workSeconds, string state) standClear,
             params (Vector3 position, float yaw, float workSeconds, string state)[] stops)
         {
             GameObject root = Root(parent, name, stops[0].position, stops[0].yaw);
@@ -199,16 +216,82 @@ namespace TwoDude.FactoryTwin.Twin
             var worker = root.AddComponent<SimulatedWorker>();
             var so = new SerializedObject(worker);
             so.FindProperty("animator").objectReferenceValue = animator;
+            so.FindProperty("context").objectReferenceValue = context;
             SerializedProperty list = so.FindProperty("stops");
             list.arraySize = stops.Length;
             for (int i = 0; i < stops.Length; i++)
+                SetStop(list.GetArrayElementAtIndex(i), stops[i]);
+            SetStop(so.FindProperty("standClear"), standClear);
+            so.ApplyModifiedProperties();
+            return root.transform;
+        }
+
+        private static void SetStop(SerializedProperty entry, (Vector3 position, float yaw, float workSeconds, string state) stop)
+        {
+            entry.FindPropertyRelative("position").vector3Value = stop.position;
+            entry.FindPropertyRelative("yawDegrees").floatValue = stop.yaw;
+            entry.FindPropertyRelative("workSeconds").floatValue = stop.workSeconds;
+            entry.FindPropertyRelative("state").stringValue = stop.state;
+        }
+
+        // The colleague is a training point too (Colleague): a click, or a controller ray and trigger, asks them to
+        // stand clear. The guide's beacon points at them while they block the area check.
+        private static Transform Colleague(Transform parent, Material material, AnimatorController controller, CellContext context,
+            (Vector3 position, float yaw, string state) home, (Vector3 position, float yaw, string state) workArea,
+            (Vector3 position, float yaw, string state) clear)
+        {
+            GameObject root = Root(parent, "Worker_Colleague", home.position, home.yaw);
+            Animator animator = Model(root, material, controller);
+            var capsule = root.AddComponent<CapsuleCollider>();
+            capsule.isTrigger = true;
+            capsule.height = Height;
+            capsule.radius = 0.3f;
+            capsule.center = new Vector3(0f, Height / 2f, 0f);
+
+            var point = root.AddComponent<TrainingPoint>();
+            var pointSo = new SerializedObject(point);
+            pointSo.FindProperty("context").objectReferenceValue = context;
+            pointSo.FindProperty("kind").enumValueIndex = (int)TrainingPointKind.Colleague;
+            pointSo.FindProperty("highlight").arraySize = 0;
+            pointSo.ApplyModifiedProperties();
+
+            var npc = root.AddComponent<NpcColleague>();
+            var so = new SerializedObject(npc);
+            so.FindProperty("context").objectReferenceValue = context;
+            so.FindProperty("animator").objectReferenceValue = animator;
+            foreach (var (field, spot) in new[] { ("home", home), ("workArea", workArea), ("clear", clear) })
             {
-                SerializedProperty entry = list.GetArrayElementAtIndex(i);
-                entry.FindPropertyRelative("position").vector3Value = stops[i].position;
-                entry.FindPropertyRelative("yawDegrees").floatValue = stops[i].yaw;
-                entry.FindPropertyRelative("workSeconds").floatValue = stops[i].workSeconds;
-                entry.FindPropertyRelative("state").stringValue = stops[i].state;
+                SerializedProperty entry = so.FindProperty(field);
+                entry.FindPropertyRelative("position").vector3Value = spot.position;
+                entry.FindPropertyRelative("yawDegrees").floatValue = spot.yaw;
+                entry.FindPropertyRelative("state").stringValue = spot.state;
             }
+            so.ApplyModifiedProperties();
+
+            TrainingGuide guide = Object.FindAnyObjectByType<TrainingGuide>();
+            if (guide != null)
+            {
+                var guideSo = new SerializedObject(guide);
+                guideSo.FindProperty("colleague").objectReferenceValue = point;
+                guideSo.ApplyModifiedProperties();
+            }
+            else
+                Debug.LogWarning("[WorkersSetup] No TrainingGuide; run Build Training Points first so the beacon can point at the colleague.");
+            return root.transform;
+        }
+
+        private static void Area(Transform parent, CellContext context, Bounds bounds, params Transform[] people)
+        {
+            var go = new GameObject("WorkArea");
+            go.transform.SetParent(parent, false);
+            var area = go.AddComponent<WorkArea>();
+            var so = new SerializedObject(area);
+            so.FindProperty("context").objectReferenceValue = context;
+            so.FindProperty("bounds").boundsValue = bounds;
+            SerializedProperty list = so.FindProperty("people");
+            list.arraySize = people.Length;
+            for (int i = 0; i < people.Length; i++)
+                list.GetArrayElementAtIndex(i).objectReferenceValue = people[i];
             so.ApplyModifiedProperties();
         }
 

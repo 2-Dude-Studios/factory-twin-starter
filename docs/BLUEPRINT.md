@@ -106,7 +106,7 @@ Three ideas hold the design together:
 - QoS 0, not retained. A client that connects mid-run sees a signal only when it next changes.
 - Enumerations travel as numbers: `line/state` 0 feeding, 1 transferring, 2 stalled, 3 held; `press/health` 0 ok, 1 warning, 2 fault; `plc/source` 0 Unity, 1 PLC.
 
-### Topic catalogue (84 topics)
+### Topic catalogue (85 topics)
 
 **out** is state leaving the cell; **in** is a command or stimulus the cell obeys. Commands are visible on the broker too. The station is called `press` in topics and code; on screen it is a CNC machining centre (AI4I models milling).
 
@@ -190,6 +190,7 @@ Three ideas hold the design together:
 | `arm/speed_scale` | number | in | SafetyZoneController | Arm speed fraction: 1, 0.25 in the warning zone, 0 on the stop |
 | `safety/zone_force` | number | in | Commissioning suite | ForceMode on both zone sensors (a person) |
 | `safety/worker_walk` | number | in | Commissioning suite | Where the zone walker goes (M12): 0 home, 1 warning zone, 2 protective zone; the real sensors see them |
+| `training/area_occupied` | bool | out | WorkArea | Someone other than the trainee is in the CNC's work area; the area check (1910.147(e)(2)(i)) is refused while true |
 
 **Lockout training (M11)**, a training demo, not certified training:
 

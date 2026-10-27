@@ -37,11 +37,11 @@ namespace TwoDude.FactoryTwin.Tests
         [Test]
         public void StepPanel_ShowsTheStepDueWithItsParagraph()
         {
-            Assert.AreEqual("Step 3 of 12", DashboardViewModel.TrainingStepWords(3, TrainingOutcome.InProgress));
+            Assert.AreEqual("Step 4 of 14", DashboardViewModel.TrainingStepWords(4, TrainingOutcome.InProgress));
             Assert.AreEqual("Isolate the CNC at its main isolator · 1910.147(d)(3)",
-                DashboardViewModel.TrainingNextWords(3, TrainingOutcome.InProgress));
-            Assert.AreEqual("12 of 12 steps", DashboardViewModel.TrainingStepWords(13, TrainingOutcome.PassedWithErrors));
-            Assert.AreEqual("Lockout complete. Training record saved.", DashboardViewModel.TrainingNextWords(13, TrainingOutcome.Passed));
+                DashboardViewModel.TrainingNextWords(4, TrainingOutcome.InProgress));
+            Assert.AreEqual("14 of 14 steps", DashboardViewModel.TrainingStepWords(15, TrainingOutcome.PassedWithErrors));
+            Assert.AreEqual("Lockout complete. Training record saved.", DashboardViewModel.TrainingNextWords(15, TrainingOutcome.Passed));
             Assert.AreEqual("No mistakes", DashboardViewModel.MistakeWords(0));
             Assert.AreEqual("1 mistake", DashboardViewModel.MistakeWords(1));
             Assert.AreEqual("Done, with mistakes", DashboardViewModel.TrainingResultWords(TrainingOutcome.PassedWithErrors));

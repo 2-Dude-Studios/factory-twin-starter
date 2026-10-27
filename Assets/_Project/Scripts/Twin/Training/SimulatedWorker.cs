@@ -4,9 +4,11 @@ using UnityEngine;
 namespace TwoDude.FactoryTwin.Twin
 {
     /// <summary>
-    /// Training (M12): a simulated co-worker beside the cell, scene dressing for the training beats. It walks between
-    /// its stops and plays each stop's animation there (working, or standing), always outside the robot zone. It has
-    /// no collider and is not on the Trainee layer, so the zone sensors never see it, and it publishes nothing.
+    /// Training (M12): a simulated co-worker beside the cell, one of the affected employees of a lockout. It walks
+    /// between its stops and plays each stop's animation there (working, or standing), always outside the robot
+    /// zone. When the trainee notifies the crew of the shutdown it stops work and stands clear at its stand-clear
+    /// spot, facing the cell, until it is told the lock has come off (<see cref="CrewRules"/>). It has no collider
+    /// and is not on the Trainee layer, so the zone sensors never see it, and it publishes nothing.
     /// </summary>
     public sealed class SimulatedWorker : MonoBehaviour
     {
@@ -25,21 +27,27 @@ namespace TwoDude.FactoryTwin.Twin
         }
 
         [SerializeField] private Animator animator;
+        [Tooltip("Reads the training run, so the worker can stand clear during a lockout. Left empty, it just works.")]
+        [SerializeField] private CellContext context;
         [Tooltip("Where the worker stands, which way it faces, for how long and in which animator state, in world space. Two stops at one spot: it changes what it does without walking.")]
         [SerializeField] private Stop[] stops = Array.Empty<Stop>();
+        [Tooltip("Where the worker waits, facing the cell, while the CNC is locked out.")]
+        [SerializeField] private Stop standClear = new Stop();
         [SerializeField] private float walkSpeed = 1.1f;
         [SerializeField] private float turnDegreesPerSecond = 270f;
         [SerializeField] private string walkState = "Walk";
 
-        private int _walkHash;
+        private int _walkHash, _clearHash;
         private int[] _stateHashes = Array.Empty<int>();
         private int _index;
         private float _workLeft;
         private bool _walking;
+        private bool _clear;
 
         private void Awake()
         {
             _walkHash = Animator.StringToHash(walkState);
+            _clearHash = Animator.StringToHash(standClear.State);
             _stateHashes = new int[stops.Length];
             for (int i = 0; i < stops.Length; i++)
                 _stateHashes[i] = Animator.StringToHash(stops[i].State);
@@ -57,20 +65,31 @@ namespace TwoDude.FactoryTwin.Twin
         {
             if (stops.Length == 0)
                 return;
-            Stop stop = stops[_index];
+            bool clear = ShouldStandClear();
+            if (clear != _clear)
+            {
+                _clear = clear;
+                _walking = true;
+                Play(_walkHash);
+            }
+
+            Stop stop = _clear ? standClear : stops[_index];
             if (_walking)
             {
-                Vector3 to = stop.Position - transform.position;
-                to.y = 0f;
-                if (to.sqrMagnitude > 0.0001f)
-                    Turn(Quaternion.LookRotation(to, Vector3.up));
-                transform.position = Vector3.MoveTowards(transform.position, stop.Position, walkSpeed * Time.deltaTime);
-                if ((transform.position - stop.Position).sqrMagnitude < 0.0001f)
-                    BeginWork(_index);
+                if (Walk(stop.Position))
+                {
+                    _walking = false;
+                    if (_clear)
+                        Play(_clearHash);
+                    else
+                        BeginWork(_index);
+                }
                 return;
             }
 
             Turn(Quaternion.Euler(0f, stop.YawDegrees, 0f));
+            if (_clear)
+                return;
             _workLeft -= Time.deltaTime;
             if (_workLeft <= 0f && stops.Length > 1)
             {
@@ -84,6 +103,27 @@ namespace TwoDude.FactoryTwin.Twin
                 _walking = true;
                 Play(_walkHash);
             }
+        }
+
+        private bool ShouldStandClear()
+        {
+            if (context == null)
+                return false;
+            SignalBus bus = context.Bus;
+            int step = bus.TryGetLast(CellTopics.TrainingStep, out SignalMessage s) ? (int)s.Value.AsNumber : 0;
+            var outcome = bus.TryGetLast(CellTopics.TrainingResult, out SignalMessage r) ? (TrainingOutcome)(int)r.Value.AsNumber : TrainingOutcome.Idle;
+            return CrewRules.StandClear(step, outcome);
+        }
+
+        // One frame of walking toward the target; true on arrival.
+        private bool Walk(Vector3 target)
+        {
+            Vector3 to = target - transform.position;
+            to.y = 0f;
+            if (to.sqrMagnitude > 0.0001f)
+                Turn(Quaternion.LookRotation(to, Vector3.up));
+            transform.position = Vector3.MoveTowards(transform.position, target, walkSpeed * Time.deltaTime);
+            return (transform.position - target).sqrMagnitude < 0.0001f;
         }
 
         private void BeginWork(int index)

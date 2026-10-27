@@ -73,11 +73,13 @@ namespace TwoDude.FactoryTwin.UI
         /// What the HUD says when an action is refused: what was refused, and the step due with where to do it;
         /// empty outside a run.
         /// </summary>
-        public static string Refusal(LockoutAction refused, int step, TrainingOutcome outcome)
+        public static string Refusal(LockoutAction refused, int step, TrainingOutcome outcome, bool areaOccupied = false)
         {
             if (outcome != TrainingOutcome.InProgress || step < 1 || step > LockoutProcedure.Steps.Count)
                 return string.Empty;
             LockoutStep due = LockoutProcedure.Steps[step - 1];
+            if (refused == LockoutAction.CheckArea && due.Action == LockoutAction.CheckArea && areaOccupied)
+                return "Not clear: someone is still in the work area. Follow the beacon to them, point and pull the trigger to ask them to stand clear.";
             string where = TrainingPoints.TryKindFor(due.Action, out TrainingPointKind kind) ? " (" + TrainingPoints.Where(kind) + ")" : string.Empty;
             return $"Not yet: {LockoutProcedure.Describe(refused)}. First: {due.Title}{where}.";
         }
@@ -95,6 +97,7 @@ namespace TwoDude.FactoryTwin.UI
                 case TrainingPointKind.LockHasp: return "Grip your lock and hang it on the hasp; take it off the same way.";
                 case TrainingPointKind.AirDumpValve: return "Grip the lever and twist it a quarter turn.";
                 case TrainingPointKind.ToolChange: return "Grip the old tool out of the spindle and put the new one in.";
+                case TrainingPointKind.ProcedureCard: return "Read it, then point at it and pull the trigger.";
                 default: return "Point and pull the trigger.";
             }
         }

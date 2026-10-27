@@ -122,6 +122,10 @@ namespace TwoDude.FactoryTwin.Twin
         // 2 into the protective zone). Unlike zone_force, nothing is forced.
         public static readonly TopicPath SafetyWorkerWalk = new TopicPath("safety", "worker_walk");
 
+        // Lockout training (M12): true while anyone other than the trainee is in the CNC's work area. The area check
+        // (1910.147(e)(2)(i)) is refused while it is true.
+        public static readonly TopicPath TrainingAreaOccupied = new TopicPath("training", "area_occupied");
+
         // The arm's speed as a fraction of full speed (0–1), written by the safety zone and read by the arm through
         // its realvirtual signal: 1 normal, reduced in the warning zone, 0 on a protective stop.
         public static readonly TopicPath ArmSpeedScale = new TopicPath("arm", "speed_scale");

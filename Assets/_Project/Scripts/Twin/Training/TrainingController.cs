@@ -76,10 +76,11 @@ namespace TwoDude.FactoryTwin.Twin
         private void OnAction(SignalMessage message)
         {
             var action = (LockoutAction)(int)message.Value.AsNumber;
-            if (!_run.IsRunning || action == LockoutAction.None)
+            if (!_run.IsRunning || !LockoutProcedure.IsProcedureAction(action))
                 return;
 
-            bool due = _run.Attempt(action, Time.timeAsDouble - _startedAt);
+            bool areaClear = !(context.Bus.TryGetLast(CellTopics.TrainingAreaOccupied, out SignalMessage area) && area.Value.AsNumber != 0d);
+            bool due = _run.Attempt(action, Time.timeAsDouble - _startedAt, areaClear);
             if (!due)
                 Command(CellTopics.TrainingMistake, (int)action);
             if (due || LockoutProcedure.AlwaysReachesThePlant(action))

@@ -15,6 +15,12 @@ namespace TwoDude.FactoryTwin.Twin
         AirDumpValve = 6,
         ToolChange = 7,
         Inspection = 8,
+
+        /// <summary>The CNC's written energy control procedure, read before shutting down (1910.147(d)(1)).</summary>
+        ProcedureCard = 9,
+
+        /// <summary>A colleague who can be asked to stand clear of the work area.</summary>
+        Colleague = 10,
     }
 
     /// <summary>
@@ -31,7 +37,9 @@ namespace TwoDude.FactoryTwin.Twin
                 case TrainingPointKind.StartButton: return LockoutAction.Start;
                 case TrainingPointKind.StopButton: return LockoutAction.Stop;
                 case TrainingPointKind.NotifyButton: return LockoutAction.Notify;
-                case TrainingPointKind.AllClearButton: return LockoutAction.ClearAndNotify;
+                case TrainingPointKind.AllClearButton: return LockoutAction.CheckArea;
+                case TrainingPointKind.ProcedureCard: return LockoutAction.ReviewProcedure;
+                case TrainingPointKind.Colleague: return LockoutAction.AskStandClear;
                 case TrainingPointKind.Isolator: return isolated ? LockoutAction.IsolatorOn : LockoutAction.IsolatorOff;
                 case TrainingPointKind.LockHasp: return locked ? LockoutAction.RemoveLock : LockoutAction.ApplyLock;
                 case TrainingPointKind.AirDumpValve: return LockoutAction.ReleaseEnergy;
@@ -49,7 +57,8 @@ namespace TwoDude.FactoryTwin.Twin
                 case LockoutAction.Start: kind = TrainingPointKind.StartButton; return true;
                 case LockoutAction.Stop: kind = TrainingPointKind.StopButton; return true;
                 case LockoutAction.Notify: kind = TrainingPointKind.NotifyButton; return true;
-                case LockoutAction.ClearAndNotify: kind = TrainingPointKind.AllClearButton; return true;
+                case LockoutAction.CheckArea: kind = TrainingPointKind.AllClearButton; return true;
+                case LockoutAction.ReviewProcedure: kind = TrainingPointKind.ProcedureCard; return true;
                 case LockoutAction.IsolatorOff:
                 case LockoutAction.IsolatorOn: kind = TrainingPointKind.Isolator; return true;
                 case LockoutAction.ApplyLock:
@@ -69,7 +78,9 @@ namespace TwoDude.FactoryTwin.Twin
                 case TrainingPointKind.StartButton: return "Control station: green Start button";
                 case TrainingPointKind.StopButton: return "Control station: red Stop button";
                 case TrainingPointKind.NotifyButton: return "Control station: blue intercom button";
-                case TrainingPointKind.AllClearButton: return "Control station: white all-clear button";
+                case TrainingPointKind.AllClearButton: return "Control station: white area-clear button";
+                case TrainingPointKind.ProcedureCard: return "CNC, east end: the yellow energy control procedure card";
+                case TrainingPointKind.Colleague: return "The colleague in the work area";
                 case TrainingPointKind.Isolator: return "CNC, east end: red handle on the yellow isolator";
                 case TrainingPointKind.LockHasp: return "CNC, east end: the hasp under the isolator; your lock is on the board beside it";
                 case TrainingPointKind.AirDumpValve: return "CNC, east end, low down: the air-dump valve lever";
@@ -86,8 +97,10 @@ namespace TwoDude.FactoryTwin.Twin
             {
                 case TrainingPointKind.StartButton: return "Line start";
                 case TrainingPointKind.StopButton: return "Line stop";
-                case TrainingPointKind.NotifyButton: return "Intercom: notify the crew of the shutdown";
-                case TrainingPointKind.AllClearButton: return "Intercom: all clear, notify the crew";
+                case TrainingPointKind.NotifyButton: return "Intercom: notify the crew";
+                case TrainingPointKind.AllClearButton: return "Area check: everyone is clear of the CNC";
+                case TrainingPointKind.ProcedureCard: return "Energy control procedure: electrical, pneumatic, stored";
+                case TrainingPointKind.Colleague: return "Ask your colleague to stand clear";
                 case TrainingPointKind.Isolator: return isolated ? "CNC isolator: switch on" : "CNC isolator: switch off";
                 case TrainingPointKind.LockHasp: return locked ? "Remove your lock and tag" : "Apply your lock and tag";
                 case TrainingPointKind.AirDumpValve: return "Dump the air and check the spindle is at rest";

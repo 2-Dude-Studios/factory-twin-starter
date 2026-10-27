@@ -26,6 +26,15 @@ namespace TwoDude.FactoryTwin.Twin
         private static readonly Color White = new Color(0.92f, 0.94f, 0.96f);
         private static readonly Color Amber = new Color(1f, 0.68f, 0.05f);
         private static readonly Color Cyan = new Color(0.1f, 0.8f, 0.85f);
+        private static readonly Color Yellow = new Color(1f, 0.82f, 0.1f);
+
+        // The CNC's written energy control procedure (1910.147(c)(4)), what the trainee reads to prepare (d)(1).
+        private const string ProcedureText =
+            "ENERGY CONTROL PROCEDURE\nCNC machining centre 1\n\n" +
+            "1 Electrical, 400 V AC:\n   main isolator, yellow box\n" +
+            "2 Pneumatic, 6 bar:\n   air-dump valve, below it\n" +
+            "3 Stored: spindle inertia,\n   wait until it is at rest\n\n" +
+            "Lock: hasp under the isolator\nVerify: press Start,\n   nothing may move";
 
         [MenuItem("Tools/Factory Twin/Build Training Points")]
         private static void Build()
@@ -68,6 +77,10 @@ namespace TwoDude.FactoryTwin.Twin
             Point(points, "Isolator", TrainingPointKind.Isolator, PrimitiveType.Cube, new Vector3(east, 1.25f, b.center.z - 0.5f), new Vector3(0.12f, 0.24f, 0.18f), Amber, lamp, context);
             Point(points, "LockHasp", TrainingPointKind.LockHasp, PrimitiveType.Cube, new Vector3(east + 0.01f, 1.06f, b.center.z - 0.5f), new Vector3(0.05f, 0.07f, 0.07f), Red, lamp, context);
             Point(points, "AirDumpValve", TrainingPointKind.AirDumpValve, PrimitiveType.Cylinder, new Vector3(east, 0.7f, b.center.z + 0.1f), new Vector3(0.1f, 0.03f, 0.1f), Blue, lamp, context);
+            // The procedure card above the isolator, read first.
+            Vector3 card = new Vector3(east, 1.62f, b.center.z - 0.5f);
+            Point(points, "ProcedureCard", TrainingPointKind.ProcedureCard, PrimitiveType.Cube, card, new Vector3(0.02f, 0.36f, 0.30f), Yellow, lamp, context);
+            Label(points, "ProcedureCard_Text", ProcedureText, card + new Vector3(0.012f, 0.16f, -0.135f), 0.0026f, Color.black);
             Point(points, "Inspection", TrainingPointKind.Inspection, PrimitiveType.Cube, new Vector3(b.max.x + 0.02f, 1.0f, b.center.z + 0.6f), new Vector3(0.02f, 0.2f, 0.2f), White, lamp, context);
 
             // The tool change at the east corner of the CNC's front: most of the front is behind the fence, and standing
@@ -150,6 +163,24 @@ namespace TwoDude.FactoryTwin.Twin
             highlight.GetArrayElementAtIndex(0).objectReferenceValue = go.GetComponent<Renderer>();
             so.ApplyModifiedProperties();
             return go;
+        }
+
+        // Plain text on a part's +X face (the CNC's east end), read from the east; upper-left anchored at the position.
+        private static void Label(Transform parent, string name, string text, Vector3 position, float characterSize, Color color)
+        {
+            var go = new GameObject(name);
+            Undo.RegisterCreatedObjectUndo(go, "Build Training Points");
+            go.transform.SetParent(parent, false);
+            go.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, -90f, 0f));
+            var mesh = go.AddComponent<TextMesh>();
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            mesh.font = font;
+            mesh.text = text;
+            mesh.fontSize = 64;
+            mesh.characterSize = characterSize;
+            mesh.anchor = TextAnchor.UpperLeft;
+            mesh.color = color;
+            go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
         }
 
         private static GameObject Part(Transform parent, string name, PrimitiveType shape, Vector3 position, Vector3 size, Material material)

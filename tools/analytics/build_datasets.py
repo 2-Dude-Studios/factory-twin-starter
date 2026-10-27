@@ -10,7 +10,7 @@ Writes to Builds/Analytics/ (or --out):
   training_steps.csv  one row per procedure step per run, with its time and mistakes
   commissioning.csv   one row per scenario per suite run
 
-Usage: python tools/analytics/build_datasets.py [--vr-run lockout_20261027_151529.csv ...] [--out DIR]
+Usage: python tools/analytics/build_datasets.py [--vr-run FILE ...] [--scripted-run FILE ...] [--out DIR]
 A run from the build counts as a headset run when named with --vr-run (the record does not say how it was played).
 """
 import argparse
@@ -22,7 +22,6 @@ from datetime import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BUILD_DATA = os.path.join(os.environ.get('USERPROFILE', ''), 'AppData', 'LocalLow', 'DefaultCompany', 'factory-twin-starter')
-STEPS = 12
 
 
 def training_files():
@@ -33,9 +32,11 @@ def training_files():
                     yield os.path.join(folder, name), origin
 
 
-def mode_for(name, origin, rows, vr_runs):
+def mode_for(name, origin, rows, vr_runs, scripted_runs):
     if name in vr_runs:
         return 'Quest 3 headset'
+    if name in scripted_runs:
+        return 'Desktop, scripted'
     # The Editor's scripted check-runs press a step every 1.5 s, faster than anyone does by hand.
     done = [float(r['at_s']) for r in rows if r['kind'] == 'done' and r['at_s']]
     gaps = [b - a for a, b in zip(done, done[1:])]
@@ -44,7 +45,7 @@ def mode_for(name, origin, rows, vr_runs):
     return 'Desktop'
 
 
-def training(vr_runs):
+def training(vr_runs, scripted_runs):
     runs, steps = [], []
     for path, origin in training_files():
         name = os.path.basename(path)
@@ -54,19 +55,21 @@ def training(vr_runs):
         summary = next((r for r in rows if r['kind'] not in ('done', 'mistake')), None)
         if not events or summary is None:
             continue
-        mode = mode_for(name, origin, events, vr_runs)
+        mode = mode_for(name, origin, events, vr_runs, scripted_runs)
         run_id = name[len('lockout_'):-len('.csv')]
         started = rows[0].get('started_utc', '')
         mistakes = sum(1 for r in events if r['kind'] == 'mistake')
         done_at = {int(r['step']): float(r['at_s']) for r in events if r['kind'] == 'done'}
+        match = re.search(r'of (\d+) steps', summary['detail'])
+        steps_total = int(match.group(1)) if match else max(done_at)
         runs.append({
             'run': run_id, 'mode': mode, 'trainee': rows[0].get('trainee', ''), 'started_utc': started,
-            'result': summary['kind'], 'steps_done': len(done_at), 'mistakes': mistakes,
+            'result': summary['kind'], 'steps_done': len(done_at), 'steps_total': steps_total, 'mistakes': mistakes,
             'duration_s': round(max(done_at.values()), 1) if done_at else '',
         })
         titles = {int(r['step']): r['detail'] for r in events if r['kind'] == 'done'}
         regulations = {int(r['step']): r['regulation'] for r in events if r['kind'] == 'done'}
-        for step in range(1, STEPS + 1):
+        for step in range(1, steps_total + 1):
             at = done_at.get(step)
             before = done_at.get(step - 1, 0.0) if step > 1 else 0.0
             steps.append({
@@ -124,10 +127,11 @@ def write(path, rows):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     parser.add_argument('--vr-run', action='append', default=[], help='record file name of a run played in the headset')
+    parser.add_argument('--scripted-run', action='append', default=[], help='record file name of a run driven by a script or by Claude, not a person')
     parser.add_argument('--out', default=os.path.join(ROOT, 'Builds', 'Analytics'))
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
-    runs, steps = training(set(args.vr_run))
+    runs, steps = training(set(args.vr_run), set(args.scripted_run))
     write(os.path.join(args.out, 'training_runs.csv'), runs)
     write(os.path.join(args.out, 'training_steps.csv'), steps)
     write(os.path.join(args.out, 'commissioning.csv'), commissioning())
