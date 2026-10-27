@@ -39,9 +39,9 @@ namespace TwoDude.FactoryTwin.UI
 
         // Where each grabbed prop sits in the palm (grip frames: +Z through the fist toward the thumb, +X the palm's
         // normal). The padlock: body in the palm, broad face against it, shackle out past the thumb. A tool: the
-        // holder in the fist, the tool's top toward the thumb.
+        // holder's chuck body in the fist just under the flange, the taper toward the thumb.
         private static readonly Pose PadlockGrip = new Pose(new Vector3(0f, -0.0535f, 0f), Quaternion.LookRotation(Vector3.up, Vector3.right));
-        private static readonly Pose ToolGrip = new Pose(new Vector3(0f, -0.07f, 0f), Quaternion.LookRotation(Vector3.up, Vector3.back));
+        private static readonly Pose ToolGrip = new Pose(new Vector3(0f, -0.035f, 0f), Quaternion.LookRotation(Vector3.up, Vector3.back));
 
         private static Dictionary<string, Transform> _models;
         private static Dictionary<Color, Material> _materials;
@@ -138,21 +138,23 @@ namespace TwoDude.FactoryTwin.UI
             Highlight(point, Red, lever);
         }
 
-        // The spindle nose just in front of the CNC's front (-Z), holding the worn tool; the new one waits on a cart
-        // east of the CNC, outside both safety zones, with an empty slot for the worn one.
+        // The spindle head on the CNC's front (-Z), its nose holding the worn tool; the new one waits on a cart
+        // east of the CNC, outside both safety zones, with an empty fork for the worn one (red flag; the new one's
+        // is green).
         private static void ToolChange(Transform prop, TrainingPoint point, VrHud hud)
         {
             Part(prop, "Spindle_Nose", new Vector3(0f, 0.12f, -0.09f), PrimitiveType.Cylinder, new Vector3(0.07f, 0.015f, 0.07f), Vector3.zero, Steel, collider: false);
             KeyedSocket spindle = Socket(prop, "Spindle_Socket", new Vector3(0f, 0.105f, -0.09f), Quaternion.identity, "tool", 0.06f, ToolGrip);
 
             Vector3 cart = new Vector3(0.5f, -prop.position.y, -0.55f);
-            Part(prop, "ToolCart", cart, PrimitiveType.Cube, new Vector3(0.45f, 0.9f, 0.3f), new Vector3(0f, 0.45f, 0f), Grey, collider: false);
-            // A tool's origin is at its top; a slot holds it standing on the cart's top, 0.9 m up.
-            KeyedSocket slotA = Socket(prop, "Cart_SlotA", cart + new Vector3(-0.1f, 0.9f + 0.14f, 0f), Quaternion.identity, "tool", 0.05f, ToolGrip);
-            KeyedSocket slotB = Socket(prop, "Cart_SlotB", cart + new Vector3(0.1f, 0.9f + 0.14f, 0f), Quaternion.identity, "tool", 0.05f, ToolGrip);
+            Part(prop, "ToolCart", cart, PrimitiveType.Cube, new Vector3(0.56f, 0.9f, 0.36f), new Vector3(0f, 0.45f, 0f), Grey, collider: false);
+            // A tool's origin is its holder's gauge face, the top of the flange; a slot holds it by the flange in
+            // the cart's fork rack, 1.05 m up, the cutter hanging over the tray.
+            KeyedSocket slotA = Socket(prop, "Cart_SlotA", cart + new Vector3(-0.1f, 1.05f, 0f), Quaternion.identity, "tool", 0.05f, ToolGrip);
+            KeyedSocket slotB = Socket(prop, "Cart_SlotB", cart + new Vector3(0.1f, 1.05f, 0f), Quaternion.identity, "tool", 0.05f, ToolGrip);
 
-            XRGrabInteractable worn = Tool(prop, "Tool_A", spindle.transform.localPosition, slotA, hud, point, out Transform wornHolder);
-            XRGrabInteractable fresh = Tool(prop, "Tool_B", slotB.transform.localPosition, slotB, hud, point, out Transform freshHolder);
+            XRGrabInteractable worn = Tool(prop, "Tool_A", "Tool_Cutter_Worn", spindle.transform.localPosition, slotA, hud, point, out Transform wornHolder);
+            XRGrabInteractable fresh = Tool(prop, "Tool_B", "Tool_Cutter_New", slotB.transform.localPosition, slotB, hud, point, out Transform freshHolder);
             spindle.startingSelectedInteractable = worn;
             slotB.startingSelectedInteractable = fresh;
 
@@ -189,12 +191,14 @@ namespace TwoDude.FactoryTwin.UI
             Set(label, ("training", Object.FindAnyObjectByType<TrainingController>()));
         }
 
-        private static XRGrabInteractable Tool(Transform prop, string name, Vector3 at, XRSocketInteractor home, VrHud hud, TrainingPoint point, out Transform holder)
+        // A tool: the holder (taper up from its origin, the chuck below) and its cutter, worn or new, under it.
+        private static XRGrabInteractable Tool(Transform prop, string name, string cutter, Vector3 at, XRSocketInteractor home, VrHud hud, TrainingPoint point, out Transform holder)
         {
             var tool = new GameObject(name);
             tool.transform.SetParent(prop, false);
             tool.transform.localPosition = at;
-            holder = Part(tool.transform, "Tool_Holder", Vector3.zero, PrimitiveType.Cylinder, new Vector3(0.04f, 0.07f, 0.04f), new Vector3(0f, -0.07f, 0f), Steel);
+            holder = Part(tool.transform, "Tool_Holder", Vector3.zero, PrimitiveType.Cylinder, new Vector3(0.045f, 0.045f, 0.045f), new Vector3(0f, -0.03f, 0f), Steel);
+            Part(holder, cutter, Vector3.zero, PrimitiveType.Cylinder, new Vector3(0.012f, 0.03f, 0.012f), new Vector3(0f, -0.1f, 0f), Steel, collider: false);
             XRGrabInteractable grab = Grabbable(tool, "tool", home, ToolGrip, new FingerCurls(0.5f, 0.62f, 0.66f, 0.7f, 0.72f));
             Prompt(tool, grab, point, hud);
             return grab;

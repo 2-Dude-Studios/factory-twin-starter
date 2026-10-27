@@ -147,6 +147,13 @@ class Part:
         bmesh.ops.translate(bm, vec=Vector(center), verts=bm.verts)
         self.merge(bm, mat, smooth=True)
 
+    def lathe(self, profile, mat, center=(0, 0, 0), segments=32):
+        """A solid of revolution round Unity's Y axis; profile is (radius, y) pairs in order, a radius of 0 closing
+        that end to a point. Shaded smooth; build(sharp_deg=...) keeps its shoulders crisp."""
+        bm = bmesh.new()
+        lathe_bm(bm, profile, center, segments)
+        self.merge(bm, mat, smooth=True)
+
     def merge(self, bm, mat, smooth=False):
         index = self.slot(mat)
         for f in bm.faces:
@@ -165,9 +172,12 @@ class Part:
             poly.material_index = index
         self.bm.from_mesh(mesh)
 
-    def build(self, show_at):
+    def build(self, show_at, sharp_deg=None):
+        """sharp_deg: shade every face smooth and split the normals where faces meet at more than this angle."""
         bmesh.ops.transform(self.bm, matrix=TO_BLENDER, verts=self.bm.verts)
         bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces)
+        if sharp_deg is not None:
+            smooth_by_angle(self.bm, sharp_deg)
         mesh = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(mesh)
         self.bm.free()
@@ -178,6 +188,42 @@ class Part:
         # Spread out for viewing in Blender; Unity uses the mesh about the origin, not the object's position.
         obj.location = TO_BLENDER @ Vector(show_at)
         return obj
+
+
+def lathe_bm(bm, profile, center=(0, 0, 0), segments=32):
+    """Adds a solid of revolution round Unity's Y axis to bm (see Part.lathe)."""
+    rings = []
+    for r, y in profile:
+        if r <= 1e-7:
+            rings.append([bm.verts.new((center[0], center[1] + y, center[2]))])
+            continue
+        rings.append([bm.verts.new((center[0] + r * math.cos(2 * math.pi * s / segments), center[1] + y,
+                                    center[2] + r * math.sin(2 * math.pi * s / segments))) for s in range(segments)])
+    for r0, r1 in zip(rings, rings[1:]):
+        for s in range(segments):
+            t = (s + 1) % segments
+            if len(r0) == 1 and len(r1) > 1:
+                bm.faces.new((r0[0], r1[t], r1[s]))
+            elif len(r1) == 1 and len(r0) > 1:
+                bm.faces.new((r0[s], r0[t], r1[0]))
+            elif len(r0) > 1:
+                bm.faces.new((r0[s], r0[t], r1[t], r1[s]))
+    faces = [f for f in bm.faces if f.is_valid]
+    for ring in (rings[0], rings[-1]):
+        if len(ring) > 1:
+            faces.append(bm.faces.new(ring))
+    # Outward normals now, not only at build: a boolean reads an inside-out cutter as a solid to add.
+    bmesh.ops.recalc_face_normals(bm, faces=faces)
+
+
+def smooth_by_angle(bm, sharp_deg):
+    """Smooth shading with hard edges where faces meet at more than sharp_deg (normals must be consistent)."""
+    bm.normal_update()
+    limit = math.radians(sharp_deg)
+    for f in bm.faces:
+        f.smooth = True
+    for e in bm.edges:
+        e.smooth = not (len(e.link_faces) == 2 and e.calc_face_angle(0.0) > limit)
 
 
 def boolean_difference(name, build_target, build_cutters):
@@ -200,6 +246,7 @@ def boolean_difference(name, build_target, build_cutters):
     mod.operation = 'DIFFERENCE'
     mod.object = cutters
     mod.solver = 'EXACT'
+    mod.use_self = True  # cutters may overlap each other (a fork: a round end and a slot to it)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     result = bpy.data.meshes.new_from_object(target.evaluated_get(depsgraph))
     for o in (target, cutters):
