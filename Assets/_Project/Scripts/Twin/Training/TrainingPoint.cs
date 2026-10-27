@@ -41,6 +41,44 @@ namespace TwoDude.FactoryTwin.Twin
             }
         }
 
+        /// <summary>The point that carries out <paramref name="action"/>, for guiding the trainee to the step due.</summary>
+        public static bool TryKindFor(LockoutAction action, out TrainingPointKind kind)
+        {
+            switch (action)
+            {
+                case LockoutAction.Start: kind = TrainingPointKind.StartButton; return true;
+                case LockoutAction.Stop: kind = TrainingPointKind.StopButton; return true;
+                case LockoutAction.Notify: kind = TrainingPointKind.NotifyButton; return true;
+                case LockoutAction.ClearAndNotify: kind = TrainingPointKind.AllClearButton; return true;
+                case LockoutAction.IsolatorOff:
+                case LockoutAction.IsolatorOn: kind = TrainingPointKind.Isolator; return true;
+                case LockoutAction.ApplyLock:
+                case LockoutAction.RemoveLock: kind = TrainingPointKind.LockHasp; return true;
+                case LockoutAction.ReleaseEnergy: kind = TrainingPointKind.AirDumpValve; return true;
+                case LockoutAction.ChangeTool: kind = TrainingPointKind.ToolChange; return true;
+                case LockoutAction.Inspect: kind = TrainingPointKind.Inspection; return true;
+                default: kind = TrainingPointKind.StartButton; return false;
+            }
+        }
+
+        /// <summary>Where the trainee finds the point and what it looks like.</summary>
+        public static string Where(TrainingPointKind kind)
+        {
+            switch (kind)
+            {
+                case TrainingPointKind.StartButton: return "Control station: green Start button";
+                case TrainingPointKind.StopButton: return "Control station: red Stop button";
+                case TrainingPointKind.NotifyButton: return "Control station: blue intercom button";
+                case TrainingPointKind.AllClearButton: return "Control station: white all-clear button";
+                case TrainingPointKind.Isolator: return "CNC, east end: red handle on the yellow isolator";
+                case TrainingPointKind.LockHasp: return "CNC, east end: the hasp under the isolator; your lock is on the board beside it";
+                case TrainingPointKind.AirDumpValve: return "CNC, east end, low down: the air-dump valve lever";
+                case TrainingPointKind.ToolChange: return "CNC, front: the spindle; the new tool is on the cart";
+                case TrainingPointKind.Inspection: return "CNC, east end: white inspection plate";
+                default: return string.Empty;
+            }
+        }
+
         /// <summary>The prompt the trainee sees while looking at the point.</summary>
         public static string Prompt(TrainingPointKind kind, bool isolated, bool locked)
         {
@@ -78,6 +116,7 @@ namespace TwoDude.FactoryTwin.Twin
 
         private MaterialPropertyBlock _block;
         private bool _hovered;
+        private bool _guided;
 
         public TrainingPointKind Kind => kind;
         public LockoutAction Action => TrainingPoints.ActionFor(kind, Read(CellTopics.PressIsolated), Read(CellTopics.PressLockout));
@@ -108,11 +147,27 @@ namespace TwoDude.FactoryTwin.Twin
             Tint();
         }
 
+        /// <summary>Pulses while it is the point the step due needs (TrainingGuide).</summary>
+        public void SetGuided(bool guided)
+        {
+            if (guided == _guided)
+                return;
+            _guided = guided;
+            Tint();
+        }
+
+        private void Update()
+        {
+            if (_guided && !_hovered)
+                Tint();
+        }
+
         private void Tint()
         {
+            float glow = _hovered ? 2f : _guided ? Mathf.Lerp(0.5f, 2.5f, Mathf.PingPong(Time.time * 2f, 1f)) : 0.25f;
             _block.Clear();
             _block.SetColor(BaseColorId, color);
-            _block.SetColor(EmissionColorId, color * (_hovered ? 2f : 0.25f));
+            _block.SetColor(EmissionColorId, color * glow);
             foreach (Renderer r in highlight)
             {
                 if (r != null)

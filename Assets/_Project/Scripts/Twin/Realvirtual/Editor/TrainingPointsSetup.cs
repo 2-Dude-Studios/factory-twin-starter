@@ -75,10 +75,44 @@ namespace TwoDude.FactoryTwin.Twin
             Point(points, "ToolChange", TrainingPointKind.ToolChange, PrimitiveType.Cube, new Vector3(b.max.x - 0.2f, 1.15f, b.min.z - 0.02f), new Vector3(0.24f, 0.24f, 0.02f), Cyan, lamp, context);
 
             WireTrainee(trainee);
+            Guide(training.transform, points, lamp, context);
 
             Undo.CollapseUndoOperations(undoGroup);
             EditorSceneManager.MarkSceneDirty(cell.scene);
             Debug.Log($"[TrainingPointsSetup] Built {points.childCount} objects around the CNC (bounds {b.min:F2} to {b.max:F2}); trainee interactor and HUD wired.", points);
+        }
+
+        // The guide (M12): a beacon, a ball on a short stem pointing down, that bobs above the point the step due needs.
+        // No colliders, so it never takes a click or a ray.
+        private static void Guide(Transform training, Transform points, Material lamp, CellContext context)
+        {
+            Transform old = training.Find("Guide");
+            if (old != null)
+                Undo.DestroyObjectImmediate(old.gameObject);
+            var guide = new GameObject("Guide");
+            Undo.RegisterCreatedObjectUndo(guide, "Build Training Points");
+            guide.transform.SetParent(training, false);
+            var beacon = new GameObject("Beacon");
+            beacon.transform.SetParent(guide.transform, false);
+            GameObject ball = Part(beacon.transform, "Ball", PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.07f, lamp);
+            GameObject stem = Part(beacon.transform, "Stem", PrimitiveType.Cylinder, Vector3.zero, new Vector3(0.015f, 0.06f, 0.015f), lamp);
+            ball.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+            stem.transform.localPosition = new Vector3(0f, 0.03f, 0f);
+
+            var component = Undo.AddComponent<TrainingGuide>(guide);
+            var so = new SerializedObject(component);
+            so.FindProperty("context").objectReferenceValue = context;
+            so.FindProperty("beacon").objectReferenceValue = beacon.transform;
+            TrainingPoint[] all = points.GetComponentsInChildren<TrainingPoint>(true);
+            SerializedProperty list = so.FindProperty("points");
+            list.arraySize = all.Length;
+            for (int i = 0; i < all.Length; i++)
+                list.GetArrayElementAtIndex(i).objectReferenceValue = all[i];
+            SerializedProperty renderers = so.FindProperty("beaconRenderers");
+            renderers.arraySize = 2;
+            renderers.GetArrayElementAtIndex(0).objectReferenceValue = ball.GetComponent<Renderer>();
+            renderers.GetArrayElementAtIndex(1).objectReferenceValue = stem.GetComponent<Renderer>();
+            so.ApplyModifiedProperties();
         }
 
         // Every renderer of the machine: the case alone is smaller than the machine body, which would hide the points.

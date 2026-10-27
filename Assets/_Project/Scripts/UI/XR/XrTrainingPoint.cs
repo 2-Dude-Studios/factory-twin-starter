@@ -1,13 +1,17 @@
+using System.Collections.Generic;
 using TwoDude.FactoryTwin.Twin;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
-    /// Training (M12): lets a controller use a training point. Hovering the point with a controller ray lights it,
-    /// selecting it (the trigger) uses it: the same cell/training/action a desktop click sends.
+    /// Training (M12): lets a controller use a training point. Hovering the point with a controller ray lights it;
+    /// the trigger uses it, the same cell/training/action a desktop click sends. The trigger is XRI's activate input,
+    /// which XRI only passes to things already selected (select is the grip), so the point reads it from the
+    /// hovering controller itself; a grip press uses the point too.
     /// </summary>
     [RequireComponent(typeof(TrainingPoint), typeof(XRSimpleInteractable))]
     public sealed class XrTrainingPoint : MonoBehaviour
@@ -38,11 +42,26 @@ namespace TwoDude.FactoryTwin.UI
             _interactable.selectEntered.RemoveListener(OnSelectEntered);
         }
 
+        private void Update()
+        {
+            if (!_interactable.isHovered)
+                return;
+            List<IXRHoverInteractor> hovering = _interactable.interactorsHovering;
+            for (int i = 0; i < hovering.Count; i++)
+            {
+                if (hovering[i] is XRBaseInputInteractor controller && controller.activateInput.ReadWasPerformedThisFrame())
+                {
+                    Use();
+                    return;
+                }
+            }
+        }
+
         private void OnHoverEntered(HoverEnterEventArgs args)
         {
             _point.SetHovered(true);
             if (hud != null)
-                hud.SetPrompt(_point.Prompt);
+                hud.SetPrompt(_point.Prompt, VrHudText.ShortHow(_point.Kind));
         }
 
         private void OnHoverExited(HoverExitEventArgs args)
@@ -52,12 +71,14 @@ namespace TwoDude.FactoryTwin.UI
                 hud.SetPrompt(string.Empty);
         }
 
+        private void OnSelectEntered(SelectEnterEventArgs args) => Use();
+
         // The prompt changes with the point's state (isolator off, then on), so it is refreshed after each use.
-        private void OnSelectEntered(SelectEnterEventArgs args)
+        private void Use()
         {
             _point.Use();
             if (hud != null)
-                hud.SetPrompt(_point.Prompt);
+                hud.SetPrompt(_point.Prompt, VrHudText.ShortHow(_point.Kind));
         }
     }
 }

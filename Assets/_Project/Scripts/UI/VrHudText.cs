@@ -59,6 +59,50 @@ namespace TwoDude.FactoryTwin.UI
             return step >= 1 && step < LockoutProcedure.Steps.Count ? LockoutProcedure.Steps[step].Title : "Last step";
         }
 
+        /// <summary>Where the point for the step due is, and how to use it; empty outside a run.</summary>
+        public static string Where(int step, TrainingOutcome outcome)
+        {
+            if (outcome != TrainingOutcome.InProgress || step < 1 || step > LockoutProcedure.Steps.Count)
+                return string.Empty;
+            return TrainingPoints.TryKindFor(LockoutProcedure.Steps[step - 1].Action, out TrainingPointKind kind)
+                ? TrainingPoints.Where(kind) + ". " + How(kind)
+                : string.Empty;
+        }
+
+        /// <summary>How to use a point in the headset, in a sentence, for the HUD's where line.</summary>
+        public static string How(TrainingPointKind kind)
+        {
+            switch (kind)
+            {
+                case TrainingPointKind.StartButton:
+                case TrainingPointKind.StopButton:
+                case TrainingPointKind.NotifyButton:
+                case TrainingPointKind.AllClearButton: return "Press it with your finger, or point and pull the trigger.";
+                case TrainingPointKind.Isolator: return "Grip the handle and twist it a quarter turn.";
+                case TrainingPointKind.LockHasp: return "Grip your lock and hang it on the hasp; take it off the same way.";
+                case TrainingPointKind.AirDumpValve: return "Grip the lever and twist it a quarter turn.";
+                case TrainingPointKind.ToolChange: return "Grip the old tool out of the spindle and put the new one in.";
+                default: return "Point and pull the trigger.";
+            }
+        }
+
+        /// <summary>How to use a point, in a few words, for the prompt while a controller is on it.</summary>
+        public static string ShortHow(TrainingPointKind kind)
+        {
+            switch (kind)
+            {
+                case TrainingPointKind.StartButton:
+                case TrainingPointKind.StopButton:
+                case TrainingPointKind.NotifyButton:
+                case TrainingPointKind.AllClearButton: return "press it or pull the trigger";
+                case TrainingPointKind.Isolator:
+                case TrainingPointKind.AirDumpValve: return "grip and twist";
+                case TrainingPointKind.LockHasp: return "grip the lock, hang it on the hasp";
+                case TrainingPointKind.ToolChange: return "grip the tool";
+                default: return "pull the trigger";
+            }
+        }
+
         /// <summary>The step line under the status on the training board: empty while no lockout run is on.</summary>
         public static string Step(int step, TrainingOutcome outcome)
         {
@@ -71,8 +115,8 @@ namespace TwoDude.FactoryTwin.UI
                 : string.Empty;
         }
 
-        /// <summary>The prompt for the training point under the controller ray.</summary>
-        public static string Prompt(string pointPrompt) =>
-            string.IsNullOrEmpty(pointPrompt) ? string.Empty : pointPrompt + "  ·  pull the trigger";
+        /// <summary>The prompt for the training point under a controller, with how to use it.</summary>
+        public static string Prompt(string pointPrompt, string how = "pull the trigger") =>
+            string.IsNullOrEmpty(pointPrompt) ? string.Empty : pointPrompt + "  ·  " + how;
     }
 }

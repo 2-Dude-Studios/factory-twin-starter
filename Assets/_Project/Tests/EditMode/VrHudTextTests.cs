@@ -44,6 +44,28 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void EveryStep_HasAPointToGuideTo()
+        {
+            foreach (LockoutStep step in LockoutProcedure.Steps)
+            {
+                Assert.IsTrue(TrainingPoints.TryKindFor(step.Action, out TrainingPointKind kind), step.Title);
+                Assert.IsNotEmpty(TrainingPoints.Where(kind), step.Title);
+                Assert.AreEqual(step.Action, TrainingPoints.ActionFor(kind,
+                    isolated: step.Action == LockoutAction.IsolatorOn, locked: step.Action == LockoutAction.RemoveLock), step.Title);
+            }
+        }
+
+        [Test]
+        public void Where_SaysWhichPointAndHowToUseIt_OnlyDuringARun()
+        {
+            Assert.AreEqual("Control station: blue intercom button. Press it with your finger, or point and pull the trigger.", VrHudText.Where(1, TrainingOutcome.InProgress));
+            Assert.AreEqual("CNC, east end: red handle on the yellow isolator. Grip the handle and twist it a quarter turn.", VrHudText.Where(3, TrainingOutcome.InProgress));
+            Assert.AreEqual("CNC, east end: the hasp under the isolator; your lock is on the board beside it. Grip your lock and hang it on the hasp; take it off the same way.", VrHudText.Where(4, TrainingOutcome.InProgress));
+            Assert.AreEqual(string.Empty, VrHudText.Where(0, TrainingOutcome.Idle));
+            Assert.AreEqual(string.Empty, VrHudText.Where(13, TrainingOutcome.Passed));
+        }
+
+        [Test]
         public void Prompt_SaysHowToUseThePoint()
         {
             Assert.AreEqual("CNC isolator: switch off  ·  pull the trigger", VrHudText.Prompt("CNC isolator: switch off"));

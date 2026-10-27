@@ -7,8 +7,8 @@ namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
     /// Training (M12): the headset HUD (VrHud.uxml), a small world-space panel held at the top left of the view.
-    /// It leads with the task at hand and the next one, then safety or line status, then the prompt for the
-    /// training point under the controller ray (set by XrTrainingPoint). Read from the bus; it changes nothing.
+    /// It leads with the task at hand, where to do it, and the next one, then safety or line status, then the prompt
+    /// for the training point under the controller ray (set by XrTrainingPoint). Read from the bus; it changes nothing.
     /// </summary>
     public sealed class VrHud : MonoBehaviour
     {
@@ -16,7 +16,7 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private CellContext context;
 
         private IDisposable _subscription;
-        private Label _nowLabel, _current, _next, _status, _prompt;
+        private Label _nowLabel, _current, _where, _next, _status, _prompt;
         private VisualElement _nextRow;
         private SafetyState _safety;
         private CellState _line;
@@ -30,6 +30,7 @@ namespace TwoDude.FactoryTwin.UI
                 return;
             _nowLabel = root.Q<Label>("now-label");
             _current = root.Q<Label>("current");
+            _where = root.Q<Label>("where");
             _nextRow = root.Q("next-row");
             _next = root.Q<Label>("next");
             _status = root.Q<Label>("status");
@@ -52,12 +53,12 @@ namespace TwoDude.FactoryTwin.UI
             _subscription = null;
         }
 
-        /// <summary>The prompt for the training point under the ray; empty clears it.</summary>
-        public void SetPrompt(string pointPrompt)
+        /// <summary>The prompt for the training point under a controller, with how to use it; empty clears it.</summary>
+        public void SetPrompt(string pointPrompt, string how = "pull the trigger")
         {
             if (_prompt == null)
                 return;
-            _prompt.text = VrHudText.Prompt(pointPrompt);
+            _prompt.text = VrHudText.Prompt(pointPrompt, how);
             _prompt.EnableInClassList("hidden", string.IsNullOrEmpty(pointPrompt));
         }
 
@@ -85,6 +86,9 @@ namespace TwoDude.FactoryTwin.UI
                 return;
             _nowLabel.text = VrHudText.NowLabel(_stepNumber, _outcome);
             _current.text = VrHudText.Current(_stepNumber, _outcome);
+            string where = VrHudText.Where(_stepNumber, _outcome);
+            _where.text = where;
+            _where.EnableInClassList("hidden", string.IsNullOrEmpty(where));
             string next = VrHudText.Next(_stepNumber, _outcome);
             _next.text = next;
             _nextRow.EnableInClassList("hidden", string.IsNullOrEmpty(next));

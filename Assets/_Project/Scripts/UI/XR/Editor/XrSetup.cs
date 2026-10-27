@@ -11,6 +11,9 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.UIElements;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.XR.Interaction.Toolkit.Filtering;
+using UnityEngine.XR.Interaction.Toolkit.Gaze;
 using UnityEngine.XR.Interaction.Toolkit.Interactors.Casters;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation;
 using UnityEngine.XR.Management;
@@ -107,6 +110,9 @@ namespace TwoDude.FactoryTwin.UI
             {
                 Undo.RecordObject(caster, "Build VR Rig");
                 caster.raycastTriggerInteraction = QueryTriggerInteraction.Collide;
+                // Rays skip the trainee's own body, the safety-zone volumes and the lockout sockets' trigger spheres
+                // (Ignore Raycast), so none of them blocks a ray from the thing behind it.
+                caster.raycastMask = ~LayerMask.GetMask("Ignore Raycast", "Trainee", "SafetyZone");
             }
 
             XROrigin origin = rig.GetComponent<XROrigin>();
@@ -145,14 +151,38 @@ namespace TwoDude.FactoryTwin.UI
             PanelSettings worldPanel = WorldPanel();
             CellContext context = cell.GetComponent<CellContext>();
             Undo.AddComponent<XRUIToolkitManager>(rig);
+            // realvirtual's EventSystem would otherwise feed every UI Toolkit panel (AutoSwitch), and XRI's rays and
+            // pokes would never reach the world panels. On the rig, so it only applies while VR runs.
+            var panelInput = Undo.AddComponent<PanelInputConfiguration>(rig);
+            panelInput.panelInputRedirection = PanelInputConfiguration.PanelInputRedirection.Never;
             Board(cell.transform, worldPanel, context);
             VrHud vrHud = Hud(rig.transform, origin.Camera.transform, worldPanel, context);
             Menu(origin, vrSwitch, worldPanel, context, cell.transform);
 
+            LotoProps.Build(cell.transform, vrHud, context);
             int points = 0;
             foreach (TrainingPoint point in cell.GetComponentsInChildren<TrainingPoint>(true))
             {
-                GetOrAdd<XRSimpleInteractable>(point.gameObject);
+                // Isolator, hasp, valve and tool change are used hands-on through their props (LotoProps), not by a
+                // ray and a trigger on the point.
+                if (System.Array.IndexOf(LotoProps.Physical, point.Kind) >= 0)
+                {
+                    foreach (Component clickTarget in new Component[] { point.GetComponent<XrTrainingPoint>(), point.GetComponent<XRSimpleInteractable>() })
+                    {
+                        if (clickTarget != null)
+                            Undo.DestroyObjectImmediate(clickTarget);
+                    }
+                    continue;
+                }
+                // The point's collider is a trigger, which XRI leaves out when it collects colliders itself, so it is
+                // listed by hand; without it no ray can hover the point.
+                var interactable = GetOrAdd<XRSimpleInteractable>(point.gameObject);
+                interactable.colliders.Clear();
+                interactable.colliders.Add(point.GetComponent<Collider>());
+                EditorUtility.SetDirty(interactable);
+                if (point.Kind == TrainingPointKind.StartButton || point.Kind == TrainingPointKind.StopButton
+                    || point.Kind == TrainingPointKind.NotifyButton || point.Kind == TrainingPointKind.AllClearButton)
+                    PokeButton(point, interactable);
                 var xrPoint = GetOrAdd<XrTrainingPoint>(point.gameObject);
                 var pointSo = new SerializedObject(xrPoint);
                 pointSo.FindProperty("hud").objectReferenceValue = vrHud;
@@ -160,6 +190,7 @@ namespace TwoDude.FactoryTwin.UI
                 points++;
             }
 
+            OnePointer(rig);
             rig.SetActive(false);
             Undo.CollapseUndoOperations(undoGroup);
             EditorSceneManager.MarkSceneDirty(cell.scene);
@@ -277,6 +308,8 @@ namespace TwoDude.FactoryTwin.UI
             panel.renderMode = PanelRenderMode.WorldSpace;
             panel.themeStyleSheet = AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(ThemePath);
             var so = new SerializedObject(panel);
+            // Keep existing colliders (the internal ColliderUpdateMode: 0 MatchBoundingBox, 1 Keep, 2 MatchDocumentRect).
+            // Panels that take input carry their own collider (Pressable); the HUD has none, so it never blocks a ray.
             so.FindProperty("m_ColliderUpdateMode").intValue = 1;
             so.FindProperty("m_ColliderIsTrigger").boolValue = true;
             so.FindProperty("m_PixelsPerUnit").floatValue = 100f;
@@ -314,6 +347,7 @@ namespace TwoDude.FactoryTwin.UI
             go.transform.position = (station != null ? station.position : new Vector3(1.8f, 1.1f, 2.0f)) + new Vector3(0f, 0.68f, 0.02f);
             go.transform.rotation = Quaternion.identity;
             UIDocument document = Document(go, panel, BoardUxml, 900f, 600f, 0.1f);
+            Pressable(go, 900f, 600f);
             var board = go.AddComponent<TrainingBoard>();
             var so = new SerializedObject(board);
             so.FindProperty("document").objectReferenceValue = document;
@@ -329,7 +363,7 @@ namespace TwoDude.FactoryTwin.UI
             var go = new GameObject("VrHud");
             Undo.RegisterCreatedObjectUndo(go, "Build VR Rig");
             go.transform.SetParent(rig, false);
-            UIDocument document = Document(go, panel, HudUxml, 520f, 240f, 0.07f);
+            UIDocument document = Document(go, panel, HudUxml, 520f, 290f, 0.07f);
             var follow = go.AddComponent<LazyFollow>();
             follow.target = head;
             follow.targetOffset = new Vector3(-0.26f, 0.14f, 1.0f);
@@ -356,6 +390,7 @@ namespace TwoDude.FactoryTwin.UI
             go.transform.localPosition = new Vector3(0f, 0.14f, 0.06f);
             go.transform.localRotation = Quaternion.Euler(45f, 0f, 0f);
             UIDocument document = Document(go, panel, MenuUxml, 360f, 600f, 0.05f);
+            Pressable(go, 360f, 600f);
             var menu = go.AddComponent<VrMenu>();
             var so = new SerializedObject(menu);
             so.FindProperty("document").objectReferenceValue = document;
@@ -398,6 +433,75 @@ namespace TwoDude.FactoryTwin.UI
             var box = floor.AddComponent<BoxCollider>();
             box.size = new Vector3(13f, 0.02f, 12f);
             floor.AddComponent<TeleportationArea>();
+
+            // The hall's own floor is on realvirtual's rvTransport layer, which the rig's CharacterController
+            // (Ignore Raycast) does not collide with, so walking off the teleport floor fell through. A metre-deep
+            // box under the whole hall, top at the floor, on Default, holds the rig wherever it walks.
+            Transform oldWalk = cell.Find("Training/WalkFloor");
+            if (oldWalk != null)
+                Undo.DestroyObjectImmediate(oldWalk.gameObject);
+            var walk = new GameObject("WalkFloor");
+            Undo.RegisterCreatedObjectUndo(walk, "Build VR Rig");
+            walk.transform.SetParent(cell.Find("Training"), false);
+            walk.transform.position = new Vector3(-5f, -0.5f, 0f);
+            var walkBox = walk.AddComponent<BoxCollider>();
+            walkBox.size = new Vector3(110f, 1f, 110f);
+        }
+
+        // One pointer: the right controller's ray. The starter rig's gaze interactor falls back to the head without eye
+        // tracking, so it hovered and pressed whatever the trainee looked at, and the left hand holds the selection
+        // panel, so its ray only got in the way. Both hands keep teleport and poke.
+        private static void OnePointer(GameObject rig)
+        {
+            foreach (Transform t in rig.GetComponentsInChildren<Transform>(true))
+            {
+                bool leftRay = t.name == "Near-Far Interactor" && t.parent != null && t.parent.name == "Left Controller";
+                if (t.name == "Gaze Interactor" || leftRay)
+                {
+                    Undo.RecordObject(t.gameObject, "Build VR Rig");
+                    t.gameObject.SetActive(false);
+                }
+            }
+            var gazeAssistance = rig.GetComponent<XRGazeAssistance>();
+            if (gazeAssistance != null)
+            {
+                Undo.RecordObject(gazeAssistance, "Build VR Rig");
+                gazeAssistance.enabled = false;
+            }
+        }
+
+        // A station button pressed with a fingertip: the poke runs along the button's own +Y, which faces into the
+        // panel (the button cylinders are turned 90 degrees about X), and selects the point like a trigger press.
+        private static void PokeButton(TrainingPoint point, XRSimpleInteractable interactable)
+        {
+            XRPokeFilter poke = point.GetComponent<XRPokeFilter>();
+            if (poke == null)
+                poke = Undo.AddComponent<XRPokeFilter>(point.gameObject);
+            var so = new SerializedObject(poke);
+            so.FindProperty("m_Interactable").objectReferenceValue = interactable;
+            so.FindProperty("m_PokeCollider").objectReferenceValue = point.GetComponent<Collider>();
+            so.FindProperty("m_PokeConfiguration.m_UseConstant").boolValue = true;
+            so.FindProperty("m_PokeConfiguration.m_ConstantValue.m_PokeDirection").enumValueIndex = (int)PokeAxis.Y;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        // A panel the controllers press: a trigger collider the size of the document (rays), and an interactable
+        // with a poke filter on it (touch). The collider is listed on the interactable by hand, since XRI skips
+        // trigger colliders when it collects them itself.
+        private static void Pressable(GameObject go, float width, float height)
+        {
+            var box = go.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.center = Vector3.zero;
+            box.size = new Vector3(width / 100f, height / 100f, 0.05f);
+            var interactable = go.AddComponent<XRSimpleInteractable>();
+            interactable.colliders.Clear();
+            interactable.colliders.Add(box);
+            var poke = go.AddComponent<XRPokeFilter>();
+            poke.pokeInteractable = interactable;
+            poke.pokeCollider = box;
+            EditorUtility.SetDirty(interactable);
+            EditorUtility.SetDirty(poke);
         }
 
         private static T GetOrAdd<T>(GameObject go) where T : Component
