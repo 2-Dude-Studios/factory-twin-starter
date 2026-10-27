@@ -8,5 +8,6 @@ gives the notice and licence text for one item.
 03  URDF Importer (Unity-Technologies/URDF-Importer) v0.5.2 — Apache License 2.0
 04  MQTTnet 4.3.7 — MIT
 05  Apache License 2.0 — full terms
+06  Microsoft Rocketbox avatars and animations (four construction workers) — MIT
 
 Built with Unity and realvirtual.io (licensed under their own terms; no notice required here).

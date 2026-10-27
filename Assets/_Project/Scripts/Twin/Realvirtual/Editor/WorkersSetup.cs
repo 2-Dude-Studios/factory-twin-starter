@@ -25,6 +25,30 @@ namespace TwoDude.FactoryTwin.Twin
     internal static class WorkersSetup
     {
         private const string ModelPath = "Assets/ThirdParty/Quaternius/AnimatedHuman/AnimatedHuman.fbx";
+        // Realistic workers (MIT, Microsoft Rocketbox), used when present: four construction avatars in hi-vis and the
+        // idle, walk and work animations for men and women, retargeted through Humanoid avatars.
+        private const string RocketboxFolder = "Assets/ThirdParty/Rocketbox";
+        private const string RocketboxMaterials = Folder + "/Rocketbox";
+        private const float RocketboxHeight = 1.75f;
+        private static readonly string[] RocketboxParts = { "body", "head", "helmet", "tools", "opacity" };
+
+        // What a worker looks like: a model, its materials (one for every slot when Material is set; built from the
+        // model's own textures when not), the animator, and the height to scale to.
+        private readonly struct Figure
+        {
+            public Figure(string model, Material material, AnimatorController controller, float height)
+            {
+                Model = model;
+                Material = material;
+                Controller = controller;
+                Height = height;
+            }
+
+            public string Model { get; }
+            public Material Material { get; }
+            public AnimatorController Controller { get; }
+            public float Height { get; }
+        }
         private const string Folder = "Assets/_Project/Art/Workers";
         private const string ControllerPath = Folder + "/SimulatedWorker.controller";
         // Standing height to the top of the head. The cell is built a little under real scale (belts about 0.5 m
@@ -65,10 +89,21 @@ namespace TwoDude.FactoryTwin.Twin
             ConfigureModel();
             EnsureFolder();
             AnimatorController controller = Controller();
-            Material loader = Look("WorkerA", new Color32(255, 209, 159, 255), new Color32(124, 88, 35, 255), new Color32(255, 112, 16, 255), new Color32(32, 42, 64, 255));
-            Material carrier = Look("WorkerB", new Color32(141, 85, 54, 255), new Color32(30, 26, 24, 255), new Color32(214, 232, 40, 255), new Color32(64, 66, 72, 255));
-            Material technician = Look("WorkerC", new Color32(198, 134, 66, 255), new Color32(20, 18, 16, 255), new Color32(36, 104, 196, 255), new Color32(40, 44, 52, 255));
-            Material maintenance = Look("WorkerD", new Color32(232, 180, 140, 255), new Color32(90, 60, 40, 255), new Color32(120, 120, 128, 255), new Color32(36, 52, 90, 255));
+            Figure loader, carrier, technician, maintenance;
+            if (Rocketbox(out AnimatorController male, out AnimatorController female))
+            {
+                loader = new Figure(Avatar("Construction_Male_01"), null, male, RocketboxHeight);
+                carrier = new Figure(Avatar("Construction_Female_01"), null, female, RocketboxHeight);
+                technician = new Figure(Avatar("Construction_Male_02"), null, male, RocketboxHeight);
+                maintenance = new Figure(Avatar("Construction_Male_03"), null, male, RocketboxHeight);
+            }
+            else
+            {
+                loader = new Figure(ModelPath, Look("WorkerA", new Color32(255, 209, 159, 255), new Color32(124, 88, 35, 255), new Color32(255, 112, 16, 255), new Color32(32, 42, 64, 255)), controller, Height);
+                carrier = new Figure(ModelPath, Look("WorkerB", new Color32(141, 85, 54, 255), new Color32(30, 26, 24, 255), new Color32(214, 232, 40, 255), new Color32(64, 66, 72, 255)), controller, Height);
+                technician = new Figure(ModelPath, Look("WorkerC", new Color32(198, 134, 66, 255), new Color32(20, 18, 16, 255), new Color32(36, 104, 196, 255), new Color32(40, 44, 52, 255)), controller, Height);
+                maintenance = new Figure(ModelPath, Look("WorkerD", new Color32(232, 180, 140, 255), new Color32(90, 60, 40, 255), new Color32(120, 120, 128, 255), new Color32(36, 52, 90, 255)), controller, Height);
+            }
 
             Undo.SetCurrentGroupName("Build Simulated Workers");
             int undoGroup = Undo.GetCurrentGroup();
@@ -83,18 +118,18 @@ namespace TwoDude.FactoryTwin.Twin
             // ends at x -4.85, both on the cell's long axis.
             // Each operator is an affected employee: notified of a lockout, they stand clear at a spot facing the cell.
             var infeed = new Vector3(0.95f, 0f, 0.35f);
-            Transform infeedWorker = Worker(workers.transform, "Worker_Infeed", loader, controller, context,
+            Transform infeedWorker = Worker(workers.transform, "Worker_Infeed", loader, context,
                 (new Vector3(2.4f, 0f, -0.5f), -120f, 0f, "Idle"),
                 (infeed, -90f, 7f, "Idle"),
                 (infeed, -90f, 9f, "Working"));
-            Transform outfeedWorker = Worker(workers.transform, "Worker_Outfeed", carrier, controller, context,
+            Transform outfeedWorker = Worker(workers.transform, "Worker_Outfeed", carrier, context,
                 (new Vector3(-6.1f, 0f, -0.6f), 70f, 0f, "Idle"),
                 (new Vector3(-5.4f, 0f, 1.2f), 90f, 10f, "Working"),
                 (new Vector3(-5.4f, 0f, -1.7f), 200f, 6f, "Idle"));
 
             // The maintenance colleague waits north-east of the CNC, comes into its work area (east of the machine, by the
             // isolator and the inspection plate) after the tool change, and stands clear when asked.
-            Transform colleague = Colleague(workers.transform, maintenance, controller, context,
+            Transform colleague = Colleague(workers.transform, maintenance, context,
                 (new Vector3(3.1f, 0f, 5.0f), -110f, "Idle"),
                 (new Vector3(1.45f, 0f, 4.3f), -90f, "Idle"),
                 (new Vector3(3.0f, 0f, 3.0f), -100f, "Idle"));
@@ -106,7 +141,7 @@ namespace TwoDude.FactoryTwin.Twin
             // short of the protective one, a spot just inside the protective zone south of the infeed.
             if (!WalkArea(training.transform))
                 return;
-            ZoneWalkerWorker(workers.transform, technician, controller, context,
+            ZoneWalkerWorker(workers.transform, technician, context,
                 (new Vector3(-1.0f, 0f, -1.8f), 0f),
                 (new Vector3(-1.0f, 0f, -0.55f), 0f),
                 (new Vector3(-1.5f, 0f, 0.2f), 0f));
@@ -206,12 +241,12 @@ namespace TwoDude.FactoryTwin.Twin
         }
 
         // An operator: the first entry is where they stand clear during a lockout, the rest their working stops.
-        private static Transform Worker(Transform parent, string name, Material material, AnimatorController controller, CellContext context,
+        private static Transform Worker(Transform parent, string name, Figure figure, CellContext context,
             (Vector3 position, float yaw, float workSeconds, string state) standClear,
             params (Vector3 position, float yaw, float workSeconds, string state)[] stops)
         {
             GameObject root = Root(parent, name, stops[0].position, stops[0].yaw);
-            Animator animator = Model(root, material, controller);
+            Animator animator = Model(root, figure);
 
             var worker = root.AddComponent<SimulatedWorker>();
             var so = new SerializedObject(worker);
@@ -236,17 +271,17 @@ namespace TwoDude.FactoryTwin.Twin
 
         // The colleague is a training point too (Colleague): a click, or a controller ray and trigger, asks them to
         // stand clear. The guide's beacon points at them while they block the area check.
-        private static Transform Colleague(Transform parent, Material material, AnimatorController controller, CellContext context,
+        private static Transform Colleague(Transform parent, Figure figure, CellContext context,
             (Vector3 position, float yaw, string state) home, (Vector3 position, float yaw, string state) workArea,
             (Vector3 position, float yaw, string state) clear)
         {
             GameObject root = Root(parent, "Worker_Colleague", home.position, home.yaw);
-            Animator animator = Model(root, material, controller);
+            Animator animator = Model(root, figure);
             var capsule = root.AddComponent<CapsuleCollider>();
             capsule.isTrigger = true;
-            capsule.height = Height;
+            capsule.height = figure.Height;
             capsule.radius = 0.3f;
-            capsule.center = new Vector3(0f, Height / 2f, 0f);
+            capsule.center = new Vector3(0f, figure.Height / 2f, 0f);
 
             var point = root.AddComponent<TrainingPoint>();
             var pointSo = new SerializedObject(point);
@@ -297,7 +332,7 @@ namespace TwoDude.FactoryTwin.Twin
 
         // The body the zone sensors see is the root: a kinematic capsule on the Trainee layer, like the trainee's.
         // The model under it stays on Default, so cameras draw it as before.
-        private static void ZoneWalkerWorker(Transform parent, Material material, AnimatorController controller, CellContext context,
+        private static void ZoneWalkerWorker(Transform parent, Figure figure, CellContext context,
             (Vector3 position, float yaw) home, (Vector3 position, float yaw) warning, (Vector3 position, float yaw) protective)
         {
             home.position = Snap(home.position);
@@ -322,7 +357,7 @@ namespace TwoDude.FactoryTwin.Twin
             agent.acceleration = 8f;
             agent.stoppingDistance = 0.05f;
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
-            Animator animator = Model(root, material, controller);
+            Animator animator = Model(root, figure);
 
             var walker = root.AddComponent<ZoneWalker>();
             var so = new SerializedObject(walker);
@@ -444,28 +479,148 @@ namespace TwoDude.FactoryTwin.Twin
             return root;
         }
 
-        // The model under a worker's root, in the given look, scaled to Height, with the worker animator.
-        private static Animator Model(GameObject root, Material material, AnimatorController controller)
+        // The model under a worker's root, in the figure's look, scaled to its height, with its animator.
+        private static Animator Model(GameObject root, Figure figure)
         {
-            var model = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath), root.transform);
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(figure.Model), root.transform);
             model.transform.localPosition = Vector3.zero;
             model.transform.localRotation = Quaternion.identity;
             Renderer[] renderers = model.GetComponentsInChildren<Renderer>(true);
             foreach (Renderer r in renderers)
-                r.sharedMaterial = material;
+                r.sharedMaterials = figure.Material != null
+                    ? Enumerable.Repeat(figure.Material, r.sharedMaterials.Length).ToArray()
+                    : r.sharedMaterials.Select(m => RocketboxMaterial(figure.Model, m)).ToArray();
             Transform headTop = model.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == HeadTopBone);
-            float height = (headTop != null ? headTop.position.y : renderers.Select(r => r.bounds.max.y).DefaultIfEmpty(Height).Max())
+            float height = (headTop != null ? headTop.position.y : renderers.Select(r => r.bounds.max.y).DefaultIfEmpty(figure.Height).Max())
                 - root.transform.position.y;
             if (height > 0.01f)
-                model.transform.localScale *= Height / height;
+                model.transform.localScale *= figure.Height / height;
 
             Animator animator = model.GetComponent<Animator>();
             if (animator == null)
                 animator = model.AddComponent<Animator>();
-            animator.runtimeAnimatorController = controller;
+            animator.runtimeAnimatorController = figure.Controller;
             animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
             return animator;
+        }
+        private static string Avatar(string name) => $"{RocketboxFolder}/{name}/{name}.fbx";
+
+        // Humanoid avatars and clips, so one set of animations drives every body; a controller for men and one for
+        // women with the same three states as the Quaternius one. False when the Rocketbox files are not there.
+        private static bool Rocketbox(out AnimatorController male, out AnimatorController female)
+        {
+            male = female = null;
+            string animations = RocketboxFolder + "/Animations";
+            if (!AssetDatabase.IsValidFolder(RocketboxFolder) || !AssetDatabase.IsValidFolder(animations))
+                return false;
+            foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { RocketboxFolder }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var importer = (ModelImporter)AssetImporter.GetAtPath(path);
+                bool clip = path.StartsWith(animations);
+                importer.animationType = ModelImporterAnimationType.Human;
+                importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                importer.importAnimation = clip;
+                if (clip)
+                {
+                    ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
+                    foreach (ModelImporterClipAnimation c in clips)
+                    {
+                        c.loopTime = true;
+                        c.loopPose = true;
+                        c.lockRootRotation = true;
+                        c.lockRootHeightY = true;
+                        c.keepOriginalOrientation = true;
+                        c.keepOriginalPositionY = true;
+                    }
+                    importer.clipAnimations = clips;
+                }
+                importer.SaveAndReimport();
+            }
+            foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { RocketboxFolder }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+                importer.textureType = path.Contains("_normal") ? TextureImporterType.NormalMap : TextureImporterType.Default;
+                importer.alphaIsTransparency = path.Contains("_opacity_");
+                importer.maxTextureSize = 1024;
+                importer.SaveAndReimport();
+            }
+            male = RocketboxController("Male", "m_", animations);
+            female = RocketboxController("Female", "f_", animations);
+            return male != null && female != null;
+        }
+
+        private static AnimatorController RocketboxController(string name, string prefix, string animations)
+        {
+            string path = $"{RocketboxMaterials}/Rocketbox{name}.controller";
+            if (!AssetDatabase.IsValidFolder(RocketboxMaterials))
+                AssetDatabase.CreateFolder(Folder, "Rocketbox");
+            AssetDatabase.DeleteAsset(path);
+            AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(path);
+            AnimatorStateMachine machine = controller.layers[0].stateMachine;
+            foreach ((string state, string file) in new[] { ("Working", "work_mid"), ("Walk", "walk_neutral_01"), ("Idle", "idle_neutral_01") })
+            {
+                AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath($"{animations}/{prefix}{file}.fbx")
+                    .OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview__"));
+                if (clip == null)
+                {
+                    Debug.LogWarning($"[WorkersSetup] No {prefix}{file} clip in {animations}.");
+                    return null;
+                }
+                AnimatorState s = machine.AddState(state);
+                s.motion = clip;
+                if (state == "Working")
+                    machine.defaultState = s;
+            }
+            AssetDatabase.SaveAssets();
+            return controller;
+        }
+
+        // A URP material for one slot of a Rocketbox avatar, from that part's colour and normal maps ("m111_body").
+        // The opacity slot (eyelashes, hair edges) is alpha-clipped.
+        private static Material RocketboxMaterial(string modelPath, Material slot)
+        {
+            string slotName = slot != null ? slot.name.ToLowerInvariant() : string.Empty;
+            string part = RocketboxParts.FirstOrDefault(p => slotName.Contains(p)) ?? "body";
+            string avatarFolder = System.IO.Path.GetDirectoryName(modelPath).Replace('\\', '/');
+            string avatar = System.IO.Path.GetFileName(avatarFolder);
+            string textures = avatarFolder + "/Textures";
+            string colour = AssetDatabase.FindAssets($"_{part}_color t:Texture2D", new[] { textures }).Select(AssetDatabase.GUIDToAssetPath).FirstOrDefault();
+            string normal = AssetDatabase.FindAssets($"_{part}_normal t:Texture2D", new[] { textures }).Select(AssetDatabase.GUIDToAssetPath).FirstOrDefault();
+
+            string path = $"{RocketboxMaterials}/{avatar}_{part}.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.SetTexture("_BaseMap", colour != null ? AssetDatabase.LoadAssetAtPath<Texture2D>(colour) : null);
+            material.SetColor("_BaseColor", Color.white);
+            material.SetFloat("_Smoothness", part == "helmet" ? 0.45f : 0.2f);
+            if (normal != null)
+            {
+                material.SetTexture("_BumpMap", AssetDatabase.LoadAssetAtPath<Texture2D>(normal));
+                material.EnableKeyword("_NORMALMAP");
+            }
+            bool clip = part == "opacity";
+            material.SetFloat("_AlphaClip", clip ? 1f : 0f);
+            material.SetFloat("_Cutoff", 0.5f);
+            if (clip)
+            {
+                material.EnableKeyword("_ALPHATEST_ON");
+                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+                material.SetFloat("_Cull", 0f);
+            }
+            else
+            {
+                material.DisableKeyword("_ALPHATEST_ON");
+                material.renderQueue = -1;
+            }
+            EditorUtility.SetDirty(material);
+            return material;
         }
     }
 }
