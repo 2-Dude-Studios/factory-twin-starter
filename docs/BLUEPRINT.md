@@ -1,6 +1,6 @@
 # Factory Twin — project blueprint
 
-As of 2026-10-24, commit `0c3b0fc`. Both use cases are built: predictive maintenance (M4–M6, video approved) and virtual commissioning (M7–M8 closed, M9 waiting on the voiceover). A third, workforce training and safety (Rev 5, M10–M13), was approved on 2026-10-24; its safety zone (M10) closed the same day and the lockout procedure (M11) on 2026-10-26; the Quest 3 view (M12) is next. Written from the code, `Cell.unity` and the docs in this repo. Where they disagree, the code is described and the difference is listed in section 13.
+As of 2026-10-29, commit `ff10a1e`. Status sections (1, 11, 12, 13, 14) updated on 2026-10-29; the reference sections (2–10) were drawn at commit `0c3b0fc` (2026-10-24) and do not yet describe the M11 14-step procedure or the M12 XR code. Both use cases are built: predictive maintenance (M4–M6, video approved) and virtual commissioning (M7–M8 closed, M9 waiting on the voiceover). A third, workforce training and safety (Rev 5, M10–M13): the safety zone (M10) closed on 2026-10-24, the lockout procedure (M11) on 2026-10-26, and the Quest 3 view (M12) is nearly done, with its exit runs in the headset left. Written from the code, `Cell.unity` and the docs in this repo. Where they disagree, the code is described and the difference is listed in section 13.
 
 Companion documents: `docs/build-plan.md` (why and in what order, Rev 5), `docs/STATUS.md` (running log and decisions), `docs/demo-script.md` (video beats), `docs/voiceover.md` and `docs/voiceover_vc*.md` (scripts and cut plans), `docs/LICENSES.md` (what may ship), `CLAUDE.md` (rules for working in the repo).
 
@@ -52,9 +52,9 @@ It ships as a Windows build for live demos and a walkthrough video per use case 
 | M8 Commissioning suite | Six scenarios against either logic source, I/O list, seeded bug caught | Done 2026-10-23 |
 | M9 VC capture | Takes D and E, 76 s picture-only rough cut | **Waiting on your recorded voiceover** |
 | M10 Safety zone | Warning and protective zones, arm freeze, reset, PLC hold, first-person trainee, two suite scenarios | Done 2026-10-24 |
-| M11 Lockout procedure | 1910.147 steps on the CNC, PLC refuses start with the lock on, training record, trainee points and step panel | Done 2026-10-26 |
-| M12 Quest 3 view | OpenXR + XR Interaction Toolkit over Link, same signals | **Current** (Rev 5) |
-| M13 Training capture | Training clip | Planned |
+| M11 Lockout procedure | 1910.147 steps on the CNC (14 since 2026-10-27), PLC refuses start with the lock on, training record, trainee points and step panel | Done 2026-10-26 |
+| M12 Quest 3 view | OpenXR + XR Interaction Toolkit + XR Hands over Link, same signals; hands-on lockout props, tablet, NPC crew | **Current**: checked in the headset at 72 fps; exit runs left |
+| M13 Training capture | Training clip | Next |
 
 ---
 
@@ -545,7 +545,7 @@ One test holds the AI4I hit rate: every labelled TWF/HDF/PWF/OSF row warned, pro
 
 | Deliverable | Where | State |
 |---|---|---|
-| Windows build | `Builds/Windows/FactoryTwin.exe` (git-ignored) | Last build recorded in `STATUS.md`: 2026-10-20, with the capture features; 60 fps lock confirmed. That predates the PLC and commissioning work |
+| Windows build | `Builds/Windows/FactoryTwin.exe` (git-ignored) | Rebuilt 2026-10-27 at `6a8c6b8`: everything through M12. Desktop holds the 60 fps lock; `-vr` runs at 72 fps over Link |
 | PdM video v02 | `Builds/Recordings/2DS_Manufacturing_FactoryTwin_PdM_v02_20261021.mp4` | 111 s, approved |
 | PdM video v03 | `tools/video/build3.py` | Script committed (126.5 s cut with mid screens and subtitles); no rendered or approved v03 is recorded in `STATUS.md` |
 | VC takes D and E | `Builds/Recordings/2DS_FactoryTwin_Take{D,E}_20261023_*.mp4` | Bug caught (46 s); fix passes 6/6 (330 s) |
@@ -556,15 +556,18 @@ One test holds the AI4I hit rate: every labelled TWF/HDF/PWF/OSF row warned, pro
 
 ## 12. What is left
 
+**To close M12.** In the Quest 3 over Link, with the broker and the OpenPLC Runtime running: the zone stop (walk into the robot zone; the arm stops; reset from outside); the full 14-step lockout end to end; a wrong-order run; a start with the lock on, refused by the PLC and logged. Then check that training record against a desktop run of the same steps.
+
+**Then.** The commissioning suite on the soft PLC with scenario 10 (so far the Unity sequencer only: 9 passed). M13, the training clip: beats in `docs/demo-script.md`, voiceover, takes from the desktop trainee and the headset mirror view.
+
 **To close M9.** Record `block1.wav` … `block6.wav` from `docs/voiceover_vc_script.md`, then run `tools/video/vc/build_vc.py --voice-dir <folder> --logo "<logo>" <output>` and approve the clip.
 
 **Open items from the status log.**
-- Rebuild the Windows build so the live demo includes the PLC link and the commissioning panel.
+- OpenPLC Runtime (MIT) and Editor (GPL-3.0, a tool) on the licence register before a clip ships.
 - Player Settings still say "factory-twin-starter" / "DefaultCompany" with a 1024×768 default; decide on "Factory Twin" / "2 Dude Studios" at 1920×1080.
 - OpenPLC showed high latency and many overruns after a stop and start; the suite was unaffected. Restart the runtime before a live demo.
-- Manual cleanup: `Assets/Screenshots/`. (The deactivated training objects are already gone from `Cell.unity`; they went with the M2 commit.)
-
-**Rev 5, workforce training and safety (M10–M13, ≈10 days).** Safety zone, lockout procedure, Quest 3 view over Link, training clip. Exit conditions in `docs/build-plan.md`.
+- Uncommitted: the Rocketbox `.meta` changes under `Assets/ThirdParty/Rocketbox/` (importer state written by Build Simulated Workers) and the UnitySkills bump; commit or revert.
+- Manual cleanup: `Assets/Screenshots/`.
 
 **Later.** Full monitoring (hover, health per station, OEE, retained MQTT), layout what-if (runtime IK), pre-planning, kiosk view, standalone Quest 3, OPC UA on the first client project that asks.
 
@@ -580,14 +583,13 @@ Open:
 | 2 | **The demo script's VC section is the pre-M8 draft.** It says "Stuck sensor" or "missing part" fails and parts pile up at the gate. What happens: the seeded bug fails the interlock checks from the normal run onward, and parts queue into the pick station. Its PdM section still marks M5 signals as not existing yet. | The demo script is the reference for anyone re-cutting the videos. `docs/voiceover_vc.md` has the as-built beats. |
 | 3 | **The arm bake script is not in the repo.** `STATUS.md` points at `scratchpad/ur5e_kin.py`. | The poses cannot be regenerated after a layout change; the parked layout what-if work needs it first. |
 | 4 | **Uncommitted settings drift.** UnitySkills is now v2.9.1 in the manifest (register says v2.8.4), and `ProjectSettings/EditorSettings.asset` carries an Editor serialisation upgrade. | Commit or revert both; the register must match the manifest. |
-| 5 | **The last recorded live-demo build predates M7–M9** (2026-10-20). | A prospect meeting on that .exe shows predictive maintenance only. |
-| 6 | **`/test` names Editor 6000.3.0f1**; the project is on 6000.3.19f1. | The headless command fails as written. |
-| 7 | **Stray `Assets/Temp.meta` and `Assets/UnitySkillsTests_Temp.meta`** remain untracked. | Delete or ignore. |
-| 8 | **`Prefabs/` is empty**; everything lives in one scene that realvirtual dirties on load. | Diffs are noisy; extracting the cell, arm and CNC would help reuse. |
-| 9 | **Bridge components read realvirtual directly.** `PartGripper` and now `JamClearer` use `Sensor` and `MU`, while `.claude/rules/unity-csharp.md` says everything goes through `TwinSignals`. | Contained in the bridge assembly, so the layering holds; reword the rule or the code. |
-| 10 | **`docs/build-plan.md`'s repo layout** omits `Scripts/Twin/Plc`, `Commissioning`, `UI/` assets and `tools/video`. | Minor; the plan reads as older than the code. |
+| 5 | **`/test` names Editor 6000.3.0f1**; the project is on 6000.3.19f1. | The headless command fails as written. |
+| 6 | **Stray `Assets/Temp.meta` and `Assets/UnitySkillsTests_Temp.meta`** remain untracked. | Delete or ignore. |
+| 7 | **`Prefabs/` is empty**; everything lives in one scene that realvirtual dirties on load. | Diffs are noisy; extracting the cell, arm and CNC would help reuse. |
+| 8 | **Bridge components read realvirtual directly.** `PartGripper` and now `JamClearer` use `Sensor` and `MU`, while `.claude/rules/unity-csharp.md` says everything goes through `TwinSignals`. | Contained in the bridge assembly, so the layering holds; reword the rule or the code. |
+| 9 | **`docs/build-plan.md`'s repo layout** omits `Scripts/Twin/Plc`, `Commissioning`, `UI/` assets and `tools/video`. | Minor; the plan reads as older than the code. |
 
-Resolved since the first blueprint: no CNC in 3D (CNC prefab and stack light, M4); demo signals that did not exist (M4–M5 added them); undefined risk (threshold margins, M5); OEE parked under Later.
+Resolved since the first blueprint: the live-demo build is current again (rebuilt 2026-10-27, through M12); no CNC in 3D (CNC prefab and stack light, M4); demo signals that did not exist (M4–M5 added them); undefined risk (threshold margins, M5); OEE parked under Later.
 
 Risks carried from `STATUS.md`:
 
@@ -609,6 +611,12 @@ Risks carried from `STATUS.md`:
 1. Optional broker: `docker compose -f tools/broker/docker-compose.yml up -d`.
 2. Open `Cell.unity` in Unity 6000.3.19f1 and press Play. Let the line run about 2.5 minutes, so parts per hour settles near 510 and parts lost has a rate to count against.
 3. Keys: **1** wear the tool out, **2** change the tool, **3** clear faults, **0** fresh take; **4**–**9** camera shots; **F9** FPS readout, **F10** cursor.
+
+**Training and safety (desktop and Quest 3).**
+
+1. Broker and OpenPLC Runtime as above (the Runtime starts its last uploaded program; Start OpenPLC Runtime from the Start menu).
+2. Desktop: Play, F5 for the trainee, Start lockout training on the board or the dashboard. Quest 3: Link active in the headset, then `Builds/Windows/FactoryTwin.exe -vr` (add `-logfps` for frame times in `Player.log`), or F11 in Play. If the log says "OpenXR did not start", the headset was not yet in Link: put it on and launch again.
+3. Training records land in `Builds/Training/lockout_*.csv`.
 
 **Virtual commissioning.**
 

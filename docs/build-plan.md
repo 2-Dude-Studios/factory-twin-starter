@@ -1,4 +1,4 @@
-# Manufacturing Demo — Factory Digital Twin build plan (Rev 5, 24 Oct 2026)
+# Manufacturing Demo — Factory Digital Twin build plan (Rev 5, 24 Oct 2026; progress updated 29 Oct 2026)
 
 Source tracker (62 items, licence verdicts, download status): https://claude.ai/artifact/AGRYueGCfv6UwgTbnQcdre
 Video SOP to follow once the build exists: `claude/walkthrough-video-playbook.md`
@@ -8,6 +8,12 @@ Rev 3 narrowed the prototype to one use case, **predictive maintenance**: the mo
 Rev 4 adds a second use case, **virtual commissioning** (M7–M9), for machine builders and system integrators. Chosen after a short research pass on 2026-10-22: machine builders know virtual commissioning but rarely use it, customers increasingly ask them for a virtual factory acceptance test, and competitors' demos are either engineering-tool screen recordings or whole-factory showpieces. None tells the story of one logic bug caught before site. The other four use cases stay under "Later".
 
 Rev 5 adds a third use case, **workforce training and safety** (M10–M13), the studio's first Quest 3 content. Chosen after a short research pass on 2026-10-24 (summary under Use case 3 below): lockout/tagout is OSHA's #4 most-cited standard in FY2025, and the VR safety-training vendors (Pixaera, Uptale, Interplay, Transfr, PIXO) sell generic modules. None found runs the training on the plant's own live twin, PLC and dashboard, which is what this one does.
+
+## Where it stands (29 Oct 2026)
+
+- **Done:** M0–M8, M10 and M11. Predictive maintenance is on video (v02 approved). Virtual commissioning is built: the soft PLC runs the cell and the suite catches the seeded bug. The safety zone and the 1910.147 lockout (14 steps since 27 Oct) run on desktop against both logic sources.
+- **Now, M12:** the Quest 3 view over Link is built and checked in the headset at a steady 72 fps: XR rig, controller and tracked hands that hold the props, a hands-on lockout (isolator, padlock and tag, air valve, tool change), a tablet in the left hand, a training board, simulated workers and modelled props. Left: the exit runs in the headset (zone stop, full lockout, wrong order, refused start) and the training-record match with a desktop run.
+- **Next:** M13, the training clip. M9 waits on the VC voiceover.
 
 ## What this is
 
@@ -83,7 +89,7 @@ Days are rough estimates of focused time.
 
 **M3 — Data spine (days 8–10). Done.** Signal bus: every drive, sensor and arm joint writes to a topic. AI4I rows replayed as press telemetry. Fault injector switches the press to failure rows on demand. Exit: `mosquitto_sub -t 'cell/#'` shows the whole cell live.
 
-**M4 — Dashboard (≈3 days).** Only what the predictive-maintenance story needs. A UI Toolkit overlay with runtime binding:
+**M4 — Dashboard (≈3 days). Done 2026-10-20.** Only what the predictive-maintenance story needs. A UI Toolkit overlay with runtime binding:
 - Press panel: health, live telemetry (air and process temperature, speed, torque, tool wear) as sparklines, and a failure-risk gauge (empty until M5 feeds it).
 - Line panel: line state, parts out, parts/hour, and parts lost while the line is held.
 - Event log, Inject/Clear fault buttons, broker link indicator, credits panel.
@@ -91,7 +97,7 @@ Days are rough estimates of focused time.
 The press gets geometry and turns amber/red in 3D from its health signal. realvirtual's runtime toolbar is hidden. New signals: `cell/press/health` (0 ok, 1 warning, 2 fault), `cell/line/parts_per_hour`, `cell/line/parts_lost` (held time × the running rate).
 Exit: the "inject fault" beat looks good on camera. The press goes red, the line holds, and the dashboard's press health, line state and parts lost move together.
 
-**M5 — Prediction (≈3 days).** Today the injector jumps straight to a failure row, which shows detection, not prediction. M5 adds:
+**M5 — Prediction (≈3 days). Done 2026-10-20.** Today the injector jumps straight to a failure row, which shows detection, not prediction. M5 adds:
 - **Degradation mode:** tool wear and torque climb through a warning band to failure over about a minute.
 - **Risk model:** a pure, tested class that turns press telemetry into failure risk, remaining tool life and a maintenance recommendation. Parameters live in a ScriptableObject; no ML package.
 - **Tool change:** a command that resets tool wear, so acting on the recommendation can be shown.
@@ -115,13 +121,13 @@ The beat that is the whole pitch: a soft PLC runs the cell from Structured Text.
 
 Soft PLC: OpenPLC Runtime v4 (MIT), outside Unity and outside the repo. Link: Modbus TCP, with our own client. realvirtual Professional is not needed, because Unity writes the Signals itself. CODESYS (2-hour demo mode), TwinCAT and PLCSIM Advanced (trial licences, and realvirtual Professional's interfaces) were ruled out. Commissioning savings figures (25–70%) are all vendor-reported; any on screen carry that label.
 
-**M7 — Soft PLC link (≈2 days).** OpenPLC Runtime v4 running on the studio PC. `CellSequence` ported to Structured Text (`tools/plc/cell.st`), the same four states, handshake and hold. `PlcLink`: our own Modbus TCP client (a pure, tested frame codec plus a socket loop) with an I/O map ScriptableObject that maps coils and registers to bus topics; the PLC host and port live in `TwinConfig`. A logic-source switch hands the line to the PLC (the in-Unity `CellSequencer` stops writing its outputs), and a heartbeat watchdog holds the line if the PLC goes silent. New signals: `cell/plc/source` (0 Unity, 1 PLC), `cell/plc/heartbeat`, `cell/plc/link`.
+**M7 — Soft PLC link (≈2 days). Done 2026-10-23.** OpenPLC Runtime v4 running on the studio PC. `CellSequence` ported to Structured Text (`tools/plc/cell.st`), the same four states, handshake and hold. `PlcLink`: our own Modbus TCP client (a pure, tested frame codec plus a socket loop) with an I/O map ScriptableObject that maps coils and registers to bus topics; the PLC host and port live in `TwinConfig`. A logic-source switch hands the line to the PLC (the in-Unity `CellSequencer` stops writing its outputs), and a heartbeat watchdog holds the line if the PLC goes silent. New signals: `cell/plc/source` (0 Unity, 1 PLC), `cell/plc/heartbeat`, `cell/plc/link`.
 Exit: the cell runs 10 minutes from the soft PLC with `CellSequencer` off. Parts per hour stay within 10% of the M2 rate, with 0 stalls. Stopping the PLC holds the line within 1 s.
 
-**M8 — Commissioning suite (≈2.5 days).** Fault forcing extends to the cell: force the gate sensor on or off, drop a part, keep the arm busy. Six scenarios (normal run, stuck sensor, missing part, arm not ready, press fault, PLC loss) run against either logic source and write a pass/fail report, shown on a dashboard panel and saved as CSV. An I/O list is exported from the I/O map as CSV, because that is what commissioning engineers work from. A copy of the program with a seeded bug (`tools/plc/cell_buggy.st`, the missing interlock). New signals: `cell/gate1/force` (0 off, 1 forced false, 2 forced true), `cell/vc/test`, `cell/vc/result`.
+**M8 — Commissioning suite (≈2.5 days). Done 2026-10-23.** Fault forcing extends to the cell: force the gate sensor on or off, drop a part, keep the arm busy. Six scenarios (normal run, stuck sensor, missing part, arm not ready, press fault, PLC loss) run against either logic source and write a pass/fail report, shown on a dashboard panel and saved as CSV. An I/O list is exported from the I/O map as CSV, because that is what commissioning engineers work from. A copy of the program with a seeded bug (`tools/plc/cell_buggy.st`, the missing interlock). New signals: `cell/gate1/force` (0 off, 1 forced false, 2 forced true), `cell/vc/test`, `cell/vc/result`.
 Exit: the suite passes against both logic sources. The bugged program fails a named test, and the failure is visible in 3D.
 
-**M9 — VC capture (≈1.5 days).** Demo-script beats for VC, voiceover, takes through `TakeSequencer`, cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_VC_v01_<date>`.
+**M9 — VC capture (≈1.5 days). Takes and a picture-only rough cut done; waiting on the voiceover.** Demo-script beats for VC, voiceover, takes through `TakeSequencer`, cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_VC_v01_<date>`.
 Exit: the clip is captured from the project and approved.
 
 M7–M9 come to roughly 6 days of focused time.
@@ -143,18 +149,20 @@ Standards the demo follows, and how far:
 
 Platform: Quest 3 over Link or Air Link first. The PC renders the existing Windows build, and the broker and the soft PLC stay on localhost. Standalone Quest does not fit the hall as it stands (316 draw calls plus 116 shadow casters, 1.49 M triangles in view, Deferred+ with SSAO and about 50 realtime point lights, against Meta's Quest 3 guide of 400–600 draw calls and 1.3–1.8 M triangles); it needs a forward, fully baked scene variant and an Android build, about 3–4 more days, and stays under "Later". Meta stopped selling Quest for Business in Feb 2026; business buyers now run consumer Quest 3 headsets under ArborXR or ManageXR.
 
-**M10 — Safety zone (≈2.5 days).** A warning zone and a protective zone around the arm (sensor volumes, like a safety laser scanner), dressed with the Factory Training fence and cone props. The warning zone slows the arm; the protective zone freezes it where it is, on the tick the signal changes (not after the current pick, unlike the CNC-fault hold), and holds the line. Leaving the zone does not restart anything; a reset from outside the zone does. `cell.st` gets a safety input and the reset logic, mirrored in `CellSequence`. A desktop first-person trainee (Input System) walks the hall. Two commissioning scenarios check it: zone entry stops the arm and holds the line; leaving without a reset does not restart it. New signals: `cell/safety/zone_warning`, `cell/safety/arm_zone_occupied`, `cell/safety/protective_stop`, `cell/safety/reset` (in).
+**M10 — Safety zone (≈2.5 days). Done 2026-10-24.** A warning zone and a protective zone around the arm (sensor volumes, like a safety laser scanner), dressed with the Factory Training fence and cone props. The warning zone slows the arm; the protective zone freezes it where it is, on the tick the signal changes (not after the current pick, unlike the CNC-fault hold), and holds the line. Leaving the zone does not restart anything; a reset from outside the zone does. `cell.st` gets a safety input and the reset logic, mirrored in `CellSequence`. A desktop first-person trainee (Input System) walks the hall. Two commissioning scenarios check it: zone entry stops the arm and holds the line; leaving without a reset does not restart it. New signals: `cell/safety/zone_warning`, `cell/safety/arm_zone_occupied`, `cell/safety/protective_stop`, `cell/safety/reset` (in).
 Exit: entering the zone stops the arm within one physics tick of the signal, and the dashboard shows why. Leaving the zone does not restart the line; the reset does. The suite passes against both logic sources.
 
-**M11 — Lockout procedure (≈3 days).** The 1910.147 steps on the CNC as a pure, tested procedure model: notify, stop the line, isolate (the CNC's main isolator), apply lock and tag, verify with a try-start, change the tool (resets tool wear), clear and notify, remove the lock, restart. Interactable points on the CNC drive the steps through signals only. Out-of-order steps are flagged and counted. A step panel on the dashboard; each run writes a training record (CSV: trainee, start, steps with times, errors, result). The PLC refuses to start the line while the lock is on, and the refusal is logged. New signals: `cell/press/isolated`, `cell/press/lockout`, `cell/training/step`, `cell/training/errors`, `cell/training/result`.
+**M11 — Lockout procedure (≈3 days). Done 2026-10-26; 14 steps since 2026-10-27** (preparation (d)(1) added, and the area check (e)(2)(i) and the notification (e)(2)(ii) split as the rule has them). The 1910.147 steps on the CNC as a pure, tested procedure model: notify, stop the line, isolate (the CNC's main isolator), apply lock and tag, verify with a try-start, change the tool (resets tool wear), clear and notify, remove the lock, restart. Interactable points on the CNC drive the steps through signals only. Out-of-order steps are flagged and counted. A step panel on the dashboard; each run writes a training record (CSV: trainee, start, steps with times, errors, result). The PLC refuses to start the line while the lock is on, and the refusal is logged. New signals: `cell/press/isolated`, `cell/press/lockout`, `cell/training/step`, `cell/training/errors`, `cell/training/result`.
 Exit: the procedure runs end to end and the line restarts. Starting the line with the lock on is refused by the PLC and logged. A wrong-order run records its errors in the training record.
 Decide at start: the trainee's name in the record (fixed demo name or typed in).
 
-**M12 — Quest 3 view over Link (≈3 days).** The three approved XR packages. An XR rig beside the desktop trainee (one or the other is active), teleport and snap turn, ray and grab on the same lockout points, the dashboard's step panel as a world-space panel. Nothing new on the signal side: the headset drives the same signals. Desktop stays the default; a launch switch turns VR on.
+**M12 — Quest 3 view over Link (≈3 days). In progress, nearly done.** The three approved XR packages. An XR rig beside the desktop trainee (one or the other is active), teleport and snap turn, ray and grab on the same lockout points, the dashboard's step panel as a world-space panel. Nothing new on the signal side: the headset drives the same signals. Desktop stays the default; a launch switch turns VR on.
 Exit: both beats (zone stop, lockout) run in the Quest 3 over Link at 72 fps or better, with no new signals, and the training record matches a desktop run.
-Decide at start: whether world-space UI Toolkit with XRI covers the panel, or the panel is rendered to a texture.
+Decided 2026-10-26: world-space UI Toolkit with XRI.
+Built (26–29 Oct; details in `docs/STATUS.md`): `-vr` or F11 switches to the XR rig with a lighter VR render pipeline (72 fps steady in the Windows build over Link); controller hands and tracked hands (com.unity.xr.hands, approved 27 Oct) with grip poses; hands-on props on the lockout points (isolator twist, padlock and tag into the hasp, air-valve twist, tool swap from a cart, poke buttons), modelled in Blender from `tools/blender/`; a tablet in the left hand with the step due and the options; a pressable training board; NPC operators and a maintenance colleague who react to the procedure; the walkway fence round the press. Checked in the headset on 29 Oct.
+Left: the exit runs in the headset and the training-record comparison with a desktop run.
 
-**M13 — Training capture (≈1.5 days).** Demo-script beats for the training clip, voiceover, takes from the desktop trainee and from the headset (mirror view), cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_Safety_v01_<date>`.
+**M13 — Training capture (≈1.5 days). Next.** Demo-script beats for the training clip, voiceover, takes from the desktop trainee and from the headset (mirror view), cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_Safety_v01_<date>`.
 Exit: the clip is captured from the project and approved.
 
 M10–M13 come to roughly 10 days of focused time.

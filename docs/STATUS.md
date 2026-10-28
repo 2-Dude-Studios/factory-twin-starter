@@ -1,7 +1,13 @@
 # Status
 
-**Current milestone:** M12 — Quest 3 view over Link (build plan Rev 5, workforce training and safety). M11 closed 2026-10-26, M10 closed 2026-10-24. M9 — VC capture runs alongside and waits on your voiceover. M8 and M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
-**Last updated:** 2026-10-27
+**Current milestone:** M12 — Quest 3 view over Link (build plan Rev 5, workforce training and safety), nearly done: the headset runs the cell at a steady 72 fps over Link with hands, hands-on lockout props, a tablet in the left hand and modelled valve, station, inspection door and tool change, all checked by you in the headset on 2026-10-29. Left for M12: the exit runs in the headset (see Next). M11 closed 2026-10-26, M10 closed 2026-10-24. M9 — VC capture waits on your voiceover. M8 and M7 closed 2026-10-23. Rev 3 (predictive maintenance) is complete: M6 closed 2026-10-21, M5 and M4 closed 2026-10-20.
+**Next:**
+1. M12 exit runs in the Quest 3 over Link, with the broker and the OpenPLC Runtime up: the zone stop (walk into the robot zone, arm stops, reset from outside); the full 14-step lockout end to end; a wrong-order run; a start with the lock on, refused and logged. Then compare that training record with a desktop run of the same steps (same columns, steps and mistake names) and close M12.
+2. The commissioning suite on the soft PLC with scenario 10 (the zone walker); so far only the Unity sequencer has run it (9 passed).
+3. M13 — training capture: beats in `docs/demo-script.md`, voiceover, takes from the desktop trainee and the headset mirror view, cut with `tools/video`.
+4. M9 — your six voice blocks for the VC clip, then `build_vc.py`.
+5. Before a clip ships: OpenPLC Runtime (MIT) and Editor (GPL-3.0, a tool) on `docs/LICENSES.md`. Decide on the uncommitted Rocketbox `.meta` changes under `Assets/ThirdParty/Rocketbox/` (importer state from Build Simulated Workers) and the UnitySkills bump.
+**Last updated:** 2026-10-29
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
