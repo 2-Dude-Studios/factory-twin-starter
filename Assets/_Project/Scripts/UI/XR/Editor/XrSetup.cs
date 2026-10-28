@@ -169,6 +169,9 @@ namespace TwoDude.FactoryTwin.UI
             // pokes would never reach the world panels. On the rig, so it only applies while VR runs.
             var panelInput = Undo.AddComponent<PanelInputConfiguration>(rig);
             panelInput.panelInputRedirection = PanelInputConfiguration.PanelInputRedirection.Never;
+            // The trainee is in the headset; another window on the PC may hold the focus, which UI Toolkit would
+            // otherwise take as a reason to drop every press.
+            Undo.AddComponent<VrBackgroundInput>(rig);
             Board(cell.transform, worldPanel, context);
             VrHud vrHud = Tablet(origin, vrSwitch, worldPanel, context, cell.transform);
 
