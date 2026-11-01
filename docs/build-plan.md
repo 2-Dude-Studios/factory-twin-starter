@@ -9,11 +9,10 @@ Rev 4 adds a second use case, **virtual commissioning** (M7–M9), for machine b
 
 Rev 5 adds a third use case, **workforce training and safety** (M10–M13), the studio's first Quest 3 content. Chosen after a short research pass on 2026-10-24 (summary under Use case 3 below): lockout/tagout is OSHA's #4 most-cited standard in FY2025, and the VR safety-training vendors (Pixaera, Uptale, Interplay, Transfr, PIXO) sell generic modules. None found runs the training on the plant's own live twin, PLC and dashboard, which is what this one does.
 
-## Where it stands (29 Oct 2026)
+## Where it stands (2 Nov 2026)
 
-- **Done:** M0–M8, M10 and M11. Predictive maintenance is on video (v02 approved). Virtual commissioning is built: the soft PLC runs the cell and the suite catches the seeded bug. The safety zone and the 1910.147 lockout (14 steps since 27 Oct) run on desktop against both logic sources.
-- **Now, M12:** the Quest 3 view over Link is built and checked in the headset at a steady 72 fps: XR rig, controller and tracked hands that hold the props, a hands-on lockout (isolator, padlock and tag, air valve, tool change), a tablet in the left hand, a training board, simulated workers and modelled props. Left: the exit runs in the headset (zone stop, full lockout, wrong order, refused start) and the training-record match with a desktop run.
-- **Next:** M13, the training clip. M9 waits on the VC voiceover.
+- **Done:** M0–M13, all of Rev 5. M9, M12 and M13 closed 2 Nov. All three use cases are built and on video as a three-part series: 1 predictive maintenance, 2 virtual commissioning, 3 training and safety in the Quest 3 over Link (`Builds/Recordings/Final Series/`, with YouTube, Shorts and LinkedIn cuts in `v06 kit/`).
+- **Next:** the public-repo decisions in `docs/public-release-check.md`; the Later use cases when a prospect asks.
 
 ## What this is
 
@@ -127,7 +126,7 @@ Exit: the cell runs 10 minutes from the soft PLC with `CellSequencer` off. Parts
 **M8 — Commissioning suite (≈2.5 days). Done 2026-10-23.** Fault forcing extends to the cell: force the gate sensor on or off, drop a part, keep the arm busy. Six scenarios (normal run, stuck sensor, missing part, arm not ready, press fault, PLC loss) run against either logic source and write a pass/fail report, shown on a dashboard panel and saved as CSV. An I/O list is exported from the I/O map as CSV, because that is what commissioning engineers work from. A copy of the program with a seeded bug (`tools/plc/cell_buggy.st`, the missing interlock). New signals: `cell/gate1/force` (0 off, 1 forced false, 2 forced true), `cell/vc/test`, `cell/vc/result`.
 Exit: the suite passes against both logic sources. The bugged program fails a named test, and the failure is visible in 3D.
 
-**M9 — VC capture (≈1.5 days). Takes and a picture-only rough cut done; waiting on the voiceover.** Demo-script beats for VC, voiceover, takes through `TakeSequencer`, cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_VC_v01_<date>`.
+**M9 — VC capture (≈1.5 days). Done 2026-11-02: Part 2 of the series.** Demo-script beats for VC, voiceover, takes through `TakeSequencer`, cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_VC_v01_<date>`.
 Exit: the clip is captured from the project and approved.
 
 M7–M9 come to roughly 6 days of focused time.
@@ -156,13 +155,13 @@ Exit: entering the zone stops the arm within one physics tick of the signal, and
 Exit: the procedure runs end to end and the line restarts. Starting the line with the lock on is refused by the PLC and logged. A wrong-order run records its errors in the training record.
 Decide at start: the trainee's name in the record (fixed demo name or typed in).
 
-**M12 — Quest 3 view over Link (≈3 days). In progress, nearly done.** The three approved XR packages. An XR rig beside the desktop trainee (one or the other is active), teleport and snap turn, ray and grab on the same lockout points, the dashboard's step panel as a world-space panel. Nothing new on the signal side: the headset drives the same signals. Desktop stays the default; a launch switch turns VR on.
+**M12 — Quest 3 view over Link (≈3 days). Done 2026-11-02.** The three approved XR packages. An XR rig beside the desktop trainee (one or the other is active), teleport and snap turn, ray and grab on the same lockout points, the dashboard's step panel as a world-space panel. Nothing new on the signal side: the headset drives the same signals. Desktop stays the default; a launch switch turns VR on.
 Exit: both beats (zone stop, lockout) run in the Quest 3 over Link at 72 fps or better, with no new signals, and the training record matches a desktop run.
 Decided 2026-10-26: world-space UI Toolkit with XRI.
 Built (26–29 Oct; details in `docs/STATUS.md`): `-vr` or F11 switches to the XR rig with a lighter VR render pipeline (72 fps steady in the Windows build over Link); controller hands and tracked hands (com.unity.xr.hands, approved 27 Oct) with grip poses; hands-on props on the lockout points (isolator twist, padlock and tag into the hasp, air-valve twist, tool swap from a cart, poke buttons), modelled in Blender from `tools/blender/`; a tablet in the left hand with the step due and the options; a pressable training board; NPC operators and a maintenance colleague who react to the procedure; the walkway fence round the press. Checked in the headset on 29 Oct.
 Left: the exit runs in the headset and the training-record comparison with a desktop run.
 
-**M13 — Training capture (≈1.5 days). Next.** Demo-script beats for the training clip, voiceover, takes from the desktop trainee and from the headset (mirror view), cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_Safety_v01_<date>`.
+**M13 — Training capture (≈1.5 days). Done 2026-11-02: Part 3 of the series.** Demo-script beats for the training clip, voiceover, takes from the desktop trainee and from the headset (mirror view), cut with `tools/video`. Naming `2DS_Manufacturing_FactoryTwin_Safety_v01_<date>`.
 Exit: the clip is captured from the project and approved.
 
 M10–M13 come to roughly 10 days of focused time.
