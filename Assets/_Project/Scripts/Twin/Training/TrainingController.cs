@@ -16,7 +16,7 @@ namespace TwoDude.FactoryTwin.Twin
     {
         [SerializeField] private CellContext context;
         [Tooltip("Trainee written into the training record (set 2026-10-25).")]
-        [SerializeField] private string traineeName = "Apoorv Garg";
+        [SerializeField] private string traineeName = "Sam Rivera";
         [Tooltip("Trainer who supervises the run, written into the training record (set 2026-10-25).")]
         [SerializeField] private string trainerName = "Akaash Garg";
 

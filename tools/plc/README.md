@@ -27,7 +27,7 @@ The twin writes only holding registers: Modbus cannot write `%IX` inputs.
 
 1. Install the runtime (`OpenPLC_Runtime_4.3.1_Setup.exe`) and start it ("Start OpenPLC Runtime"). It listens on 8443 for the Editor.
 2. `python sync_project.py` writes `openplc_project/pous/programs/main.st` from `cell.st` (main.st is generated, not committed).
-3. In the OpenPLC Editor: Open `openplc_project/`. Device > Configuration is set to OpenPLC Runtime v4 at 127.0.0.1; press Connect. The first time, the runtime asks you to create its user; that account is yours and stays out of the repo. Servers > `twin_modbus` is the Modbus TCP slave on port 502, already enabled.
+3. In the OpenPLC Editor: Open `openplc_project/`. Device > Configuration is set to OpenPLC Runtime v4 at 127.0.0.1; press Connect. The first time, the runtime asks you to create its user; that account is yours and stays out of the repo. Servers > `twin_modbus` is the Modbus TCP slave on port 502, already enabled. It binds `0.0.0.0` and has no authentication (Modbus TCP has none): run it only on a trusted network, and set the bind to `127.0.0.1` when the PLC and the twin are on the same PC.
 4. Build options > Build and upload. The console ends with "Compilation completed successfully", "PLC started", "Upload complete". The left-rail Stop/Start PLC button stops and starts it.
 5. In Unity, Play. The PLC shadows the line straight away (it reads the sensors and counts parts) but drives nothing. Publish `cell/plc/source` = 1 to hand it the line, 0 to take it back. `cell/plc/link` shows whether the PLC answers.
 

@@ -11,6 +11,7 @@
         <ui:Label name="next" text="" class="board__next" />
         <ui:Label name="mistakes" text="" class="board__mistakes" />
         <ui:Label name="status" text="" class="board__status" />
+        <ui:Label text="Simulated safety function · training demo, not safety-rated or certified" class="board__note" />
         <ui:VisualElement class="board__actions" picking-mode="Ignore">
             <ui:Button name="board-training" text="Start lockout training" class="board__button board__button--key" />
             <ui:Button name="board-fail" text="Fail the CNC" class="board__button" />

@@ -24,7 +24,7 @@ tools/video/.venv/Scripts/python tools/video/tts2.py
 ```
 
 ```bash
-python tools/video/build2.py --logo "C:/Users/user/Documents/2 Dude Studios/2 Dude Studios Branding/Logo/2 Dude Logo Big.png" Builds/Recordings/2DS_Manufacturing_FactoryTwin_PdM_v02_20261021.mp4
+python tools/video/build2.py --logo "<path-to>/2 Dude Logo Big.png" Builds/Recordings/2DS_Manufacturing_FactoryTwin_PdM_v02_20261021.mp4
 ```
 
 - `tts2.py` takes `--voice` (default `am_michael`), `--models` and `--out`. It takes about a minute on CPU.

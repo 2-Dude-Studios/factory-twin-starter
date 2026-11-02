@@ -1,6 +1,6 @@
 # Manufacturing Demo — Factory Digital Twin build plan (Rev 5, 24 Oct 2026; progress updated 29 Oct 2026)
 
-Source tracker (62 items, licence verdicts, download status): https://claude.ai/artifact/AGRYueGCfv6UwgTbnQcdre
+Source tracker (62 items, licence verdicts, download status): kept privately; the shipped items are in `docs/LICENSES.md`.
 Video SOP to follow once the build exists: `claude/walkthrough-video-playbook.md`
 
 Rev 3 narrowed the prototype to one use case, **predictive maintenance**: the most-asked-for digital-twin use in manufacturing, and the one this build is closest to. Rev 2 planned six use cases (M4–M10, commit `ee852e9`). M0–M6 are done; the PdM video (v02) is approved.

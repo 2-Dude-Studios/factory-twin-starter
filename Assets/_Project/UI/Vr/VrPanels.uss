@@ -46,6 +46,7 @@
 .board__mistakes--some { color: rgb(255, 174, 13); }
 .board__status { font-size: 22px; color: rgb(200, 206, 212); margin-top: 14px; }
 .board__status--alert { color: rgb(255, 80, 64); -unity-font-style: bold; }
+.board__note { font-size: 16px; color: rgb(120, 128, 136); margin-top: 10px; }
 
 .board__progress { flex-direction: row; height: 12px; margin: 6px 0 14px 0; }
 .board__seg { flex-grow: 1; margin-right: 4px; border-radius: 4px; background-color: rgb(52, 60, 68); }

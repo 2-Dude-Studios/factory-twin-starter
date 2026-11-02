@@ -8953,7 +8953,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TwoDude.FactoryTwin.Twin::TwoDude.FactoryTwin.Twin.TrainingController
   context: {fileID: 1633254721}
-  traineeName: Apoorv Garg
+  traineeName: Sam Rivera
   trainerName: Akaash Garg
   result: 0
   step: 0

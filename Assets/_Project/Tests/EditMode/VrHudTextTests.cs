@@ -94,7 +94,7 @@ namespace TwoDude.FactoryTwin.Tests
         [Test]
         public void Tag_WarnsAndNamesWhoAppliedIt()
         {
-            Assert.AreEqual("DANGER\nDO NOT\nOPERATE\n\nApoorv Garg", TagLabel.Words("Apoorv Garg"));
+            Assert.AreEqual("DANGER\nDO NOT\nOPERATE\n\nSam Rivera", TagLabel.Words("Sam Rivera"));
         }
 
         [Test]

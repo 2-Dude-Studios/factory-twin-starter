@@ -143,6 +143,7 @@
                 <ui:Label name="training-mistakes" text="—" class="training__mistakes">
                     <Bindings><ui:DataBinding property="text" data-source-path="TrainingMistakesText" binding-mode="ToTarget" /></Bindings>
                 </ui:Label>
+                <ui:Label text="Simulated safety function · training demo, not safety-rated or certified" class="footnote" />
             </ui:VisualElement>
 
             <ui:VisualElement name="fault-panel" class="section section--faults">

@@ -8,8 +8,8 @@
         <ui:Label class="credit__name" text="AI4I 2020 Predictive Maintenance Dataset" />
         <ui:Label class="credit__text" text="S. Matzka, UCI Machine Learning Repository, 2020. doi:10.24432/C5HS5C. Licensed under CC BY 4.0. Replayed as the CNC machining centre's telemetry; values and failure flags are used as published." />
 
-        <ui:Label class="credit__name" text="UR5e robot description" />
-        <ui:Label class="credit__text" text="From ros-industrial/universal_robot (ur_description), BSD 3-Clause licence. Meshes used without vendor branding." />
+        <ui:Label class="credit__name" text="Cell arm robot description" />
+        <ui:Label class="credit__text" text="Kinematics and meshes from ros-industrial/universal_robot (ur_description, UR5e), BSD 3-Clause licence. Used without vendor branding." />
 
         <ui:Label class="credit__name" text="URDF Importer" />
         <ui:Label class="credit__text" text="Unity Technologies, Apache License 2.0." />

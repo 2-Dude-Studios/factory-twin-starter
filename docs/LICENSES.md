@@ -7,7 +7,7 @@ Rules (from the build plan):
 4. Vendor branding (UR, KUKA, ABB, FANUC) is removed from any model shown publicly until vendor terms are confirmed.
 5. When a client project starts on this codebase: buy the Unity Industry seat, upgrade realvirtual to Professional if the client needs OPC UA/PLC, and re-run this list.
 
-Full tracker with 62 candidates and verdicts: https://claude.ai/artifact/AGRYueGCfv6UwgTbnQcdre
+The full tracker (62 candidates and verdicts) is kept privately. Rows marked "not in repo" are cleared candidates that the project does not use.
 
 | Item | Version | Source | Licence | Verdict | Where in repo | Credit required |
 |---|---|---|---|---|---|---|
@@ -37,21 +37,26 @@ Full tracker with 62 candidates and verdicts: https://claude.ai/artifact/AGRYueG
 | Large Warehouse/Factory Ambience (fimrod) | Freesound #278987, WAV 48 kHz/24-bit, 22.4 s | freesound.org/people/fimrod/sounds/278987/ | CC0 1.0 | OK | Assets/_Project/Audio/FactoryAmbience_fimrod_278987.wav (Git LFS); hall ambience loop | no (CC0) |
 | Electric Sparks (kev_durr) | Freesound #396470, WAV 44.1 kHz/16-bit, 11.8 s | freesound.org/people/kev_durr/sounds/396470/ | CC0 1.0 | OK | Assets/_Project/Audio/ElectricSparks_kev_durr_396470.wav (Git LFS); spark crackle during a CNC fault | no (CC0) |
 | AI4I 2020 Predictive Maintenance Dataset | 2020 | UCI ML Repository, doi:10.24432/C5HS5C | CC BY 4.0 | Conditional | Assets/_Project/Data/ai4i2020.csv, tools/replay | **yes** — Credits + web page (attribution with changes: `Assets/_Project/Licenses/01-AI4I2020-CC-BY-4.0.txt`) |
-| Industrial Workshop Foundry HDRI | — | polyhaven.com/a/industrial_workshop_foundry | CC0 | OK | Assets/_Project/Lighting | no (optional) |
-| ambientCG materials | per asset | ambientcg.com | CC0 1.0 | OK | Assets/_Project/Materials | no (optional) |
+| Industrial Workshop Foundry HDRI | — | polyhaven.com/a/industrial_workshop_foundry | CC0 | OK | not in repo (candidate, unused) | no (optional) |
+| ambientCG materials | per asset | ambientcg.com | CC0 1.0 | OK | not in repo (candidate, unused) | no (optional) |
 | Unity Particle Pack | 3.1 | Unity Asset Store | Standard Asset Store EULA | OK | Assets/ThirdParty/ParticlePack (not in git) | no |
 | TextMesh Pro essentials | bundled with com.unity.ugui 2.0.0 | Unity | Unity Companion License | OK | Assets/TextMesh Pro (imported by the Factory Training sample; TMP requires this path) | no |
-| ProGrids | 3.0.3-preview.6 | Unity (embedded by the Factory Training sample) | Unity Companion License | OK | Packages/com.unity.progrids (editor-only, not shipped) | no |
-| Sonniss #GameAudioGDC | per year | gdc.sonniss.com | Sonniss GDC bundle licence | OK (no redistribution, no AI training) | Assets/_Project/Audio | no |
-| Pixabay SFX | per clip | pixabay.com | Pixabay Content License | OK | Assets/_Project/Audio | no |
+| ProGrids | 3.0.3-preview.6 | Unity package com.unity.progrids, embedded (came in with the Factory Training sample) | Unity Companion License (its LICENSE.md) | OK | Packages/com.unity.progrids (editor-only, not shipped) | no |
+| Sonniss #GameAudioGDC | per year | gdc.sonniss.com | Sonniss GDC bundle licence | OK (no redistribution, no AI training) | not in repo (candidate, unused; may never be committed) | no |
+| Pixabay SFX | per clip | pixabay.com | Pixabay Content License | OK | not in repo (candidate, unused) | no |
 | Sound Design Elements Whoosh SFX 052 (AudioPapkin) | Freesound #812689, WAV 96 kHz/32-bit, 2.4 s | freesound.org/people/AudioPapkin/sounds/812689/ | CC0 1.0 | OK | tools/video/sfx/Whoosh052_AudioPapkin_812689.wav (Git LFS); under the chapter-card reveals in the v03 video only | no (CC0) |
 | Whoosh #1 (Kinoton) | Freesound #427823, WAV 48 kHz/24-bit, 0.8 s | freesound.org/people/Kinoton/sounds/427823/ | CC0 1.0 | OK | tools/video/sfx/Whoosh1_Kinoton_427823.wav (Git LFS); under the other masked reveals in the v03 video only | no (CC0) |
 | Kokoro-82M TTS, voice `am_michael` | v1.0 (ONNX export, kokoro-onnx model-files-v1.1) | huggingface.co/hexgrad/Kokoro-82M via github.com/thewh1teagle/kokoro-onnx | Apache-2.0 (weights); kokoro-onnx 0.6.1 MIT; phonemizer/espeak-ng GPL-3 used locally for pronunciation only | OK | Not in repo; the generated voiceover is only in the M6 video (Builds/Recordings, git-ignored). Model card allows real-world deployment; the English voices carry no extra licence terms | no |
+
+| OpenPLC Runtime | v4.3.1 | github.com/Autonomy-Logic/openplc-runtime | MIT | OK | not in repo (external tool on the studio PC); our programs `tools/plc/*.st` and `tools/plc/openplc_project/` | no |
+| OpenPLC Editor | v4 | github.com/Autonomy-Logic/openplc-editor | GPL-3.0 | OK, a tool only | not in repo, never bundled; compiles and uploads `tools/plc/openplc_project/` | no |
 
 Replaced 2026-10-04: M2MqttUnity (bundled Eclipse Paho M2Mqtt, last released Dec 2015, EPL-1.0, MQTT 3.1.1 only) was dropped for MQTTnet. MQTTnet 5.x targets net8.0+ only, which Unity 6000.3 (.NET Standard 2.1, Mono/IL2CPP) cannot load, so 4.3.7 is the newest usable release.
 
 Add a row in the same commit as the file. Unknown licence = do not add the file.
 
 Particle Pack 3.1 (Asset Store EULA) is now used in the build (M6): `SparksEffect` and `RisingSteam` instances in `Cell.unity`; compiled-only distribution, like the other Asset Store content.
+
+`Assets/_Project/Scenes/Cell.unity` was started as a Save As of the Factory Training sample hall. It holds no sample meshes, textures or materials: only GUID references to Factory Training, realvirtual and Particle Pack prefabs, with their transforms and overrides, plus our own objects. It opens properly only once those packages are imported at the paths above.
 
 Notices shipped with the build (M6): `Assets/_Project/Licenses/*.txt`, shown under Credits → Full licence texts and copied to `<build>/Licenses/` after every standalone build by `LicenseFilesPostprocessor`. Keep that folder in step with this register.

@@ -6,6 +6,9 @@ Used: the UR5e URDF (expanded from xacro) and its visual and collision meshes. T
 renamed and recoloured; no logos are shown.
 Licence: BSD 3-Clause, as published in ur_description/LICENSE and reproduced below.
 
+Copyright (c) the ros-industrial universal_robot contributors.
+(Upstream ur_description/LICENSE at commit 39ad110 gives no copyright line; the text below is copied unchanged.)
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
