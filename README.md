@@ -2,6 +2,8 @@
 
 A working digital twin of one factory production cell, built in Unity 6 by [2 Dude Studios](https://2dudestudios.com/manufacturing). The same cell shows three use cases: predictive maintenance, virtual commissioning against a real soft PLC, and lockout/tagout safety training in VR.
 
+![The cell: infeed and outfeed conveyors, the arm inside its red protective zone, the CNC machining centre, and the lockout station with its training board](docs/images/cell.jpg)
+
 **Watch first:** [the playlist](https://www.youtube.com/playlist?list=PLRKxyYfU9K7U), or one part at a time:
 
 | Part | Video | What it shows |
@@ -32,9 +34,23 @@ Every drive, sensor and joint publishes its state as a signal, and a live dashbo
 
 ### The three use cases
 
-1. **Predictive maintenance.** A risk model watches the CNC's tool wear, torque and temperatures. When the failure risk crosses a threshold, the dashboard recommends a tool change before the failure happens. If you change the tool, the line keeps running. If you ignore the warning, the tool fails: the stack light turns red, sparks fly and the line stops, in 3D and on the dashboard at the same moment.
-2. **Virtual commissioning.** The cell's control logic also exists as Structured Text (`tools/plc/cell.st`), which runs in OpenPLC Runtime v4 and talks to the twin over Modbus TCP. A commissioning suite plays ten scenarios against whichever logic runs the line (the twin's own or the PLC's) and grades each check. A deliberately buggy program (`cell_buggy.st`) fails the suite in the 3D view; the fixed one passes all ten.
-3. **Workforce training and safety.** A trainee who walks into the arm's protective zone freezes the arm and holds the line until someone outside the zone presses reset. A CNC fault can be cleared only by working through the lockout/tagout steps in order: isolate, lock and tag, bleed the air, verify, then change the tool. The PLC refuses to start while the lock is on, and every step and mistake goes into a training record. It runs on desktop or in a Meta Quest 3 over Link, with controllers or tracked hands.
+**1. Predictive maintenance.** A risk model watches the CNC's tool wear, torque and temperatures. When the failure risk crosses a threshold, the dashboard recommends a tool change before the failure happens. If you change the tool, the line keeps running. If you ignore the warning, the tool fails: the stack light turns red, sparks fly and the line stops, in 3D and on the dashboard at the same moment.
+
+| The warning: failure risk at 85 %, tool change due | Ignored: the tool fails and the line stops |
+|---|---|
+| ![The CNC glows amber and the dashboard shows 85 % failure risk with a tool change due](docs/images/pm-warning.jpg) | ![The CNC glows red and the dashboard shows 100 % failure risk and the line stopped on a CNC fault](docs/images/pm-failed.jpg) |
+
+**2. Virtual commissioning.** The cell's control logic also exists as Structured Text (`tools/plc/cell.st`), which runs in OpenPLC Runtime v4 and talks to the twin over Modbus TCP. A commissioning suite plays ten scenarios against whichever logic runs the line (the twin's own or the PLC's) and grades each check. A deliberately buggy program (`cell_buggy.st`) fails the suite in the 3D view; the fixed one passes all ten.
+
+| `cell_buggy.st`: the interlock fails 1.4 s into test 1 | `cell.st`: 10 of 10 tests, 68 of 68 checks |
+|---|---|
+| ![Test 1 fails: the infeed does not stop for a part at the gate, and a part is knocked off the belt](docs/images/vc-fail.jpg) | ![The acceptance-test panel shows all ten tests passed on the soft PLC, in real time](docs/images/vc-pass.jpg) |
+
+**3. Workforce training and safety.** A trainee who walks into the arm's protective zone freezes the arm and holds the line until someone outside the zone presses reset. A CNC fault can be cleared only by working through the lockout/tagout steps in order: isolate, lock and tag, bleed the air, verify, then change the tool. The PLC refuses to start while the lock is on, and every step and mistake goes into a training record. It runs on desktop or in a Meta Quest 3 over Link, with controllers or tracked hands.
+
+| The protective zone lights up around the arm | Lockout/tagout in a Quest 3: all 14 steps |
+|---|---|
+| ![Workers around the cell, with the warning zone and the protective zone around the arm lit](docs/images/safety-zone.jpg) | ![The headset view at the line control station, next to the 14 lockout steps all done and the live broker values](docs/images/training-lockout.jpg) |
 
 ---
 
