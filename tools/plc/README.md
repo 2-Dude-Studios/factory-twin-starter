@@ -41,5 +41,5 @@ Start and stop (M11) reach the PLC as press counts (`start_count` `%MW6`, `stop_
 
 ## Commissioning suite (M8)
 
-In Play, publish `cell/vc/run` = 1 (or press Run tests on the Commissioning panel). The suite runs eight scenarios (two of them for the M10 safety zone) against whichever logic source runs the line and writes `Builds/Commissioning/vc_<source>_<time>.csv`. To show the bug being caught: `python sync_project.py cell_buggy.st <project dir>`, reopen the project in the Editor (it does not always reload `main.st` by itself), Build and upload, run the suite, then put `cell.st` back the same way. The I/O list is `io_list.csv` (Tools > Factory Twin > Export PLC I-O List).
+In Play, publish `cell/vc/run` = 1 (or press Run tests on the Commissioning panel). The suite runs ten scenarios (including the safety-zone ones and the zone walker) against whichever logic source runs the line and writes `Builds/Commissioning/vc_<source>_<time>.csv`. To show the bug being caught: `python sync_project.py cell_buggy.st <project dir>`, reopen the project in the Editor (it does not always reload `main.st` by itself), Build and upload, run the suite, then put `cell.st` back the same way. The I/O list is `io_list.csv` (Tools > Factory Twin > Export PLC I-O List).
 
