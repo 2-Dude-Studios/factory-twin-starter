@@ -50,7 +50,7 @@ The broker address and port come from `Assets/_Project/Data/TwinConfig.asset`.
 
 ## Licence and credits
 
-2 Dude Studios' own code and content are under the [MIT licence](LICENSE). Third-party content keeps its own licence. See [LICENSE](LICENSE) and [docs/LICENSES.md](docs/LICENSES.md).
+2 Dude Studios' own code and content are under the [MIT licence](LICENSE). Third-party content keeps its own licence. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [docs/LICENSES.md](docs/LICENSES.md).
 
 Credits:
 - **AI4I 2020 Predictive Maintenance Dataset**: S. Matzka, UCI Machine Learning Repository, 2020, doi:10.24432/C5HS5C, CC BY 4.0. Replayed as the CNC's telemetry.
