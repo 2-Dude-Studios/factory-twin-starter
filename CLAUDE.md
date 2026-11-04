@@ -19,7 +19,7 @@ One production cell: infeed conveyor → sensor gate → six-axis arm pick-and-p
 
 ## Conventions
 - C#: namespaces `TwoDude.FactoryTwin.<Area>`; `[SerializeField] private` fields; events via C# `event Action<T>`; no `FindObjectOfType` at runtime, wire references in prefabs or a small `CellContext`.
-- Scenes: `Cell.unity` is the only scene. Sub-areas as prefabs under `Assets/_Project/Prefabs/`.
+- Scenes: `Menu.unity` (the start menu that picks the training; loads first, decided 2026-11-04) and `Cell.unity` (the cell, everything else). Built by Tools > Factory Twin > Build Menu Scene; `ProjectSettingsGuard` keeps the build settings to Menu then Cell. Capture runs (`-takes`) and `-cell` skip the menu. Sub-areas as prefabs under `Assets/_Project/Prefabs/`.
 - UI: UI Toolkit with runtime data binding; UXML/USS under `Assets/_Project/UI/`. No uGUI.
 - Tests: EditMode tests under `Assets/_Project/Tests/` for the signal bus, topic parsing and the dataset replayer. Run with `unity -runTests` (see `.claude/commands/test.md`).
 - Commit messages: `M<n>: <what>` where n is the milestone from `docs/build-plan.md`.

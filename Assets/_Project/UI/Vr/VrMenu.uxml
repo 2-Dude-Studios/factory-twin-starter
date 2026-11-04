@@ -26,6 +26,8 @@
                     <ui:Label text="IN HAND" class="hud__label" />
                     <ui:Label name="fire-ext" text="" class="hud__where" />
                     <ui:Label name="fire-advice" text="" class="hud__refusal" />
+                    <ui:Label text="SCORE" class="hud__label" />
+                    <ui:Label name="fire-score" text="0 points" class="hud__where" />
                     <ui:Label text="Simulated fire; training demo, not certified training." class="hud__prompt" />
                 </ui:VisualElement>
                 <ui:VisualElement name="fire-options" class="tablet__options" style="display: none;">
@@ -42,12 +44,11 @@
                         <ui:Button name="fire-station" text="Back to station" class="menu__button tablet__half" />
                         <ui:Button name="ext-none" text="Put it back" class="menu__button tablet__half" />
                     </ui:VisualElement>
-                    <ui:Button name="fire-end" text="End fire drill" class="menu__button menu__button--exit" />
+                    <ui:Button name="fire-end" text="End drill: main menu" class="menu__button menu__button--exit" />
                 </ui:VisualElement>
                 <ui:VisualElement name="main-options" class="tablet__options">
                     <ui:Label text="TRAINING" class="menu__group" />
-                    <ui:Button name="menu-training" text="Lockout training" class="menu__button menu__button--key" />
-                    <ui:Button name="menu-fire" text="Fire safety training" class="menu__button menu__button--key" />
+                    <ui:Button name="menu-home" text="Main menu" class="menu__button menu__button--key" />
                     <ui:VisualElement class="tablet__row">
                         <ui:Button name="menu-fail" text="Fail the CNC" class="menu__button tablet__half" />
                         <ui:Button name="menu-reset" text="Safety reset" class="menu__button tablet__half" />

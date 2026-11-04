@@ -113,11 +113,167 @@ namespace TwoDude.FactoryTwin.UI
                 .Select(n => (Object)AssetDatabase.LoadAssetAtPath<FireScenario>($"{ScenarioFolder}/F{n}.asset"))
                 .Where(s => s != null).ToList();
             SetList(menuSo.FindProperty("scenarios"), scenarios);
+
+            // Scoring (M15): the scorer on the station, the popups in front of the headset, the board by the stand.
+            VrSwitch vrSwitch = captureRig.GetComponent<VrSwitch>();
+            var trainingController = Object.FindAnyObjectByType<TrainingController>();
+            string trainee = trainingController != null ? trainingController.TraineeName : "Sam Rivera";
+            var scorer = GetOrAdd<FireDrillScorer>(station.gameObject);
+            var scorerSo = new SerializedObject(scorer);
+            scorerSo.FindProperty("context").objectReferenceValue = context;
+            scorerSo.FindProperty("extinguisher").objectReferenceValue = extinguisher;
+            SetList(scorerSo.FindProperty("scenarios"), scenarios);
+            scorerSo.FindProperty("traineeName").stringValue = trainee;
+            scorerSo.ApplyModifiedProperties();
+            menuSo.FindProperty("scorer").objectReferenceValue = scorer;
+            menuSo.FindProperty("vrSwitch").objectReferenceValue = vrSwitch;
             menuSo.ApplyModifiedProperties();
+            BadgeIcons icons = BadgeIconsAsset();
+            Popups(rigTransform, origin, scorer, icons);
+            ScoreBoard(station, scorer, icons);
+            Hud(rigTransform, origin, context, scorer, extinguisher, icons, scenarios);
+
+            // The start menu's request, carried out once the cell has loaded.
+            var launcher = GetOrAdd<TrainingLauncher>(captureRig);
+            var launcherSo = new SerializedObject(launcher);
+            launcherSo.FindProperty("context").objectReferenceValue = context;
+            launcherSo.FindProperty("vrSwitch").objectReferenceValue = vrSwitch;
+            launcherSo.FindProperty("vrMenu").objectReferenceValue = tablet.GetComponent<VrMenu>();
+            launcherSo.FindProperty("fireMenu").objectReferenceValue = menu;
+            launcherSo.ApplyModifiedProperties();
 
             Undo.CollapseUndoOperations(undoGroup);
             EditorSceneManager.MarkSceneDirty(cell.scene);
             Debug.Log($"[FireXrSetup] {units.Count} two-handed extinguishers on the stand, {spots.Length} fire spots, {scenarios.Count} fires on the tablet.");
+        }
+
+        // The points and badges in front of the headset, with a chime: on the rig, so only while VR runs.
+        private static void Popups(Transform rig, XROrigin origin, FireDrillScorer scorer, BadgeIcons icons)
+        {
+            Transform t = rig.Find("ScorePopups");
+            if (t == null)
+            {
+                t = new GameObject("ScorePopups").transform;
+                Undo.RegisterCreatedObjectUndo(t.gameObject, "Score popups");
+                t.SetParent(rig, false);
+            }
+            var chime = GetOrAdd<AudioSource>(t.gameObject);
+            chime.playOnAwake = false;
+            chime.spatialBlend = 0f;
+            chime.volume = 0.6f;
+            var popups = GetOrAdd<ScorePopups>(t.gameObject);
+            var so = new SerializedObject(popups);
+            so.FindProperty("scorer").objectReferenceValue = scorer;
+            so.FindProperty("head").objectReferenceValue = origin.Camera.transform;
+            so.FindProperty("chimeSource").objectReferenceValue = chime;
+            so.FindProperty("badgeIcons").objectReferenceValue = icons;
+            so.ApplyModifiedProperties();
+        }
+
+        // The drill HUD: a small world panel on the rig that follows the view, low and ahead (1000 x 340 px, 0.55 m wide).
+        private const string HudUxml = "Assets/_Project/UI/Vr/FireHud.uxml";
+
+        private static void Hud(Transform rig, XROrigin origin, CellContext context, FireDrillScorer scorer,
+            FireExtinguisher extinguisher, BadgeIcons icons, List<Object> scenarios)
+        {
+            Transform old = rig.Find("FireHud");
+            if (old != null)
+                Undo.DestroyObjectImmediate(old.gameObject);
+            var go = new GameObject("FireHud") { layer = LayerMask.NameToLayer("Ignore Raycast") };
+            Undo.RegisterCreatedObjectUndo(go, "Fire HUD");
+            go.transform.SetParent(rig, false);
+            go.transform.localPosition = new Vector3(0f, 1.2f, 0.85f);
+            UIDocument document = XrSetup.Document(go, XrSetup.WorldPanel(), HudUxml, 1000f, 340f, 0.055f);
+            var hud = go.AddComponent<FireHud>();
+            var so = new SerializedObject(hud);
+            so.FindProperty("document").objectReferenceValue = document;
+            so.FindProperty("context").objectReferenceValue = context;
+            so.FindProperty("scorer").objectReferenceValue = scorer;
+            so.FindProperty("extinguisher").objectReferenceValue = extinguisher;
+            so.FindProperty("icons").objectReferenceValue = icons;
+            so.FindProperty("head").objectReferenceValue = origin.Camera.transform;
+            SetList(so.FindProperty("scenarios"), scenarios);
+            so.ApplyModifiedProperties();
+        }
+
+        // Material Icons (Apache-2.0, docs/LICENSES.md), white, tinted by the UI.
+        private const string IconFolder = "Assets/_Project/Art/Icons";
+        private const string BadgeIconsPath = "Assets/_Project/Data/BadgeIcons.asset";
+
+        /// <summary>The badge and HUD icons: import settings for UI, and the asset that maps badges to icons.</summary>
+        internal static BadgeIcons BadgeIconsAsset()
+        {
+            Texture2D Load(string name)
+            {
+                string path = $"{IconFolder}/ms_{name}.png";
+                if (AssetImporter.GetAtPath(path) is TextureImporter importer)
+                {
+                    bool changed = importer.textureType != TextureImporterType.Default || importer.mipmapEnabled
+                        || !importer.alphaIsTransparency || importer.wrapMode != TextureWrapMode.Clamp
+                        || importer.alphaSource != TextureImporterAlphaSource.FromInput;
+                    if (changed)
+                    {
+                        importer.textureType = TextureImporterType.Default;
+                        importer.alphaSource = TextureImporterAlphaSource.FromInput;
+                        importer.alphaIsTransparency = true;
+                        importer.mipmapEnabled = false;
+                        importer.wrapMode = TextureWrapMode.Clamp;
+                        importer.filterMode = FilterMode.Bilinear;
+                        importer.textureCompression = TextureImporterCompression.Uncompressed;
+                        importer.SaveAndReimport();
+                    }
+                }
+                var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (texture == null)
+                    Debug.LogWarning($"[FireXrSetup] Missing icon {path}.");
+                return texture;
+            }
+
+            var gold = new Color(1f, 0.78f, 0.27f);
+            (string, Texture2D, Color)[] badges =
+            {
+                (FireDrillScore.BadgeAlarmFirst, Load("notifications_active"), new Color(1f, 0.42f, 0.36f)),
+                (FireDrillScore.BadgeRightClass, Load("fire_extinguisher"), new Color(1f, 0.33f, 0.3f)),
+                (FireDrillScore.BadgeCleanKnockdown, Load("local_fire_department"), new Color(1f, 0.6f, 0.2f)),
+                (FireDrillScore.BadgeSharpAim, Load("my_location"), new Color(0.38f, 0.78f, 1f)),
+                (FireDrillScore.BadgeKnewWhenToLeave, Load("directions_run"), new Color(0.35f, 0.9f, 0.55f)),
+                (FireDrillScore.BadgePerfectDrill, Load("workspace_premium"), gold),
+                (FireDrillScore.BadgeFireMarshal, Load("military_tech"), gold),
+            };
+            var asset = AssetDatabase.LoadAssetAtPath<BadgeIcons>(BadgeIconsPath);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<BadgeIcons>();
+                AssetDatabase.CreateAsset(asset, BadgeIconsPath);
+            }
+            asset.Configure(badges, Load("emoji_events"), Load("timer"), Load("local_fire_department"),
+                Load("fire_extinguisher"), Load("check_circle"), Load("radio_button_unchecked"));
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
+            return asset;
+        }
+
+        // The score board beside the stand, facing the trainee's spot like the stand (900 x 600 px, 0.9 x 0.6 m).
+        private const string BoardUxml = "Assets/_Project/UI/Vr/FireScoreBoard.uxml";
+
+        private static void ScoreBoard(Transform station, FireDrillScorer scorer, BadgeIcons icons)
+        {
+            Transform old = station.Find("ScoreBoard");
+            if (old != null)
+                Undo.DestroyObjectImmediate(old.gameObject);
+            var go = new GameObject("ScoreBoard");
+            Undo.RegisterCreatedObjectUndo(go, "Score board");
+            go.transform.SetParent(station, false);
+            // The document's front faces -Z; turned round it faces +Z, the way the stand does.
+            go.transform.SetLocalPositionAndRotation(new Vector3(1.3f, 1.35f, 0f), Quaternion.Euler(0f, 180f, 0f));
+            UIDocument document = XrSetup.Document(go, XrSetup.WorldPanel(), BoardUxml, 900f, 600f, 0.1f);
+            XrSetup.Backing(go, 900f, 600f, 12f, 0.02f);
+            var board = go.AddComponent<FireScoreBoard>();
+            var so = new SerializedObject(board);
+            so.FindProperty("document").objectReferenceValue = document;
+            so.FindProperty("scorer").objectReferenceValue = scorer;
+            so.FindProperty("badgeIcons").objectReferenceValue = icons;
+            so.ApplyModifiedProperties();
         }
 
         // The first version put three extinguishers in the right hand; take those out.
@@ -141,22 +297,37 @@ namespace TwoDude.FactoryTwin.UI
             Transform lever = group.Find("Lever");
             Transform hose = group.Find("Hose");
 
-            // Carry handle: the whole unit, held at the grip (the group's origin).
-            Collider bodyCollider = BoxOn(body);
-            XRGrabInteractable bodyGrab = Grab(group.gameObject, Attach(group, "Grip", Vector3.zero), bodyCollider);
+            // Carry handle: grabbed only round the handle and lever (so the pin and the nozzle stay reachable), the
+            // fist closing on both, thumb forward along the handle, the body hanging below. Grip frames follow
+            // HandPoseMath (+Z thumbward through the fist, +X the palm normal: towards the hand on the right, away
+            // from it on the left), so the left hand gets its own, mirrored attach.
+            RemoveCollider(body);
+            var handle = GetOrAdd<BoxCollider>(Attach(group, "HandleGrab", HandleCentre).gameObject);
+            handle.size = new Vector3(0.05f, 0.05f, 0.14f);
+            Transform rightGrip = Attach(group, "Grip", HandPoseMath.ControllerAttach(new Pose(HandleCentre, Quaternion.LookRotation(Vector3.forward, Vector3.left))));
+            Transform leftGrip = Attach(group, "GripLeft", HandPoseMath.ControllerAttach(new Pose(HandleCentre, Quaternion.LookRotation(Vector3.forward, Vector3.right))));
+            HandedGrabInteractable bodyGrab = Grab(group.gameObject, rightGrip, leftGrip, handle);
 
-            // Pin: grabbed by its ring and pulled out.
+            // Pin: a pinch on its ring; the drawn hand moves onto the ring (a right-hand frame, HandGrip turns it for
+            // the left) and the pull is measured from the controller.
             var pinCollider = GetOrAdd<SphereCollider>(pin.gameObject);
-            pinCollider.center = new Vector3(-0.012f, 0f, 0f);
-            pinCollider.radius = 0.03f;
+            pinCollider.center = PinRing;
+            pinCollider.radius = 0.025f;
             var pinSimple = GetOrAdd<XRSimpleInteractable>(pin.gameObject);
             pinSimple.colliders.Clear();
             pinSimple.colliders.Add(pinCollider);
+            Transform pinAnchor = Attach(pin, "HandAnchor", new Pose(PinRing + new Vector3(-0.055f, -0.012f, 0f), Quaternion.LookRotation(Vector3.up, Vector3.forward)));
 
-            // Nozzle: its own grab, held a little behind the tip; length from its mesh.
+            // Nozzle: held round its rear half, the same for either hand (it is round). The CO2 horn by the handle
+            // under its rear.
             Collider nozzleCollider = BoxOn(nozzle);
             float length = MeshLength(nozzle);
-            XRGrabInteractable nozzleGrab = Grab(nozzle.gameObject, Attach(nozzle, "Grip", new Vector3(0f, 0f, -length * 0.6f)), nozzleCollider);
+            // Aimed like a pistol: the nozzle's +Z lines up with the controller's own forward (where its ray points),
+            // not with the fist's thumb axis. The torch grip left the tip on the thumb side, pointing up from a
+            // natural hand, and hard to aim (seen in the headset, 2026-11-04).
+            Vector3 heldAt = agent == FireAgent.Co2 ? HornHandle : new Vector3(0f, 0f, -length * 0.55f);
+            Transform nozzleAttach = Attach(nozzle, "Grip", new Pose(heldAt, Quaternion.identity));
+            HandedGrabInteractable nozzleGrab = Grab(nozzle.gameObject, nozzleAttach, null, nozzleCollider);
 
             // The hose line from the valve, used while the nozzle is in a hand.
             Transform start = Attach(group, "HoseStart", group.InverseTransformPoint(HighestVertex(hose)));
@@ -176,7 +347,7 @@ namespace TwoDude.FactoryTwin.UI
             // How the hands close on each part (the rig's hands take a held part's HandGrip).
             Curls(group.gameObject, FingerCurls.Handle);                                        // carry handle and lever
             Curls(nozzle.gameObject, new FingerCurls(0.6f, 0.8f, 0.85f, 0.88f, 0.9f));        // round the hose nozzle
-            Curls(pin.gameObject, new FingerCurls(0.72f, 0.78f, 0.45f, 0.5f, 0.55f));          // a pinch on the ring
+            Curls(pin.gameObject, new FingerCurls(0.72f, 0.78f, 0.45f, 0.5f, 0.55f), pinAnchor); // a pinch on the ring
 
             // The discharge hiss and the pin's click, from the unit.
             var sound = GetOrAdd<AudioSource>(group.gameObject);
@@ -205,10 +376,11 @@ namespace TwoDude.FactoryTwin.UI
             return unit;
         }
 
-        private static void Curls(GameObject go, FingerCurls curls)
+        private static void Curls(GameObject go, FingerCurls curls, Transform anchor = null)
         {
             var grip = GetOrAdd<HandGrip>(go);
             var so = new SerializedObject(grip);
+            so.FindProperty("anchor").objectReferenceValue = anchor;
             SerializedProperty c = so.FindProperty("curls");
             c.FindPropertyRelative("thumb").floatValue = curls.thumb;
             c.FindPropertyRelative("index").floatValue = curls.index;
@@ -218,13 +390,27 @@ namespace TwoDude.FactoryTwin.UI
             so.ApplyModifiedProperties();
         }
 
+        // Where the fist closes on the carry handle and lever, in the extinguisher's frame (its origin is the old
+        // grip point; the handle runs front to back 2 cm below it, the lever just above). From fire_extinguishers.py.
+        private static readonly Vector3 HandleCentre = new Vector3(0f, -0.012f, 0.014f);
+        // The pin's ring, in the pin's frame; the CO2 horn's handle, in the nozzle's frame (tip at the origin).
+        private static readonly Vector3 PinRing = new Vector3(-0.012f, 0f, 0f);
+        private static readonly Vector3 HornHandle = new Vector3(0f, -0.035f, -0.22f);
+
         // Moved straight with the hand, never thrown, on a kinematic body; only its own collider counts for it.
-        private static XRGrabInteractable Grab(GameObject go, Transform attach, Collider collider)
+        private static HandedGrabInteractable Grab(GameObject go, Transform attach, Transform leftAttach, Collider collider)
         {
             var body = GetOrAdd<Rigidbody>(go);
             body.isKinematic = true;
             body.useGravity = false;
-            var grab = GetOrAdd<XRGrabInteractable>(go);
+            // A plain grab from an earlier build is replaced by the handed one.
+            var plain = go.GetComponent<XRGrabInteractable>();
+            if (plain != null && !(plain is HandedGrabInteractable))
+                Undo.DestroyObjectImmediate(plain);
+            var grab = GetOrAdd<HandedGrabInteractable>(go);
+            var grabSo = new SerializedObject(grab);
+            grabSo.FindProperty("leftAttachTransform").objectReferenceValue = leftAttach;
+            grabSo.ApplyModifiedProperties();
             grab.movementType = XRBaseInteractable.MovementType.Instantaneous;
             grab.throwOnDetach = false;
             grab.useDynamicAttach = false;
@@ -241,13 +427,25 @@ namespace TwoDude.FactoryTwin.UI
             return GetOrAdd<BoxCollider>(model.gameObject);
         }
 
-        private static Transform Attach(Transform parent, string name, Vector3 localPosition)
+        private static Transform Attach(Transform parent, string name, Vector3 localPosition) =>
+            Attach(parent, name, new Pose(localPosition, Quaternion.identity));
+
+        private static Transform Attach(Transform parent, string name, Pose local)
         {
-            Transform t = parent.Find(name) ?? new GameObject(name).transform;
+            Transform t = parent.Find(name);
+            if (t == null)
+                t = new GameObject(name).transform;
             t.SetParent(parent, false);
-            t.localPosition = localPosition;
-            t.localRotation = Quaternion.identity;
+            t.SetLocalPositionAndRotation(local.position, local.rotation);
             return t;
+        }
+
+        private static void RemoveCollider(Transform part)
+        {
+            Transform model = part.Find("Model") ?? part;
+            var collider = model.GetComponent<Collider>();
+            if (collider != null)
+                Undo.DestroyObjectImmediate(collider);
         }
 
         private static float MeshLength(Transform part)

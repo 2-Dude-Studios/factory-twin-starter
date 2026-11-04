@@ -13,17 +13,29 @@ namespace TwoDude.FactoryTwin.Twin
         // realvirtual's transport, sensing and MU physics rely on these layer names existing.
         private static readonly string[] RequiredLayers = { "rvMU", "rvSensor", "rvTransport", "rvMUSensor", "rvSimStatic" };
 
-        // CLAUDE.md: Cell.unity is the only scene.
+        // CLAUDE.md: two scenes, the start menu first (it loads the cell), then the cell. Until the menu is built
+        // (Tools > Factory Twin > Build Menu Scene) the cell alone.
+        private const string MenuScenePath = "Assets/_Project/Scenes/Menu.unity";
         private const string CellScenePath = "Assets/_Project/Scenes/Cell.unity";
 
         static ProjectSettingsGuard()
         {
-            EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
-            bool onlyCell = scenes.Length == 1 && scenes[0].enabled && scenes[0].path == CellScenePath;
-            if (!onlyCell && AssetDatabase.LoadAssetAtPath<SceneAsset>(CellScenePath) != null)
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(CellScenePath) != null)
             {
-                EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(CellScenePath, true) };
-                Debug.Log("[ProjectSettingsGuard] Build Settings now contain only " + CellScenePath + ".");
+                bool hasMenu = AssetDatabase.LoadAssetAtPath<SceneAsset>(MenuScenePath) != null;
+                string[] wanted = hasMenu ? new[] { MenuScenePath, CellScenePath } : new[] { CellScenePath };
+                EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
+                bool ok = scenes.Length == wanted.Length;
+                for (int i = 0; ok && i < wanted.Length; i++)
+                    ok = scenes[i].enabled && scenes[i].path == wanted[i];
+                if (!ok)
+                {
+                    var fixedScenes = new EditorBuildSettingsScene[wanted.Length];
+                    for (int i = 0; i < wanted.Length; i++)
+                        fixedScenes[i] = new EditorBuildSettingsScene(wanted[i], true);
+                    EditorBuildSettings.scenes = fixedScenes;
+                    Debug.Log("[ProjectSettingsGuard] Build Settings now: " + string.Join(", ", wanted) + ".");
+                }
             }
 
             // Play mode must keep simulating when the Editor is not the focused window (remote control,

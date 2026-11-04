@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="VrPanels.uss" />
+    <!-- The fire training station's score board (FireScoreBoard). -->
+    <ui:VisualElement class="board">
+        <ui:VisualElement class="score__header">
+            <ui:VisualElement>
+                <ui:Label text="FIRE SAFETY TRAINING" class="hud__label" />
+                <ui:Label name="board-trainee" text="Trainee" class="score__trainee" />
+            </ui:VisualElement>
+            <ui:VisualElement class="score__total-box">
+                <ui:Label name="board-total" text="0" class="score__total" />
+                <ui:Label text="POINTS" class="hud__label" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="board-runs" text="" class="score__runs" />
+        <ui:Label text="BADGES" class="hud__label" />
+        <ui:Label name="board-badges" text="No badges yet" class="score__badges" />
+        <ui:Label text="LATEST" class="hud__label" />
+        <ui:Label name="board-steps" text="" class="score__steps" />
+        <ui:Label name="board-news" text="" class="score__news" />
+    </ui:VisualElement>
+</ui:UXML>

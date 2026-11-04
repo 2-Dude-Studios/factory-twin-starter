@@ -9,7 +9,7 @@ namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
     /// Fire safety (M15): the fire drill page of the tablet in the left hand (VrMenu.uxml). "Fire safety training" on
-    /// the main page takes the trainee to the fire training station and swaps the tablet to the drill: start a fire
+    /// the main page takes the trainee to the fire training station and swaps the tablet to the drill (TrainingLauncher, from the start menu): start a fire
     /// at any spot in the hall (or at random), take an extinguisher from the stand by hand (ExtinguisherUnit: handle, pin, hose, lever),
     /// go to the fire, raise the alarm, end the drill. The display shows the fire, the extinguisher in hand and one
     /// line of advice (<see cref="FireDrillText"/>). Commands go out on the bus; it reads the bus for what it shows.
@@ -19,6 +19,8 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private UIDocument document;
         [SerializeField] private CellContext context;
         [SerializeField] private FireExtinguisher extinguisher;
+        [SerializeField] private FireDrillScorer scorer;
+        [SerializeField] private VrSwitch vrSwitch;
         [SerializeField] private XROrigin origin;
         [Tooltip("The fires the drill can start, one button each (F1–F9 assets in Assets/_Project/Data/Fire).")]
         [SerializeField] private FireScenario[] scenarios = Array.Empty<FireScenario>();
@@ -30,7 +32,7 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField, Min(0.05f)] private float refreshSeconds = 0.2f;
 
         private VisualElement _root, _mainOptions, _fireOptions, _hud, _fireHud, _starts;
-        private Label _fireLine, _extLine, _advice;
+        private Label _fireLine, _extLine, _advice, _score;
         private readonly List<(Button button, Action action)> _wired = new List<(Button, Action)>();
         private bool _inDrill;
         private float _nextRefresh;
@@ -49,9 +51,9 @@ namespace TwoDude.FactoryTwin.UI
             _fireLine = _root.Q<Label>("fire-line");
             _extLine = _root.Q<Label>("fire-ext");
             _advice = _root.Q<Label>("fire-advice");
+            _score = _root.Q<Label>("fire-score");
             _random ??= new System.Random();
 
-            Wire("menu-fire", EnterDrill);
             Wire("ext-none", PutBack);
             Wire("fire-random", StartRandom);
             Wire("fire-goto", GoToFire);
@@ -116,20 +118,25 @@ namespace TwoDude.FactoryTwin.UI
             return s.FleeOnly ? where + " (Li-ion)" : $"{where} ({FireDrillText.ClassLetter(s.Class)})";
         }
 
-        private void EnterDrill()
+        /// <summary>Starts the drill: at the station, a fresh score, the drill page on the tablet (TrainingLauncher).</summary>
+        public void EnterDrill()
         {
             ClearFire();
             PutBack();
             GoToStation();
+            scorer?.BeginSession();
             ShowDrill(true);
         }
 
+        // Ends the drill: the record and badges are written, and the trainee goes back to the start menu.
         private void EndDrill()
         {
             ClearFire();
             PutBack();
             Publish(CellTopics.FireAlarmReset, SignalValue.FromBool(true));
+            scorer?.EndSession();
             ShowDrill(false);
+            SceneNavigation.ToMenu(vrSwitch);
         }
 
         private void StartFire(FireScenario scenario)
@@ -201,6 +208,8 @@ namespace TwoDude.FactoryTwin.UI
             float charge = extinguisher != null ? extinguisher.Charge : 0f;
 
             _fireLine.text = FireDrillText.Fire(location, fireClass, stage, flee);
+            if (_score != null && scorer != null)
+                _score.text = $"{scorer.Score.Total} points · {scorer.Score.Badges.Count} badge{(scorer.Score.Badges.Count == 1 ? "" : "s")}";
             _extLine.text = FireDrillText.Extinguisher(agent, charge);
             bool extinguished = Read(CellTopics.FireExtinguished) != 0d;
             _advice.text = FireDrillText.Advice(stage, fireClass, flee, extinguished, alarm, agent, charge,
