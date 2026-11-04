@@ -28,7 +28,7 @@ MonoBehaviour:
     ignitionSize: 0.05
     growingAt: 0.3
     beyondAt: 0.6
-    incipientSeconds: 50
+    incipientSeconds: 60
     growingSeconds: 25
     beyondSeconds: 40
     smokeAtIgnition: 0.35

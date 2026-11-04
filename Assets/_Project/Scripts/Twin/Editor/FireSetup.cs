@@ -74,16 +74,39 @@ namespace TwoDude.FactoryTwin.Twin
             yield return new ScenarioDef(1, "Drive cabinet overheats", FireLocation.DriveCabinet, FireClass.C, true, false, false,
                 new FireModelSettings(precursorSeconds: 40, smokeSeconds: 12, incipientSeconds: 45, growingSeconds: 25));
             yield return new ScenarioDef(2, "Coolant-mist fire at the CNC", FireLocation.Cnc, FireClass.B, false, false, false,
-                new FireModelSettings(smokeSeconds: 6, incipientSeconds: 40, growingSeconds: 20));
+                new FireModelSettings(smokeSeconds: 6, incipientSeconds: 60, growingSeconds: 25));
             yield return new ScenarioDef(3, "Oily waste fire at the infeed", FireLocation.InfeedWaste, FireClass.A, false, false, false,
-                new FireModelSettings(smokeSeconds: 10, incipientSeconds: 50, growingSeconds: 25));
+                new FireModelSettings(smokeSeconds: 10, incipientSeconds: 60, growingSeconds: 25));
             yield return new ScenarioDef(4, "CNC fire grows past incipient", FireLocation.Cnc, FireClass.B, false, false, false,
                 new FireModelSettings(smokeSeconds: 5, incipientSeconds: 15, growingSeconds: 12));
             yield return new ScenarioDef(5, "CNC fire grows, primary exit blocked", FireLocation.Cnc, FireClass.B, false, false, true,
                 new FireModelSettings(smokeSeconds: 5, incipientSeconds: 15, growingSeconds: 12));
             yield return new ScenarioDef(6, "Lithium-ion fire at the chargers", FireLocation.Chargers, FireClass.C, false, true, false,
                 new FireModelSettings(smokeSeconds: 8, incipientSeconds: 10, growingSeconds: 10, knockdownPerSecond: 0.005));
+            // Fires across the hall (M15), one class each. The far ones stay incipient 75 s so the trainee can take an
+        // extinguisher at the station and get there (raised from 30–45 s after the first headset run, 2026-11-04).
+            yield return new ScenarioDef(7, "Cardboard on the storage rack", FireLocation.StorageRack, FireClass.A, false, false, false,
+                new FireModelSettings(smokeSeconds: 8, incipientSeconds: 75, growingSeconds: 30));
+            yield return new ScenarioDef(8, "Electrical panel on the column", FireLocation.ElectricalPanel, FireClass.C, false, false, false,
+                new FireModelSettings(smokeSeconds: 10, incipientSeconds: 75, growingSeconds: 30));
+            yield return new ScenarioDef(9, "Solvent drums by the far wall", FireLocation.SolventDrums, FireClass.B, false, false, false,
+                new FireModelSettings(smokeSeconds: 4, incipientSeconds: 75, growingSeconds: 30));
         }
+
+        // Fires across the hall (M15), from the spots marked in the Scene view on 2026-11-04 and a top-down survey:
+        // cardboard on the rack south-west of the cell, the electrical box on the column at about (−2.7, −19.7),
+        // solvent drums by the far wall, moved off the green walkway to (−12.3, −28.9). The fire training station, where the drill starts,
+        // stands on open floor at (−4.8, −13.9), its board facing north (+Z) towards the trainee's spot.
+        private static readonly Vector3 RackFireAt = new Vector3(-4.6f, 0.5f, -5.25f);
+        private static readonly Vector3 ColumnNear = new Vector3(-2.7f, 1.3f, -19.7f);
+        // Just off the electrical box on the column's east face, measured from a view of it (2026-11-04).
+        private static readonly Vector3 ColumnPanelFallback = new Vector3(-1.55f, 1.3f, -19.42f);
+        private static readonly Vector3 DrumsAt = new Vector3(-12.3f, 0f, -28.9f);
+        private static readonly Vector3 StationAt = new Vector3(-4.8f, 0f, -13.9f);
+        private const string BarrelPrefab = "Assets/ThirdParty/FactoryTraining/Prefabs/env/barrel_prefab.prefab";
+        private static readonly Vector3[] HookAt = { new Vector3(-0.38f, 1.32f, 0.06f), new Vector3(0f, 1.32f, 0.06f), new Vector3(0.38f, 1.32f, 0.06f) };
+        private static readonly string[] HookLabel = { "WATER\nClass A", "CO2\nClass B · C", "DRY CHEMICAL\nClass A · B · C" };
+        private const string Steam = ParticlePack + "Smoke & Steam Effects/Prefabs/PressurisedSteam.prefab";
 
         [MenuItem("Tools/Factory Twin/Build Fire Drill")]
         private static void Build()
@@ -114,6 +137,12 @@ namespace TwoDude.FactoryTwin.Twin
             Location(fire, context, FireLocation.Cnc, CncFireAt, sparks: false, detectors);
             Location(fire, context, FireLocation.InfeedWaste, TopOf(bin, WasteAt + new Vector3(0f, 0.5f, 0f), 0f), sparks: false, detectors);
             Location(fire, context, FireLocation.Chargers, Chargers(), sparks: true, detectors);
+            Location(fire, context, FireLocation.StorageRack, RackFireAt, sparks: false, detectors);
+            Location(fire, context, FireLocation.ElectricalPanel, ColumnPanel(), sparks: true, detectors);
+            Drums(fire);
+            Location(fire, context, FireLocation.SolventDrums, DrumsAt + new Vector3(0f, 0.9f, 0f), sparks: false, detectors);
+            TrainingStation(fire);
+            Spray(fire);
 
             var panel = GetOrAdd<FireAlarmPanel>(fire.gameObject);
             SetObject(panel, "context", context);
@@ -126,7 +155,107 @@ namespace TwoDude.FactoryTwin.Twin
                 if (anchor.name.StartsWith("Fire_"))
                     Debug.Log($"[FireSetup] {anchor.name} at {anchor.position:F2}");
             }
-            Debug.Log($"[FireSetup] Fire drill built: {scenarios.Count} scenarios, 4 locations, {detectors.Count} detector heads.", fire);
+            Debug.Log($"[FireSetup] Fire drill built: {scenarios.Count} scenarios, 7 locations, {detectors.Count} detector heads, training station.", fire);
+        }
+
+        // The electrical box on the hall column. The hall has no colliders, so the column is found by its renderers:
+        // a tall, narrow one within 1.5 m of the marked spot. The fire starts just off its east face (towards the cell
+        // and the camera that marked it). Without one, a spot beside the mark.
+        private static Vector3 ColumnPanel()
+        {
+            Renderer best = null;
+            float bestDistance = 1.5f;
+            foreach (Renderer r in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                Bounds b = r.bounds;
+                if (b.size.y < 4f || b.size.x > 1.6f || b.size.z > 1.6f || b.min.y > 0.5f)
+                    continue;
+                float d = Vector2.Distance(new Vector2(b.center.x, b.center.z), new Vector2(ColumnNear.x, ColumnNear.z));
+                if (d < bestDistance)
+                {
+                    bestDistance = d;
+                    best = r;
+                }
+            }
+            if (best != null)
+            {
+                Bounds b = best.bounds;
+                Debug.Log($"[FireSetup] Column '{best.name}' bounds {b.min:F2} to {b.max:F2}.");
+                return new Vector3(b.max.x + 0.15f, ColumnNear.y, b.center.z);
+            }
+            Debug.LogWarning("[FireSetup] No column found near the mark; the panel fire uses its fallback spot.");
+            return ColumnPanelFallback;
+        }
+
+        // Three drums by the far wall, from the Factory Training barrel prop.
+        private static void Drums(Transform fire)
+        {
+            Transform drums = Child(fire, "SolventDrums");
+            // The prop is about 1 m across: space them so they touch, not overlap.
+            var offsets = new[] { new Vector3(-0.75f, 0f, 0f), new Vector3(0.75f, 0f, 0f), new Vector3(0f, 0f, 1.1f) };
+            for (int i = 0; i < offsets.Length; i++)
+                Prop(drums, "Drum" + (i + 1), BarrelPrefab, DrumsAt + offsets[i], i * 40f, "the Factory Training barrel is missing; the drums fire has no drums.");
+        }
+
+        // The fire training station: the red stand from Fire_Extinguishers.fbx with the three extinguishers stowed on
+        // its hooks and a label under each, and a sign. The trainee starts here (VrFireMenu, the tablet).
+        private static void TrainingStation(Transform fire)
+        {
+            Transform station = Child(fire, "TrainingStation");
+            station.SetPositionAndRotation(StationAt, Quaternion.identity);
+            Dictionary<string, Transform> parts = ExtinguisherModels.LoadParts();
+            if (!parts.TryGetValue("Fire_Stand", out Transform standSource))
+            {
+                Debug.LogWarning("[FireSetup] Fire_Extinguishers.fbx has no Fire_Stand; build the models first.");
+                return;
+            }
+            Transform stand = Child(station, "Stand");
+            Transform visual = Child(stand, "Model");
+            visual.localRotation = standSource.localRotation;
+            visual.localScale = standSource.localScale;
+            GetOrAdd<MeshFilter>(visual.gameObject).sharedMesh = standSource.GetComponent<MeshFilter>().sharedMesh;
+            GetOrAdd<MeshRenderer>(visual.gameObject).sharedMaterials = standSource.GetComponent<MeshRenderer>().sharedMaterials;
+            GetOrAdd<BoxCollider>(visual.gameObject);
+
+            for (int i = 0; i < ExtinguisherModels.Kinds.Length; i++)
+            {
+                string kind = ExtinguisherModels.Kinds[i];
+                ExtinguisherModels.Build(kind, "Stowed_" + kind, station, held: false, out GameObject group);
+                group.transform.localPosition = HookAt[i] + new Vector3(0f, -0.03f, 0.05f);
+                Label(station, "Label_" + kind, HookLabel[i], HookAt[i] + new Vector3(0f, -0.72f, 0.03f), 0.45f);
+            }
+            Label(station, "Sign", "FIRE TRAINING", new Vector3(0f, 1.78f, 0.022f), 1.3f);
+        }
+
+        private static void Label(Transform parent, string name, string text, Vector3 localPosition, float size)
+        {
+            Transform t = Child(parent, name);
+            t.localPosition = localPosition;
+            t.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            var tmp = GetOrAdd<TMPro.TextMeshPro>(t.gameObject);
+            tmp.text = text;
+            tmp.fontSize = size;
+            tmp.alignment = TMPro.TextAlignmentOptions.Center;
+            tmp.color = name == "Sign" ? new Color(0.72f, 0.05f, 0.03f) : Color.white;
+            tmp.fontStyle = TMPro.FontStyles.Bold;
+            tmp.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
+            tmp.rectTransform.sizeDelta = new Vector2(name == "Sign" ? 1.1f : 0.36f, name == "Sign" ? 0.2f : 0.2f);
+            EditorUtility.SetDirty(tmp);
+        }
+
+        // The extinguisher's discharge: one Particle Pack pressurised-steam effect, moved to the nozzle and tinted per
+        // agent by FireExtinguisher. It lives under Cell/Fire so its particles stay in the world, not in the hand.
+        private static void Spray(Transform fire)
+        {
+            ParticleSystem spray = Effect(fire, "ExtinguisherSpray", Steam, Vector3.zero);
+            if (spray == null)
+                return;
+            ParticleSystem.MainModule main = spray.main;
+            main.loop = true;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            spray.transform.position = StationAt + Vector3.up;
+            spray.transform.rotation = Quaternion.identity;
+            EditorUtility.SetDirty(spray);
         }
 
         // unity -batchmode -projectPath . -executeMethod TwoDude.FactoryTwin.Twin.FireSetup.BuildFromCommandLine -quit

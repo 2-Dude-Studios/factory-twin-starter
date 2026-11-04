@@ -120,15 +120,7 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         // Moves the rig so the headset stands over the spot (keeping its height) and faces the given way.
-        private void GoTo(Spot spot)
-        {
-            if (origin == null)
-                return;
-            Transform head = origin.Camera.transform;
-            origin.RotateAroundCameraUsingOriginUp(Mathf.DeltaAngle(head.eulerAngles.y, spot.YawDegrees));
-            Vector3 headPosition = head.position;
-            origin.transform.position += new Vector3(spot.FloorPosition.x - headPosition.x, 0f, spot.FloorPosition.z - headPosition.z);
-        }
+        private void GoTo(Spot spot) => RigTeleport.GoTo(origin, spot.FloorPosition, spot.YawDegrees);
 
         private void Wire(string buttonName, Action handler, bool wire)
         {

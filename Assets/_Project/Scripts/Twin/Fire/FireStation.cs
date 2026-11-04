@@ -33,6 +33,11 @@ namespace TwoDude.FactoryTwin.Twin
         private double _lastSmoke;
         private double _lastTemp;
         private bool _lastOverheat;
+        private bool _wasDischarging;
+        private bool _lastExtinguished;
+
+        private double ReadNumber(TopicPath topic) =>
+            _bus.TryGetLast(topic, out SignalMessage message) ? message.Value.AsNumber : 0d;
 
         /// <summary>The fire burning now, or null. M15's extinguishers discharge onto it.</summary>
         public FireModel Model => _model;
@@ -62,7 +67,12 @@ namespace TwoDude.FactoryTwin.Twin
         {
             if (_model == null)
                 return;
-            _model.Tick(Time.deltaTime);
+            // The extinguisher, from its signals: an agent only while it discharges.
+            bool discharging = ReadNumber(CellTopics.FireDischarge) != 0d;
+            var agent = discharging ? (FireAgent)(int)ReadNumber(CellTopics.FireAgent) : FireAgent.None;
+            bool newDischarge = discharging && !_wasDischarging;
+            _wasDischarging = discharging;
+            _model.Tick(Time.deltaTime, agent, ReadNumber(CellTopics.FireAim), ReadNumber(CellTopics.FireStandoff), newDischarge);
             Publish(force: false);
             MirrorStatus();
         }
@@ -116,6 +126,8 @@ namespace TwoDude.FactoryTwin.Twin
             _bus.Publish(CellTopics.FireStage, SignalValue.FromNumber((int)FireStage.None), now);
             _bus.Publish(CellTopics.CabinetTemp, SignalValue.FromNumber(ambient), now);
             _bus.Publish(CellTopics.CabinetOverheat, SignalValue.FromBool(false), now);
+            _bus.Publish(CellTopics.FireExtinguished, SignalValue.FromBool(false), now);
+            _lastExtinguished = false;
             _lastStage = FireStage.None;
             _lastSize = 0d;
             _lastSmoke = 0d;
@@ -159,6 +171,11 @@ namespace TwoDude.FactoryTwin.Twin
             {
                 _lastStage = _model.Stage;
                 _bus.Publish(CellTopics.FireStage, SignalValue.FromNumber((int)_lastStage), now);
+            }
+            if (force || _model.Extinguished != _lastExtinguished)
+            {
+                _lastExtinguished = _model.Extinguished;
+                _bus.Publish(CellTopics.FireExtinguished, SignalValue.FromBool(_lastExtinguished), now);
             }
         }
 

@@ -19,9 +19,35 @@
                     </ui:VisualElement>
                     <ui:Label name="prompt" text="" class="hud__prompt hidden" />
                 </ui:VisualElement>
-                <ui:VisualElement class="tablet__options">
+                <!-- Fire drill display (VrFireMenu): the fire, the extinguisher in hand, one line of advice. -->
+                <ui:VisualElement name="fire-hud" class="tablet__display" picking-mode="Ignore" style="display: none;">
+                    <ui:Label text="FIRE SAFETY TRAINING" class="hud__label" />
+                    <ui:Label name="fire-line" text="No fire" class="hud__current" />
+                    <ui:Label text="IN HAND" class="hud__label" />
+                    <ui:Label name="fire-ext" text="" class="hud__where" />
+                    <ui:Label name="fire-advice" text="" class="hud__refusal" />
+                    <ui:Label text="Simulated fire; training demo, not certified training." class="hud__prompt" />
+                </ui:VisualElement>
+                <ui:VisualElement name="fire-options" class="tablet__options" style="display: none;">
+                    <ui:Label text="START A FIRE" class="menu__group" />
+                    <ui:VisualElement name="fire-starts" class="tablet__row tablet__wrap" />
+                    <ui:Button name="fire-random" text="Random fire" class="menu__button" />
+                    <ui:Label text="EXTINGUISHER" class="menu__group" />
+                    <ui:Label text="Take one from the stand by its handle. Other hand: pull the pin, take the hose. Trigger: squeeze." class="hud__prompt" style="white-space: normal; font-size: 13px; margin: 0 0 2px 0;" />
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="fire-alarm" text="Raise the alarm" class="menu__button menu__button--key tablet__half" />
+                        <ui:Button name="fire-goto" text="Go to the fire" class="menu__button tablet__half" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="fire-station" text="Back to station" class="menu__button tablet__half" />
+                        <ui:Button name="ext-none" text="Put it back" class="menu__button tablet__half" />
+                    </ui:VisualElement>
+                    <ui:Button name="fire-end" text="End fire drill" class="menu__button menu__button--exit" />
+                </ui:VisualElement>
+                <ui:VisualElement name="main-options" class="tablet__options">
                     <ui:Label text="TRAINING" class="menu__group" />
                     <ui:Button name="menu-training" text="Lockout training" class="menu__button menu__button--key" />
+                    <ui:Button name="menu-fire" text="Fire safety training" class="menu__button menu__button--key" />
                     <ui:VisualElement class="tablet__row">
                         <ui:Button name="menu-fail" text="Fail the CNC" class="menu__button tablet__half" />
                         <ui:Button name="menu-reset" text="Safety reset" class="menu__button tablet__half" />

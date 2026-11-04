@@ -56,7 +56,7 @@ namespace TwoDude.FactoryTwin.UI
         private Action[] _fireHandlers;
         private Action _fireClearHandler;
         private Action _fireAlarmResetHandler;
-        private const int FireScenarios = 6;
+        private const int FireScenarios = 9;
 
         private void OnEnable()
         {

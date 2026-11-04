@@ -40,6 +40,9 @@ namespace TwoDude.FactoryTwin.Twin
         Cnc = 2,
         InfeedWaste = 3,
         Chargers = 4,
+        StorageRack = 5,
+        ElectricalPanel = 6,
+        SolventDrums = 7,
     }
 
     /// <summary>

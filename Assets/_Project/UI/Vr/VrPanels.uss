@@ -119,6 +119,13 @@
 .tablet__row { flex-direction: row; }
 .tablet__half { flex-grow: 1; flex-basis: 0; }
 .tablet__half:first-child { margin-right: 6px; }
+.tablet__wrap { flex-wrap: wrap; justify-content: space-between; }
+.tablet__wrap > .tablet__half { flex-grow: 0; flex-basis: auto; width: 49%; margin-right: 0; }
+.tablet__third { flex-grow: 1; flex-basis: 0; margin-right: 4px; }
+.tablet__third:last-child { margin-right: 0; }
+/* The fire drill page (VrFireMenu): more options, so compact buttons */
+#fire-options .menu__button { height: 34px; margin: 2px 0; font-size: 15px; }
+#fire-options .menu__group { margin: 6px 0 2px 0; font-size: 14px; }
 .tablet__hint { font-size: 12px; color: rgb(120, 128, 136); -unity-text-align: middle-center; margin-top: 8px; }
 
 /* The tablet's option buttons */

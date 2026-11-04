@@ -188,6 +188,18 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath FireAlarmSource = new TopicPath("fire", "alarm_source");
         public static readonly TopicPath FireAlarmReset = new TopicPath("fire", "alarm_reset");
 
+        // The trainee's extinguisher (M15). fire/agent is the FireAgent in hand (0 none); fire/discharge true while
+        // the trigger is held with charge left; fire/charge 0–1 left in it; fire/aim and fire/standoff 0–1, how well
+        // the stream meets the base of the fire and how well the distance suits the agent (ExtinguisherRules).
+        public static readonly TopicPath FireAgent = new TopicPath("fire", "agent");
+        public static readonly TopicPath FireDischarge = new TopicPath("fire", "discharge");
+        public static readonly TopicPath FireCharge = new TopicPath("fire", "charge");
+        public static readonly TopicPath FireAim = new TopicPath("fire", "aim");
+        public static readonly TopicPath FireStandoff = new TopicPath("fire", "standoff");
+
+        // True once the fire is out and soaked, so it cannot reflash (FireModel.Extinguished).
+        public static readonly TopicPath FireExtinguished = new TopicPath("fire", "extinguished");
+
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }

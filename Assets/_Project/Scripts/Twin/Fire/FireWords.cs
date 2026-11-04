@@ -11,6 +11,9 @@ namespace TwoDude.FactoryTwin.Twin
                 case FireLocation.Cnc: return "CNC";
                 case FireLocation.InfeedWaste: return "infeed waste bin";
                 case FireLocation.Chargers: return "charging station";
+                case FireLocation.StorageRack: return "storage rack";
+                case FireLocation.ElectricalPanel: return "electrical panel";
+                case FireLocation.SolventDrums: return "solvent drums";
                 default: return string.Empty;
             }
         }
