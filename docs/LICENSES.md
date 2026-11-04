@@ -12,7 +12,7 @@ The full tracker (62 candidates and verdicts) is kept privately. Rows marked "no
 | Item | Version | Source | Licence | Verdict | Where in repo | Credit required |
 |---|---|---|---|---|---|---|
 | Factory Training \| Industry Sample | 1.0 (9 Feb 2026) | Unity Asset Store | Standard Asset Store EULA (Extension Asset) | OK | Assets/ThirdParty/FactoryTraining (not in git) | no |
-| realvirtual.io Digital Twin Starter 6 | 6.0.11 | Unity Asset Store + realvirtual EULA | Compiled-only distribution, single-user commercial | Conditional | Assets/realvirtual + Assets/Gizmos/realvirtual — importer's default paths (not in git, see .gitignore). Prefabs used in Cell.unity: ConveyorSmall, sensors, Source/Sink, RobotStand, and (M4) `3DPrefabs/CNC.prefab` as the press station's machine. It carries only generic safety stickers, no vendor logos. | no |
+| realvirtual.io Digital Twin Starter 6 | 6.0.11 | Unity Asset Store + realvirtual EULA | Compiled-only distribution, single-user commercial | Conditional | Assets/realvirtual + Assets/Gizmos/realvirtual — importer's default paths (not in git, see .gitignore). Prefabs used in Cell.unity: ConveyorSmall, sensors, Source/Sink, RobotStand, and (M4) `3DPrefabs/CNC.prefab` as the press station's machine. It carries only generic safety stickers, no vendor logos. From M14, `3DPrefabs/ControlCabinet/ControlCabinet.prefab` (mesh only, no realvirtual components) scaled up as the fire drill's drive cabinet, a placeholder until our own model. | no |
 | Unity Splines | 2.9.0 (minimum bundled with 6000.3.19f1) | Unity registry | Unity Companion License | OK | Packages/manifest.json | no |
 | Universal RP | 17.3.0 | Unity registry (built-in) | Unity Companion License | OK | Packages/manifest.json; stock pipeline assets from Unity's URP template in Assets/_Project/Settings | no |
 | Cinemachine | 3.1.7 | Unity registry | Unity Companion License | OK | Packages/manifest.json | no |
@@ -55,7 +55,7 @@ Replaced 2026-10-04: M2MqttUnity (bundled Eclipse Paho M2Mqtt, last released Dec
 
 Add a row in the same commit as the file. Unknown licence = do not add the file.
 
-Particle Pack 3.1 (Asset Store EULA) is now used in the build (M6): `SparksEffect` and `RisingSteam` instances in `Cell.unity`; compiled-only distribution, like the other Asset Store content.
+Particle Pack 3.1 (Asset Store EULA) is now used in the build (M6): `SparksEffect` and `RisingSteam` instances in `Cell.unity`; compiled-only distribution, like the other Asset Store content. From M14 the fire drill also places `TinyFlames`, `MediumFlames`, `LargeFlames`, `SmokeEffect` and `ElectricalSparks` instances under `Cell/Fire` (scene overrides only: play on awake off, smoke darker and upright; the pack's files are unchanged).
 
 `Assets/_Project/Scenes/Cell.unity` was started as a Save As of the Factory Training sample hall. It holds no sample meshes, textures or materials: only GUID references to Factory Training, realvirtual and Particle Pack prefabs, with their transforms and overrides, plus our own objects. It opens properly only once those packages are imported at the paths above.
 

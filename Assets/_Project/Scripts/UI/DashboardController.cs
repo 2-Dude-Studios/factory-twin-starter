@@ -50,6 +50,13 @@ namespace TwoDude.FactoryTwin.UI
         private Label _trainingResult;
         private Label _trainingMistakes;
         private Label _trainingWho;
+        private VisualElement _firePanel;
+        private Label _fireAlarm;
+        private Label _cabinetTemp;
+        private Action[] _fireHandlers;
+        private Action _fireClearHandler;
+        private Action _fireAlarmResetHandler;
+        private const int FireScenarios = 6;
 
         private void OnEnable()
         {
@@ -92,6 +99,9 @@ namespace TwoDude.FactoryTwin.UI
             _trainingResult = _root.Q<Label>("training-result");
             _trainingMistakes = _root.Q<Label>("training-mistakes");
             _trainingWho = _root.Q<Label>("training-who");
+            _firePanel = _root.Q("fire-panel");
+            _fireAlarm = _root.Q<Label>("fire-alarm");
+            _cabinetTemp = _root.Q<Label>("cabinet-temp");
             if (_trainingWho != null && training != null)
                 _trainingWho.text = $"Trainee {training.TraineeName} · Trainer {training.TrainerName}";
             if (_log != null)
@@ -143,6 +153,14 @@ namespace TwoDude.FactoryTwin.UI
                 _changeToolHandler = () => context.Bus.Publish(CellTopics.PressToolChange, SignalValue.FromBool(true), CellContext.NowUnixMs);
                 _toggleCredits = () => _credits?.ToggleInClassList("hidden");
                 _startTrainingHandler = () => context.Bus.Publish(CellTopics.TrainingRun, SignalValue.FromBool(true), CellContext.NowUnixMs);
+                _fireHandlers = new Action[FireScenarios];
+                for (int i = 0; i < FireScenarios; i++)
+                {
+                    int number = i + 1;
+                    _fireHandlers[i] = () => context.Bus.Publish(CellTopics.FireScenario, SignalValue.FromNumber(number), CellContext.NowUnixMs);
+                }
+                _fireClearHandler = () => context.Bus.Publish(CellTopics.FireScenario, SignalValue.FromNumber(0), CellContext.NowUnixMs);
+                _fireAlarmResetHandler = () => context.Bus.Publish(CellTopics.FireAlarmReset, SignalValue.FromBool(true), CellContext.NowUnixMs);
             }
 
             for (int i = 0; i < _faultButtons.Length; i++)
@@ -153,6 +171,10 @@ namespace TwoDude.FactoryTwin.UI
             Wire("credits-button", _toggleCredits, wire);
             Wire("start-training", _startTrainingHandler, wire);
             Wire("credits-close", _toggleCredits, wire);
+            for (int i = 0; i < FireScenarios; i++)
+                Wire("fire-" + (i + 1), _fireHandlers[i], wire);
+            Wire("fire-clear", _fireClearHandler, wire);
+            Wire("fire-alarm-reset", _fireAlarmResetHandler, wire);
         }
 
         private void Wire(string buttonName, Action handler, bool wire)
@@ -190,6 +212,14 @@ namespace TwoDude.FactoryTwin.UI
             _trainingResult?.EnableInClassList("training--passed", training == TrainingOutcome.Passed);
             _trainingResult?.EnableInClassList("training--mistakes", training == TrainingOutcome.PassedWithErrors);
             _trainingMistakes?.EnableInClassList("training__mistakes--some", _model.TrainingMistakes > 0);
+
+            FireStage fire = _model.FireStage;
+            bool burning = fire == FireStage.Incipient || fire == FireStage.Growing || fire == FireStage.BeyondIncipient;
+            _firePanel?.EnableInClassList("hidden", !_model.FireDrillActive);
+            _firePanel?.EnableInClassList("fire--burning", burning || _model.FireAlarm);
+            _firePanel?.EnableInClassList("fire--out", fire == FireStage.Out);
+            _fireAlarm?.EnableInClassList("fire__alarm--on", _model.FireAlarm);
+            _cabinetTemp?.EnableInClassList("cabinet--hot", _model.CabinetOverheating);
 
             _link?.EnableInClassList("link--up", _model.LinkUp);
             _link?.EnableInClassList("link--down", !_model.LinkUp);

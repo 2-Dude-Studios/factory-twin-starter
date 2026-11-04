@@ -1,12 +1,13 @@
 # Status
 
-**Current milestone:** none open. All fourteen milestones of build plan Rev 5 are closed: M9, M12 and M13 on 2026-11-02 (you), M11 2026-10-26, M10 2026-10-24, M8 and M7 2026-10-23, M6 2026-10-21, M5 and M4 2026-10-20. The three use cases (predictive maintenance, virtual commissioning, workforce training and safety) are built and on video as a three-part series (`Builds/Recordings/Final Series/`).
+**Current milestone:** M14 fire model and effects (Rev 6, fire safety training, approved 2026-11-04). All fourteen milestones of build plan Rev 5 are closed: M9, M12 and M13 on 2026-11-02 (you), M11 2026-10-26, M10 2026-10-24, M8 and M7 2026-10-23, M6 2026-10-21, M5 and M4 2026-10-20. The three use cases (predictive maintenance, virtual commissioning, workforce training and safety) are built and on video as a three-part series (`Builds/Recordings/Final Series/`).
 **Next:**
 1. Going public: the two decisions from `docs/public-release-check.md` (a LICENSE for the repo; how to treat `Cell.unity`), then its other fixes.
 2. Before a clip ships: OpenPLC Runtime (MIT) and Editor (GPL-3.0, a tool) on `docs/LICENSES.md`. Decide on the uncommitted Rocketbox `.meta` changes under `Assets/ThirdParty/Rocketbox/` (importer state from Build Simulated Workers) and the UnitySkills bump.
 3. Commit the VC capture tooling (`TakeAudioRecorder`, `TakeEventLog`, `capture_build_takes.py`, `render_code_takes.py`, `-targetfps`) and `tools/video/training/` (drop the cloned voice ID from `script.json` first).
-4. Later use cases (build plan, Later) when a prospect asks.
-**Last updated:** 2026-11-02
+4. M14 (Rev 6, fire safety training, M14–M18, about 14 days): answer its start decisions (`docs/fire-safety-training.md` section 9), then build. Plan in that doc, scope and exits in the build plan.
+5. Later use cases (build plan, Later) when a prospect asks.
+**Last updated:** 2026-11-04
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
@@ -403,6 +404,19 @@ Decide: Player Settings still have Unity's defaults (product "factory-twin-start
 ## M13 — Training capture, closed 2026-11-02 (exit: the training clip is captured from the project and approved)
 - [x] The training clip is Part 3 of the series, cut from the 29 Oct headset run, the desktop view and the training record: `Builds/Recordings/Final Series/Part3_TrainingSafety_VR_2DS_FactoryTwin_v04.mp4` (3:26), with a 5:33 YouTube cut and 1:44 Shorts and LinkedIn cuts in `v06 kit/`. Narrated by the ElevenLabs Tech Narrator voice; the trainee's name is blurred.
 - [x] **M13 exit met (2026-11-02, you).**
+
+## M14 — Fire model and effects, opened 2026-11-04 (exit: each scenario ignites and grows through its stages on schedule; a detector raises the alarm and the line holds; the dashboard shows stage and location; the largest fire with smoke holds 72 fps in the Quest 3 over Link)
+- [x] Rev 6 approved (2026-11-04, you): M14 fire model and effects, M15 extinguisher and hazard hunt, M16 alarm and evacuation, M17 assessment and record, M18 fire capture, about 14 days. Plan: `docs/fire-safety-training.md`. No new packages.
+- [x] Fire model (pure, `Scripts/Twin/Fire/FireModel.cs`): heat precursor (F1 only), smoke, then a flame that grows incipient → growing → beyond incipient on each scenario's timings. Suppression by agent × class × aim × stand-off; a wrong agent (water on B or C) spreads it; past incipient an extinguisher barely touches it; stop before a 2 s soak and it reflashes 6 s later; isolating a Class C fire turns it into A. Ready for M15's extinguishers; not yet driven by anything in the scene.
+- [x] `DetectorLatch` and `FireAlarmLatch` (pure): a head trips after its response time and stays latched; the panel keeps the first source and refuses a reset while a head or call point still calls for it.
+- [x] Scene parts: `FireStation` runs the scenario and publishes it; `FireAlarmPanel` ticks the heads and latches `fire/alarm`; `FireEffects` per location drives Particle Pack flames (three tiers), smoke, sparks and one fire light from signals only. New topics in `CellTopics`: `fire/scenario` (in), `stage`, `size`, `smoke`, `class`, `location`, `smoke_detected`, `heat_detected`, `call_point` (in, M16), `alarm`, `alarm_source`, `alarm_reset` (in), `cabinet/temp_c`, `cabinet/overheat`. The alarm is a latched panel output with its own inputs, not the "(in)" topic the plan's table showed.
+- [x] The line holds on `fire/alarm` (`CellSequencer`, the same path as a CNC fault: the arm finishes its pick, then the line holds). Only with the Unity sequencer as logic source; the soft PLC does not read the fire alarm (out of scope for Rev 6).
+- [x] Dashboard: a Fire panel (stage chip, alarm and its source, location and class, drive-cabinet temperature, detectors), shown only during a drill; Fire drill buttons F1–F6, Reset alarm, Clear fire; the line badge and event log say "Stopped — fire alarm". Event log lines for the precursor, smoke, ignition with its class, growth, beyond incipient, out, reflash, detectors and the alarm.
+- [x] `Tools > Factory Twin > Build Fire Drill` (`FireSetup`, re-runnable, also `-executeMethod …FireSetup.BuildFromCommandLine`): six scenario assets in `Assets/_Project/Data/Fire/F1–F6.asset`, `Cell/Fire` with the station and panel, four locations (drive cabinet south-east of the infeed drive at (0.9, −1.1), outside the warning zone; CNC door; waste container east of the infeed at (2.4, 0.4); the hall's wall chargers at (11.8, −22.6)), six detector heads under the 8.8 m ceiling. The drive cabinet is realvirtual's ControlCabinet box scaled to 0.8 × 2.0 × 0.4 m, a placeholder until our own model.
+- [x] Tests: 33 new (`FireModelTests`, `FireAlarmTests`); 354/354 project EditMode tests pass headless (6000.3.19f1, 2026-11-04).
+- [x] Headless Play check (`FireDrillCheck`, dev tooling, frames to `Builds/FireDrillCheck/`): F4 in Cell.unity smoked 5 s, incipient ~17 s (15 s scheduled, plus a render stall), growing 12.5 s, then beyond incipient; the CNC smoke head tripped 3 s after its threshold and raised the alarm (source: detector); the line held once the arm finished its pick. Flames read well; the smoke column reads light against the bright hall (M16's ceiling smoke layer is the bigger smoke piece).
+- [ ] **Left for the exit (you, in the Editor and headset):** run F1–F6 from the dashboard and look at each location (the cabinet placement and the F1 precursor have only been checked by bounds and log); then the largest fire (F4 past 40 s) with smoke at 72 fps in the Quest 3 over Link.
+- [x] Start decisions (2026-11-04, you): policy mode defaults to **all employees** (1910.157(g)(1)–(2)); signage **US + ISO 7010**: lit "EXIT" lettering per 1910.37(b)(7) with ISO 7010-style pictograms, all drawn by us; **F6** lithium-ion charger stays in; **assembly point in the yard past the loading gate**, which needs a small yard ground (ambientCG CC0, to be approved at import with its LICENSES.md row).
 
 ## Manual steps pending
 - **UnitySkills does not start by itself after an Editor restart** (seen 2026-10-24): start it from its toolbar button, or Claude Code cannot reach the Editor.

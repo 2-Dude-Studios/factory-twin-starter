@@ -28,6 +28,9 @@ namespace TwoDude.FactoryTwin.UI
             CellTopics.LinePartsLost, CellTopics.LineCycleTime, CellTopics.PressToolRemaining,
             CellTopics.PressMaintenanceDue, CellTopics.PlcSource, CellTopics.PlcLink,
             CellTopics.TrainingStep, CellTopics.TrainingErrors, CellTopics.TrainingResult,
+            CellTopics.FireClass, CellTopics.FireLocation, CellTopics.FireStage, CellTopics.CabinetTemp,
+            CellTopics.CabinetOverheat, CellTopics.FireSmokeDetected, CellTopics.FireHeatDetected,
+            CellTopics.FireAlarmSource, CellTopics.FireAlarm,
         };
 
         private readonly IDisposable _subscription;
@@ -55,6 +58,16 @@ namespace TwoDude.FactoryTwin.UI
         private string _trainingNextText = NoValue;
         private string _trainingMistakesText = NoValue;
         private int _trainingStep;
+        private string _fireStageText = NoValue;
+        private string _fireWhereText = string.Empty;
+        private string _cabinetTempText = NoValue;
+        private string _fireAlarmText = "Alarm off";
+        private string _fireDetectorsText = "Detectors clear";
+        private FireLocation _fireLocation;
+        private FireClass _fireClass;
+        private bool _smokeDetected;
+        private bool _heatDetected;
+        private AlarmSource _alarmSource;
 
         public DashboardViewModel(SignalBus bus)
         {
@@ -107,6 +120,19 @@ namespace TwoDude.FactoryTwin.UI
         [CreateProperty] public string TrainingStepText => _trainingStepText;
         [CreateProperty] public string TrainingNextText => _trainingNextText;
         [CreateProperty] public string TrainingMistakesText => _trainingMistakesText;
+        [CreateProperty] public string FireStageText => _fireStageText;
+        [CreateProperty] public string FireWhereText => _fireWhereText;
+        [CreateProperty] public string CabinetTempText => _cabinetTempText;
+        [CreateProperty] public string FireAlarmText => _fireAlarmText;
+        [CreateProperty] public string FireDetectorsText => _fireDetectorsText;
+
+        /// <summary>Fire safety (M14): the fire's stage, the latched alarm, and the cabinet precursor, for the fire panel.</summary>
+        public FireStage FireStage { get; private set; } = FireStage.None;
+        public bool FireAlarm { get; private set; }
+        public bool CabinetOverheating { get; private set; }
+
+        /// <summary>The fire panel shows while a drill is on: a fire anywhere, the alarm, or the cabinet heating up.</summary>
+        public bool FireDrillActive => FireStage != FireStage.None || FireAlarm || CabinetOverheating || _fireLocation != FireLocation.None;
 
         /// <summary>Lockout training (M11): how the run stands and its mistakes, for the step panel colours.</summary>
         public TrainingOutcome Training { get; private set; } = TrainingOutcome.Idle;
@@ -180,6 +206,50 @@ namespace TwoDude.FactoryTwin.UI
                 Training = (TrainingOutcome)(int)v;
                 ApplyTraining();
             }
+            else if (topic == CellTopics.FireStage)
+            {
+                FireStage = (FireStage)(int)v;
+                Set(ref _fireStageText, FireWords.Stage(FireStage), nameof(FireStageText));
+                StatusChanged?.Invoke();
+            }
+            else if (topic == CellTopics.FireLocation)
+            {
+                _fireLocation = (FireLocation)(int)v;
+                ApplyFireWhere();
+            }
+            else if (topic == CellTopics.FireClass)
+            {
+                _fireClass = (FireClass)(int)v;
+                ApplyFireWhere();
+            }
+            else if (topic == CellTopics.CabinetTemp)
+                Set(ref _cabinetTempText, v.ToString("0", Invariant) + " °C", nameof(CabinetTempText));
+            else if (topic == CellTopics.CabinetOverheat)
+            {
+                CabinetOverheating = v != 0d;
+                _version++;
+                StatusChanged?.Invoke();
+            }
+            else if (topic == CellTopics.FireSmokeDetected)
+            {
+                _smokeDetected = v != 0d;
+                ApplyFireDetectors();
+            }
+            else if (topic == CellTopics.FireHeatDetected)
+            {
+                _heatDetected = v != 0d;
+                ApplyFireDetectors();
+            }
+            else if (topic == CellTopics.FireAlarmSource)
+                _alarmSource = (AlarmSource)(int)v;
+            else if (topic == CellTopics.FireAlarm)
+            {
+                FireAlarm = v != 0d;
+                Set(ref _fireAlarmText, FireAlarmWords(FireAlarm, _alarmSource), nameof(FireAlarmText));
+                if (_lineStateText != NoValue)
+                    ApplyLineState(LineState);
+                StatusChanged?.Invoke();
+            }
             else if (topic == CellTopics.PlcSource)
             {
                 _plcRunsLine = v >= 0.5d;
@@ -236,6 +306,40 @@ namespace TwoDude.FactoryTwin.UI
         public static string MistakeWords(int mistakes) =>
             mistakes == 0 ? "No mistakes" : $"{mistakes} mistake{(mistakes == 1 ? "" : "s")}";
 
+        private void ApplyFireWhere()
+        {
+            string where = FireWords.Location(_fireLocation);
+            string cls = FireWords.Class(_fireClass);
+            string text = where.Length == 0 ? string.Empty : cls.Length == 0 ? Capitalise(where) : Capitalise(where) + " · " + cls;
+            Set(ref _fireWhereText, text, nameof(FireWhereText));
+            StatusChanged?.Invoke();
+        }
+
+        private void ApplyFireDetectors()
+        {
+            Set(ref _fireDetectorsText, DetectorWords(_smokeDetected, _heatDetected), nameof(FireDetectorsText));
+        }
+
+        public static string FireAlarmWords(bool on, AlarmSource source)
+        {
+            if (!on)
+                return "Alarm off";
+            string by = FireWords.Source(source);
+            return by.Length == 0 ? "FIRE ALARM" : "FIRE ALARM · " + by;
+        }
+
+        public static string DetectorWords(bool smoke, bool heat)
+        {
+            if (smoke && heat)
+                return "Smoke and heat detected";
+            if (smoke)
+                return "Smoke detected";
+            return heat ? "Heat detected" : "Detectors clear";
+        }
+
+        private static string Capitalise(string text) =>
+            text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text.Substring(1);
+
         private void ApplyRisk(double risk)
         {
             double clamped = Math.Max(0d, Math.Min(1d, risk));
@@ -262,7 +366,7 @@ namespace TwoDude.FactoryTwin.UI
         {
             bool changed = state != LineState || _lineStateText == NoValue;
             LineState = state;
-            Set(ref _lineStateText, LineStateWords(state, _plcRunsLine && !_plcLinkUp), nameof(LineStateText));
+            Set(ref _lineStateText, LineStateWords(state, _plcRunsLine && !_plcLinkUp, FireAlarm), nameof(LineStateText));
             if (changed)
                 StatusChanged?.Invoke();
         }
@@ -300,6 +404,12 @@ namespace TwoDude.FactoryTwin.UI
         public static string LineStateWords(CellState state, bool plcLinkLost)
         {
             return state == CellState.Held && plcLinkLost ? "Stopped — PLC link lost" : LineStateWords(state);
+        }
+
+        /// <summary>As above; a hold while the fire alarm is on is named as the fire alarm (M14).</summary>
+        public static string LineStateWords(CellState state, bool plcLinkLost, bool fireAlarm)
+        {
+            return state == CellState.Held && fireAlarm && !plcLinkLost ? "Stopped — fire alarm" : LineStateWords(state, plcLinkLost);
         }
 
         public static string LineStateWords(CellState state)

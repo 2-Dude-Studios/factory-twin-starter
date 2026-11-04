@@ -146,6 +146,31 @@
                 <ui:Label text="Simulated safety function · training demo, not safety-rated or certified" class="footnote" />
             </ui:VisualElement>
 
+            <ui:VisualElement name="fire-panel" class="section section--fire hidden">
+                <ui:VisualElement class="section__header">
+                    <ui:Label text="Fire" class="section__title" />
+                    <ui:Label name="fire-stage" text="—" class="chip fire">
+                        <Bindings><ui:DataBinding property="text" data-source-path="FireStageText" binding-mode="ToTarget" /></Bindings>
+                    </ui:Label>
+                </ui:VisualElement>
+                <ui:Label name="fire-alarm" text="Alarm off" class="fire__alarm">
+                    <Bindings><ui:DataBinding property="text" data-source-path="FireAlarmText" binding-mode="ToTarget" /></Bindings>
+                </ui:Label>
+                <ui:Label text="" class="fire__where">
+                    <Bindings><ui:DataBinding property="text" data-source-path="FireWhereText" binding-mode="ToTarget" /></Bindings>
+                </ui:Label>
+                <ui:VisualElement class="telemetry__row">
+                    <ui:Label text="Drive cabinet" class="metric__name" />
+                    <ui:Label name="cabinet-temp" text="—" class="metric__value">
+                        <Bindings><ui:DataBinding property="text" data-source-path="CabinetTempText" binding-mode="ToTarget" /></Bindings>
+                    </ui:Label>
+                </ui:VisualElement>
+                <ui:Label text="—" class="fire__detectors">
+                    <Bindings><ui:DataBinding property="text" data-source-path="FireDetectorsText" binding-mode="ToTarget" /></Bindings>
+                </ui:Label>
+                <ui:Label text="Simulated fire · training demo, not certified training" class="footnote" />
+            </ui:VisualElement>
+
             <ui:VisualElement name="fault-panel" class="section section--faults">
                 <ui:Label text="Scenarios" class="section__title" />
                 <ui:VisualElement class="fault-buttons">
@@ -161,6 +186,17 @@
                     <ui:Button name="inject-rnf" text="Random" class="fault-button" />
                     <ui:Button name="clear-fault" text="Clear" class="fault-button fault-button--clear" />
                     <ui:Button name="start-training" text="Lockout training" class="fault-button fault-button--key" />
+                </ui:VisualElement>
+                <ui:Label text="Fire drills" class="metric__name fault-subtitle" />
+                <ui:VisualElement class="fault-buttons">
+                    <ui:Button name="fire-1" text="F1 Cabinet" tooltip="Drive cabinet overheats, then smokes (Class C)" class="fault-button" />
+                    <ui:Button name="fire-2" text="F2 CNC" tooltip="Coolant-mist fire at the CNC (Class B)" class="fault-button" />
+                    <ui:Button name="fire-3" text="F3 Waste" tooltip="Oily waste at the infeed (Class A)" class="fault-button" />
+                    <ui:Button name="fire-4" text="F4 Grows" tooltip="CNC fire that grows past incipient: evacuate" class="fault-button" />
+                    <ui:Button name="fire-5" text="F5 Blocked" tooltip="F4 with the primary exit blocked" class="fault-button" />
+                    <ui:Button name="fire-6" text="F6 Battery" tooltip="Lithium-ion fire at the chargers: flee only" class="fault-button" />
+                    <ui:Button name="fire-alarm-reset" text="Reset alarm" class="fault-button fault-button--clear" />
+                    <ui:Button name="fire-clear" text="Clear fire" class="fault-button fault-button--clear" />
                 </ui:VisualElement>
             </ui:VisualElement>
 
