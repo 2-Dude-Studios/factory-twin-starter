@@ -6,7 +6,8 @@
 2. Before a clip ships: OpenPLC Runtime (MIT) and Editor (GPL-3.0, a tool) on `docs/LICENSES.md`. Decide on the uncommitted Rocketbox `.meta` changes under `Assets/ThirdParty/Rocketbox/` (importer state from Build Simulated Workers) and the UnitySkills bump.
 3. Commit the VC capture tooling (`TakeAudioRecorder`, `TakeEventLog`, `capture_build_takes.py`, `render_code_takes.py`, `-targetfps`) and `tools/video/training/` (drop the cloned voice ID from `script.json` first).
 4. M14 (Rev 6, fire safety training, M14–M18, about 14 days): answer its start decisions (`docs/fire-safety-training.md` section 9), then build. Plan in that doc, scope and exits in the build plan.
-5. Later use cases (build plan, Later) when a prospect asks.
+5. Rev 7, electrical safety and arc flash (M19–M23, about 13.5 days), approved 2026-11-04 with its defaults, starts after M18. At M19 start, check the NFPA 70E-2027 section numbers. Plan in `docs/electrical-safety-training.md`, scope and exits in the build plan.
+6. Later use cases (build plan, Later) when a prospect asks.
 **Last updated:** 2026-11-04
 
 ## Done

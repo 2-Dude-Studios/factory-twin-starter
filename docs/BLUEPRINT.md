@@ -12,12 +12,13 @@ Companion documents: `docs/build-plan.md` (why and in what order, Rev 5), `docs/
 
 A Unity prototype of one working production cell: an infeed conveyor, a sensor gate, a six-axis pick-and-place arm, an outfeed conveyor, and a CNC machining centre reporting machine telemetry. Every drive, sensor and joint publishes its state over MQTT to a live dashboard, and the cell can be run either by its own C# sequence or by a soft PLC over Modbus TCP.
 
-It proves three use cases, each with its own video (the third added in Rev 5), and Rev 6 (approved 2026-11-04) adds a fourth:
+It proves three use cases, each with its own video (the third added in Rev 5), and Rev 6 and Rev 7 (both approved 2026-11-04) add a fourth and a fifth:
 
 - **Predictive maintenance.** The twin sees a CNC tool failure coming, shows where it is and what it will cost the line, and recommends a tool change in time. Ignored, the machine fails and the line stops; acted on, the line never stops.
 - **Virtual commissioning.** A soft PLC outside Unity runs the cell from Structured Text. A commissioning suite catches a seeded interlock bug, visible in 3D as parts queuing into the pick station, and passes once the one line is fixed.
 - **Workforce training and safety** (Rev 5, planned). A trainee stepping into the arm's protective zone freezes the arm and holds the line until a deliberate reset. A CNC fault is cleared only through the OSHA 1910.147 lockout steps; the soft PLC refuses to start the line while the lock is on, and every step and error is logged as a training record. Desktop first, then Quest 3 over Link. A simulated safety function and a training demo: not safety-rated, not certified training.
 - **Fire safety training** (Rev 6, approved 2026-11-04; M14–M18). In VR on the same cell and crew: a hazard hunt for the fire prevention plan (29 CFR 1910.39). The twin flags an overheating drive cabinet before any smoke. The trainee raises the alarm, the line holds, and the right extinguisher used with PASS puts out an incipient fire (1910.157(g), annual). A fire past the incipient stage means evacuation by the alternate route, with a roll call at the assembly point (1910.38). Every step is logged against its clause in a training record. A training demo, not certified training; the regulatory content is guidance, not legal advice. Full plan: `docs/fire-safety-training.md`.
+- **Electrical safety and arc flash** (Rev 7, approved 2026-11-04; M19–M23, after M18). An infeed drive fault on the dashboard sends the trainee to the drive cabinet. They read the arc flash label, gear up, stay inside the right approach boundaries, and open and lock the disconnect. The dashboard reads 0 V, but the tester, proved on a known source before and after, finds 120 V backfed from the control circuit's UPS feed. They lock the second source, test again, do the work, and the soft PLC refuses to start with the cabinet lock on (29 CFR 1910.332–.335, NFPA 70E-2027). Every step is logged against its clause. A training demo, not certified training; it qualifies nobody, and the label values come from a made-up study. Full plan: `docs/electrical-safety-training.md`.
 
 It ships as a Windows build for live demos and a walkthrough video per use case for the Manufacturing page on 2dudestudios.com.
 
@@ -32,6 +33,8 @@ It ships as a Windows build for live demos and a walkthrough video per use case 
 **For an EHS or training manager (Rev 5).** New starters practise lockout and robot-zone behaviour on the plant's own cell, driven by its own PLC, with a record of every step and mistake, before they stand next to the real machine.
 
 **For an EHS or training manager (Rev 6).** The annual extinguisher training and the fire drill that a running plant rarely gets to stage, done on the plant's own cell: the right extinguisher for each class, fight or flee, a blocked exit, a missing colleague. The record lists each step against its clause, plus a field for the physical discharge that designated employees still need.
+
+**For an EHS or electrical safety manager (Rev 7).** The NFPA 70E retraining due at least every three years, and the awareness training that non-electrical workers often never get, on the plant's own drive cabinet: the label, the boundaries, live-dead-live, the backfeed that a dashboard can't see. The record lists each step against its clause, plus a field for the hands-on tester practice that VR does not replace.
 
 ### Not in scope
 
@@ -63,6 +66,11 @@ It ships as a Windows build for live demos and a walkthrough video per use case 
 | M16 Alarm and evacuation | Pull station, horn and strobe, exit signs, blocked route, smoke layer, NPC evacuation, roll call | Planned (Rev 6) |
 | M17 Assessment and record | Unguided phase 4, policy modes, scoring by clause, CSV training record | Planned (Rev 6) |
 | M18 Fire capture | Fire safety clip, Part 4 of the series | Planned (Rev 6) |
+| M19 Electrical model and cabinet | `ElectricalModel` (sources, disconnect, locks, DC bus decay, probe readings), our own drive cabinet, arc flash label, approach boundaries, dashboard electrical panel | Planned (Rev 7) |
+| M20 Tester, PPE and gloves | Two-handed tester and proving unit, live-dead-live, PPE board, glove inspection and air test | Planned (Rev 7) |
+| M21 Safe work procedure and hunt | Electrically safe work condition, scenarios E1–E5 (backfeed, stored energy, dead tester, colleague), electrical hazard hunt, cabinet lock into the soft PLC | Planned (Rev 7) |
+| M22 Electrical assessment and record | Unguided phase 4, role modes, scoring by clause, CSV record, menu card, contact release in training | Planned (Rev 7) |
+| M23 Electrical capture | Electrical safety clip, Part 5 of the series | Planned (Rev 7) |
 
 ---
 
@@ -563,6 +571,8 @@ One test holds the AI4I hit rate: every labelled TWF/HDF/PWF/OSF row warned, pro
 ---
 
 ## 12. What is left
+
+**Rev 7, electrical safety and arc flash (approved 2026-11-04).** Starts after M18. Its decisions are in `docs/electrical-safety-training.md` section 9; at M19 start, check the NFPA 70E-2027 section numbers. No code yet.
 
 **Rev 6, fire safety training (approved 2026-11-04).** M14 is current. Its start decisions are in `docs/fire-safety-training.md` section 9. No code has been written for it yet. The items below predate Rev 5's close on 2026-11-02; M12, M13 and M9 are done.
 

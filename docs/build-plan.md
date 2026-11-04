@@ -1,4 +1,4 @@
-# Manufacturing Demo — Factory Digital Twin build plan (Rev 6, 4 Nov 2026; Rev 5 of 24 Oct 2026 complete)
+# Manufacturing Demo — Factory Digital Twin build plan (Rev 7, 4 Nov 2026; Rev 6 in progress; Rev 5 of 24 Oct 2026 complete)
 
 Source tracker (62 items, licence verdicts, download status): kept privately; the shipped items are in `docs/LICENSES.md`.
 Video SOP to follow once the build exists: `claude/walkthrough-video-playbook.md`
@@ -11,10 +11,12 @@ Rev 5 adds a third use case, **workforce training and safety** (M10–M13), the 
 
 Rev 6 (approved 2026-11-04) adds a fourth use case, **fire safety training** (M14–M18), in VR on the same cell, crew and rig. 29 CFR 1910.157(g) makes extinguisher training annual for any plant whose employees may use extinguishers, so it is a recurring need. Generic VR fire modules and digital extinguisher trainers exist; none found runs the drill on the plant's own live twin. Full detail (auditor's view, scenarios, objectives by clause, asset list, phases, capture): `docs/fire-safety-training.md`.
 
+Rev 7 (approved 2026-11-04) adds a fifth use case, **electrical safety and arc flash** (M19–M23), to start after M18. It builds on the M11 lockout and Rev 6's drive cabinet. NFPA 70E-2027 (in effect since 6 May 2026) sets retraining at no more than three years and contact-release training every year, so this is another recurring need. VR arc flash modules exist and already cover boundaries, PPE and the live-dead-live test; none found runs on the plant's own twin, where the dashboard reads 0 V and the tester still finds the backfeed. Full detail: `docs/electrical-safety-training.md`.
+
 ## Where it stands (2 Nov 2026)
 
 - **Done:** M0–M13, all of Rev 5. M9, M12 and M13 closed 2 Nov. All three use cases are built and on video as a three-part series: 1 predictive maintenance, 2 virtual commissioning, 3 training and safety in the Quest 3 over Link (`Builds/Recordings/Final Series/`, with YouTube, Shorts and LinkedIn cuts in `v06 kit/`).
-- **Next:** Rev 6, fire safety training (M14–M18, about 14 days, below), approved 4 Nov; M14 is current; the public-repo decisions in `docs/public-release-check.md`; the Later use cases when a prospect asks.
+- **Next:** Rev 6, fire safety training (M14–M18, about 14 days, below), approved 4 Nov; M14 is current; Rev 7, electrical safety (M19–M23, about 13.5 days, below), approved 4 Nov, starts after M18; the public-repo decisions in `docs/public-release-check.md`; the Later use cases when a prospect asks.
 
 ## What this is
 
@@ -201,6 +203,39 @@ Exit: the clip is captured from the project and approved.
 
 M14–M18 come to roughly 14 days of focused time.
 
+### Use case 5 — Electrical safety and arc flash (Rev 7, approved 2026-11-04)
+
+The beat that is the whole pitch: the infeed drive faults and the dashboard sends the trainee to the drive cabinet. The arc flash label sets the PPE and the boundaries. The trainee opens and locks the disconnect, and the dashboard reads 0 V. They prove the tester and test anyway, and find 120 V backfed from the control circuit's UPS feed. They lock the second source, test again and prove the tester again before touching anything. On restore, the PLC refuses to start with the lock on. "The twin tells you where to look. Only your tester tells you it's dead."
+
+Requirements it trains to (detail and the objective-by-clause table in `docs/electrical-safety-training.md`):
+- **Training, 29 CFR 1910.332**: unqualified ((b)(2)) and qualified ((b)(3)) persons.
+- **Work practices, 1910.333**: de-energise first ((a)(1)). Electrical lockout ((b)(2)): a 1910.147 procedure like M11's also satisfies it only with two added steps, release of stored electric energy ((b)(2)(iii)(D)) and a qualified person's test for absence of voltage, including backfeed ((b)(2)(iv)(B)). Energised work by qualified persons only ((c)(2)).
+- **PPE and alerting, 1910.335**, with rubber insulating gloves under **1910.137**. Working space, openings and cords (1910.303(g), 1910.305, 1910.334) feed the hazard hunt.
+- **NFPA 70E-2027**: training and retraining (110.4), the electrically safe work condition (Article 120), the energised work permit and the new second-person rule (130.2), approach boundaries (130.4), arc flash assessment and label (130.5), PPE (130.7). Section numbers are checked against the 2027 text at M19 start.
+- On screen and in the voiceover it is a **training demo, not certified training**; the label values come from a made-up study; and hands-on tester practice is still required. The auditor content is guidance, not legal advice.
+
+Scenarios in this cell: E1 replace a failed VFD (the main task), E2 backfeed from the UPS feed, E3 charged DC bus, E4 dead tester caught by the proving unit, E5 unqualified colleague at the boundary, E6 contact release (training only unless decided otherwise), plus an electrical hazard hunt. Role modes: unqualified, qualified (the demo default), qualified with energised diagnostics. Trainee phases: 1 awareness, 2 gear and tester, 3 electrically safe work condition, 4 unguided assessment (the retraining run).
+
+Reuses: the M11 lock, tag and release steps; Rev 6's hazard hunt, scorer, badges, HUD, two-handed grab and alarm panel; the M10 zones for the boundaries; the CSV record writer and header; the start menu (a fifth card). New signals under the existing scheme: more `cell/cabinet/*` (door, disconnect, locks, bus, DC bus, control voltage), `cell/infeed/drive_fault` and `cell/elec/*` (scenario, boundary, PPE, tester). Tester readings stay off the bus, so the dashboard never shows the trainee the answer. The cabinet lock goes into both logic sources, like M11's. Assets to make: our own drive cabinet with a door, disconnect and VFDs (realvirtual's box has no interior), tester and proving unit, gloves and arc-rated PPE, labels and boundary decals, rescue hook and AED. Third-party sound clips only after approval, each with its LICENSES.md row.
+
+**M19 — Electrical model and cabinet (≈3 days).** A pure, tested `ElectricalModel` (sources, disconnect, locks, AC legs, DC bus decay, readings between named points, tester health), an `ArcFlashStudy` asset and the label made from it, our own cabinet in place of the scaled box (F1 still works), boundary zones, new signals and a dashboard electrical panel.
+Exit: opening the disconnect drops the AC legs to 0 except the E2 control circuit; the DC bus decays on schedule; every probe pair reads right in tests; boundary entry is detected; the dashboard shows bus, DC bus and locks; 72 fps over Link with the cabinet open.
+Decided 2026-11-04: qualified by default, our own cabinet, E6 in training only, US 480 V with demo label values, the cabinet lock into the soft PLC. At start: check the 70E-2027 section numbers.
+
+**M20 — Tester, PPE and gloves (≈3 days).** Two-handed tester and probes in VR, mouse on desktop; proving unit and a flat-battery tester; PPE board and wearing PPE; glove inspection and air test.
+Exit: live and dead buses read right; the proving unit catches the flat tester; the wrong PPE category is logged against the label; a faulty glove is caught, on desktop and in the headset.
+
+**M21 — Safe work procedure and hunt (≈3 days).** A pure, tested `ElectricalSafeWorkProcedure` (Article 120 plus 1910.333's two steps, M11's release steps reused), scenarios E1–E5, the electrical hazard hunt, and the cabinet lock into the soft PLC and the sequencer.
+Exit: E1 runs end to end; E2's backfeed is found only by testing and cleared by locking the UPS feed; E3 forces the wait; E4 voids the test; E5's colleague is stopped at the limited approach boundary; the PLC refuses to start with the lock on; each hunt find is logged with its clause.
+
+**M22 — Assessment, rescue and record (≈2.5 days).** Phase 4, the role modes, scoring by clause, board pages, the CSV record with a hands-on field, the menu card, and E6 if kept.
+Exit: a qualified session and an unqualified session run end to end unguided, in the headset and on desktop; the records match by clause; a seeded wrong-order run records its mistakes; switching the role mode changes the required steps.
+
+**M23 — Electrical capture (≈2 days).** Part 5 of the series, recorded as in M18. Voiceover in `docs/voiceover_electrical.md`, cut with `tools/video/electrical/`. Naming `2DS_Manufacturing_FactoryTwin_Electrical_v01_<date>`.
+Exit: the clip is captured from the project and approved.
+
+M19–M23 come to roughly 13.5 days of focused time.
+
 ## Later (not scheduled)
 
 Planned in Rev 2 (commit `ee852e9` has the full exit conditions). Virtual commissioning moved into Rev 4 as M7–M9, workforce training and safety into Rev 5 as M10–M13. Each builds on the same signal contract and can be picked up when a prospect asks for it:
@@ -210,6 +245,7 @@ Planned in Rev 2 (commit `ee852e9` has the full exit conditions). Virtual commis
 - **Pre-planning** — a scenario runner that sweeps layouts and speeds against a production target, using M5's maintenance windows.
 - **Views** — touch/kiosk view, standalone Quest 3 (a forward, fully baked scene variant and an Android build; ≈3–4 days).
 - **Fire safety extensions** (after Rev 6): hot work permit and fire watch (1910.252, NFPA 51B), combustible dust (NFPA 652), Class D metal fires, and a UK variant (RRO 2005, BS 5306, ISO 7010 signage).
+- **Electrical safety extensions** (after Rev 7): batteries, PV and DC systems (NFPA 70E-2027 Chapter 3), work above 1,000 V, and a UK/EU variant (Electricity at Work Regulations 1989, HSE GS38; EN 50110-1).
 
 ## Claude Code kickoff prompt (paste into the project)
 
@@ -249,6 +285,12 @@ The fire safety clip (M18):
 - **Path:** your cell's twin, your emergency action plan and fire prevention plan; Quest 3 or desktop.
 - **Ask:** book a call.
 
+The electrical safety clip (M23):
+- **Promise:** the twin tells you where to look. Only your tester tells you it's dead.
+- **Proof:** the drive faults; label, PPE, disconnect locked; the dashboard reads 0 V, and the tester finds the backfeed anyway. Second source locked, tested again, and the PLC refuses to start with the lock on.
+- **Path:** your cell's twin, your one-line drawings and arc flash study, your PLC; Quest 3 or desktop.
+- **Ask:** book a call.
+
 Voiceover rendered before capture. Naming `2DS_Manufacturing_FactoryTwin_PdM_v01_<date>`.
 As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) was cut to them; the approved video is v02, 111 s, with a digital-twin introduction ahead of the promise.
 
@@ -261,3 +303,4 @@ As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) 
 - VC (M9): ~~one VC clip, or a VC segment added to the PdM video?~~ Decided 2026-10-23: a separate clip of about 76 s; the approved 111 s PdM video stays as it is.
 - Quest 3 view: ~~pass-through tabletop twin or room-scale?~~ Decided 2026-10-24: room-scale in the hall, over Link first (M12); standalone later.
 - Fire safety (Rev 6): ~~policy mode, signage, F6, assembly point~~ Decided 2026-11-04: all employees; US + ISO 7010 signs; F6 kept; assembly point in the yard past the loading gate.
+- Electrical safety (Rev 7): ~~approval, role mode, cabinet, E6, voltage, PLC lock input~~ Decided 2026-11-04: approved; qualified by default; our own cabinet; E6 in training only; US 480 V with demo label values; the cabinet lock into the soft PLC.
