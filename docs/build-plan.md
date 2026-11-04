@@ -1,4 +1,4 @@
-# Manufacturing Demo — Factory Digital Twin build plan (Rev 5, 24 Oct 2026; progress updated 29 Oct 2026)
+# Manufacturing Demo — Factory Digital Twin build plan (Rev 6, 4 Nov 2026; Rev 5 of 24 Oct 2026 complete)
 
 Source tracker (62 items, licence verdicts, download status): kept privately; the shipped items are in `docs/LICENSES.md`.
 Video SOP to follow once the build exists: `claude/walkthrough-video-playbook.md`
@@ -9,10 +9,12 @@ Rev 4 adds a second use case, **virtual commissioning** (M7–M9), for machine b
 
 Rev 5 adds a third use case, **workforce training and safety** (M10–M13), the studio's first Quest 3 content. Chosen after a short research pass on 2026-10-24 (summary under Use case 3 below): lockout/tagout is OSHA's #4 most-cited standard in FY2025, and the VR safety-training vendors (Pixaera, Uptale, Interplay, Transfr, PIXO) sell generic modules. None found runs the training on the plant's own live twin, PLC and dashboard, which is what this one does.
 
+Rev 6 (approved 2026-11-04) adds a fourth use case, **fire safety training** (M14–M18), in VR on the same cell, crew and rig. 29 CFR 1910.157(g) makes extinguisher training annual for any plant whose employees may use extinguishers, so it is a recurring need. Generic VR fire modules and digital extinguisher trainers exist; none found runs the drill on the plant's own live twin. Full detail (auditor's view, scenarios, objectives by clause, asset list, phases, capture): `docs/fire-safety-training.md`.
+
 ## Where it stands (2 Nov 2026)
 
 - **Done:** M0–M13, all of Rev 5. M9, M12 and M13 closed 2 Nov. All three use cases are built and on video as a three-part series: 1 predictive maintenance, 2 virtual commissioning, 3 training and safety in the Quest 3 over Link (`Builds/Recordings/Final Series/`, with YouTube, Shorts and LinkedIn cuts in `v06 kit/`).
-- **Next:** the public-repo decisions in `docs/public-release-check.md`; the Later use cases when a prospect asks.
+- **Next:** Rev 6, fire safety training (M14–M18, about 14 days, below), approved 4 Nov; M14 is current; the public-repo decisions in `docs/public-release-check.md`; the Later use cases when a prospect asks.
 
 ## What this is
 
@@ -166,6 +168,39 @@ Exit: the clip is captured from the project and approved.
 
 M10–M13 come to roughly 10 days of focused time.
 
+### Use case 4 — Fire safety training (Rev 6, approved 2026-11-04)
+
+The beat that is the whole pitch: the dashboard sees the drive cabinet overheating before there is any smoke. Then the smoke comes, the trainee raises the alarm, the line holds, and the right extinguisher used with PASS puts the fire out. In a second run the fire grows past the incipient stage. The trainee backs out, finds the exit route blocked, takes the other one, and the roll call at the assembly point finds a colleague missing. The twin logs every step against its clause. "Practise the fire you hope never happens, on the line you actually run."
+
+Requirements it trains to (detail and the objective-by-clause table in `docs/fire-safety-training.md`):
+- **Fire prevention plan, 29 CFR 1910.39**: hazards, ignition sources, housekeeping, maintenance of heat-producing equipment ((c)(1)–(c)(5)), informing employees ((d), (e)).
+- **Emergency action plan, 1910.38**: report, evacuate by route, shut down critical operations, account for everyone, alarm ((c)(1)–(c)(5), (d), (f)), with 1910.165 (alarm) and 1910.36–37 (exit routes).
+- **Portable fire extinguishers, 1910.157**: the employer's policy ((b)(1)/(b)(2) evacuate only, or (g) employee use). An educational program on hire and at least annually ((g)(1)–(g)(2)), and equipment training for designated employees ((g)(3)–(g)(4)). VR covers the education. A physical discharge for designated employees is still recorded separately (OSHA interpretation, 2 Jul 1991). Incipient stage per 1910.155(c)(26).
+- **NFPA 10** (classes, siting, monthly inspection), **NFPA 101** (egress, exit marking, drills), **NFPA 72** (temporal-3 alarm), **NFPA 80** (fire doors). UK RRO 2005 / BS 5306 / ISO 7010 only if a prospect asks.
+- On screen and in the voiceover it is a **training demo, not certified training**, and the auditor content is guidance, not legal advice.
+
+Scenarios in this cell: F1 electrical cabinet (C), F2 CNC coolant-mist fire (B), F3 oily waste or cardboard (A), F4 fire past incipient (flee), F5 blocked exit route, F6 lithium-ion charger (flee only), plus a pre-shift hazard hunt. Policy modes: evacuate only, all employees (the demo default), designated employees. Trainee phases: 1 awareness and prevention, 2 extinguisher use, 3 alarm and evacuation, 4 unguided assessment (the annual refresher).
+
+Reuses: the M12 XR rig and hands, the training board and tablet, the NPC crew (one becomes the fire warden), the CSV training-record writer and folder (`Builds/Training/`, same header as the lockout record), Particle Pack flames and smoke, and realvirtual's control cabinet and assembly-point decal. New signals under the existing scheme: `cell/fire/*` and `cell/cabinet/temp_c`. The line holds on `cell/fire/alarm`, like a CNC fault. The fire drills run on the in-Unity sequencer and need no PLC work. Assets to make (extinguishers with interactive pin, gauge and tag; pull station; horn and strobe; detectors; exit signs; hazard props) are listed in the doc. Third-party audio and textures are imported only after approval, each with its LICENSES.md row.
+
+**M14 — Fire model and effects (≈3 days).** A pure, tested `FireModel` (stage growth; suppression by agent, class, aim and stand-off; reflash), with parameters in a ScriptableObject. Scenario assets F1–F6. Effects driven from signals. Smoke and heat detectors. The alarm holds the line, and the dashboard gets a fire panel. New signals: `cell/fire/scenario` (in), `stage`, `size`, `class`, `location`, `smoke_detected`, `alarm` (in), `cell/cabinet/temp_c`.
+Exit: each scenario ignites and grows through its stages on schedule. A detector raises the alarm and the line holds; the dashboard shows stage and location. The largest fire with smoke holds 72 fps in the Quest 3 over Link.
+Decided 2026-11-04: all employees by default, US + ISO 7010 signs, F6 kept, assembly point in the yard past the loading gate.
+
+**M15 — Extinguisher and hazard hunt (≈3.5 days).** ABC, CO2 and water extinguishers, modelled in Blender and rigged. A pre-use check (gauge, pin, seal, tag). PASS by hand in VR (XR Hands and controllers) and by mouse on desktop. Hazard spots for the hunt. New signals: `cell/fire/agent`, `discharge`, `charge`.
+Exit: the check catches a faulty unit. The right class used with PASS puts out an incipient fire within one charge. The wrong agent makes the fire worse and is logged as critical. Stopping early leads to reflash. Each hazard found is logged with its clause, on desktop and in the headset.
+
+**M16 — Alarm and evacuation (≈3 days).** Pull station, temporal-3 horn (synthesised) and strobe, exit signs and emergency lighting, two routes and a blocker, a smoke layer with a stay-low check, NPC evacuation on the NavMesh, and a warden with a roll call at the assembly point. New signals: `cell/fire/evacuated`, `missing`.
+Exit: the alarm sounds and flashes, and the NPCs reach the assembly point. The blocked route forces the alternate one. The roll call reports one missing. Re-entry is logged as critical.
+
+**M17 — Assessment and record (≈2.5 days).** A pure, tested `FireDrillProcedure` for phases 1–4, with the policy modes, scoring by clause, board pages for phase select and debrief, and the CSV record with metric rows and a hands-on discharge field.
+Exit: a fight session and a flee session run end to end unguided, in the headset and on desktop. Each writes a record by clause, and the headset and desktop records match. A seeded wrong-order run records its mistakes. Switching the policy mode changes the required steps.
+
+**M18 — Fire capture (≈2 days).** Part 4 of the series. Complete sessions recorded as single takes through `TakeSequencer`, with beat markers from `TakeEventLog` and game audio from `TakeAudioRecorder`. Takes from the headset (mirror view) and the desktop, plus dashboard shots. Voiceover in `docs/voiceover_fire.md`, cut with `tools/video/fire/`. Naming `2DS_Manufacturing_FactoryTwin_Fire_v01_<date>`.
+Exit: the clip is captured from the project and approved.
+
+M14–M18 come to roughly 14 days of focused time.
+
 ## Later (not scheduled)
 
 Planned in Rev 2 (commit `ee852e9` has the full exit conditions). Virtual commissioning moved into Rev 4 as M7–M9, workforce training and safety into Rev 5 as M10–M13. Each builds on the same signal contract and can be picked up when a prospect asks for it:
@@ -174,6 +209,7 @@ Planned in Rev 2 (commit `ee852e9` has the full exit conditions). Virtual commis
 - **Factory layout & what-if** — runtime UR5e IK in C# so stations can move, layout variants, faster-than-real-time comparison. Commit the arm bake script first (blueprint gap 4).
 - **Pre-planning** — a scenario runner that sweeps layouts and speeds against a production target, using M5's maintenance windows.
 - **Views** — touch/kiosk view, standalone Quest 3 (a forward, fully baked scene variant and an Android build; ≈3–4 days).
+- **Fire safety extensions** (after Rev 6): hot work permit and fire watch (1910.252, NFPA 51B), combustible dust (NFPA 652), Class D metal fires, and a UK variant (RRO 2005, BS 5306, ISO 7010 signage).
 
 ## Claude Code kickoff prompt (paste into the project)
 
@@ -207,6 +243,12 @@ The training clip (M13):
 - **Path:** your cell's twin, your PLC, your procedure; Quest 3 or desktop.
 - **Ask:** book a call.
 
+The fire safety clip (M18):
+- **Promise:** practise the fire you hope never happens, on the line you actually run.
+- **Proof:** the twin flags the overheating cabinet before the smoke; alarm, line held, PASS puts it out. A second run grows past incipient, the route is blocked, and the roll call finds one missing.
+- **Path:** your cell's twin, your emergency action plan and fire prevention plan; Quest 3 or desktop.
+- **Ask:** book a call.
+
 Voiceover rendered before capture. Naming `2DS_Manufacturing_FactoryTwin_PdM_v01_<date>`.
 As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) was cut to them; the approved video is v02, 111 s, with a digital-twin introduction ahead of the promise.
 
@@ -218,3 +260,4 @@ As built (2026-10-21): the takes were captured first and the voice (Kokoro TTS) 
 - VC (M7): ~~does OpenPLC Runtime v4 accept a plain `.st` upload?~~ Answered 2026-10-22: no; the OpenPLC Editor v4 (GPL-3.0, tool only) compiles and uploads the program. Fallback if the v4 Windows runtime does not hold up: Beremiz, as an external tool.
 - VC (M9): ~~one VC clip, or a VC segment added to the PdM video?~~ Decided 2026-10-23: a separate clip of about 76 s; the approved 111 s PdM video stays as it is.
 - Quest 3 view: ~~pass-through tabletop twin or room-scale?~~ Decided 2026-10-24: room-scale in the hall, over Link first (M12); standalone later.
+- Fire safety (Rev 6): ~~policy mode, signage, F6, assembly point~~ Decided 2026-11-04: all employees; US + ISO 7010 signs; F6 kept; assembly point in the yard past the loading gate.
