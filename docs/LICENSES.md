@@ -55,7 +55,7 @@ Replaced 2026-10-04: M2MqttUnity (bundled Eclipse Paho M2Mqtt, last released Dec
 
 Add a row in the same commit as the file. Unknown licence = do not add the file.
 
-Particle Pack 3.1 (Asset Store EULA) is now used in the build (M6): `SparksEffect` and `RisingSteam` instances in `Cell.unity`; compiled-only distribution, like the other Asset Store content. From M14 the fire drill also places `TinyFlames`, `MediumFlames`, `LargeFlames`, `SmokeEffect` and `ElectricalSparks` instances under `Cell/Fire` (scene overrides only: play on awake off, smoke darker and upright; the pack's files are unchanged).
+Particle Pack 3.1 (Asset Store EULA) is now used in the build (M6): `SparksEffect` and `RisingSteam` instances in `Cell.unity`; compiled-only distribution, like the other Asset Store content. From M14 the fire drill also places `TinyFlames`, `MediumFlames`, `LargeFlames`, `SmokeEffect` and `ElectricalSparks` instances under `Cell/Fire` (scene overrides only: play on awake off, smoke darker and upright; the pack's files are unchanged). Four material copies, `Assets/_Project/Materials/Fire/*_NoSoft.mat`, are the pack's flame and smoke materials with soft particles off (the VR pipeline has no depth texture). They hold settings and GUID references to the pack's textures only, no texture data, and ship only inside the build like the pack itself.
 
 `Assets/_Project/Scenes/Cell.unity` was started as a Save As of the Factory Training sample hall. It holds no sample meshes, textures or materials: only GUID references to Factory Training, realvirtual and Particle Pack prefabs, with their transforms and overrides, plus our own objects. It opens properly only once those packages are imported at the paths above.
 

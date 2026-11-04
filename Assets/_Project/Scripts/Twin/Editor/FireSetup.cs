@@ -333,9 +333,44 @@ namespace TwoDude.FactoryTwin.Twin
                 main.playOnAwake = false;
                 EditorUtility.SetDirty(system);
             }
+            foreach (ParticleSystemRenderer renderer in go.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                UseHardMaterial(renderer);
             // Not ??: in the Editor a missing component comes back as a fake null object.
             var root = go.GetComponent<ParticleSystem>();
             return root != null ? root : go.GetComponentInChildren<ParticleSystem>(true);
+        }
+
+        // Particle Pack's flame and smoke materials fade by the camera depth texture (soft particles). The VR render
+        // pipeline (VR_RPAsset) has no depth texture to hold 72 fps, so in the headset they faded to nothing and only
+        // the embers showed. Our instances use our own copies with soft particles off; the pack's files are unchanged.
+        private const string HardMaterialFolder = "Assets/_Project/Materials/Fire";
+        private const string SoftParticlesProperty = "_SoftParticlesEnabled";
+        private const string SoftParticlesKeyword = "_SOFTPARTICLES_ON";
+
+        private static void UseHardMaterial(ParticleSystemRenderer renderer)
+        {
+            Material material = renderer.sharedMaterial;
+            if (material == null)
+                return;
+            bool soft = material.IsKeywordEnabled(SoftParticlesKeyword)
+                || (material.HasProperty(SoftParticlesProperty) && material.GetFloat(SoftParticlesProperty) > 0f);
+            if (!soft)
+                return;
+
+            if (!AssetDatabase.IsValidFolder(HardMaterialFolder))
+                AssetDatabase.CreateFolder("Assets/_Project/Materials", "Fire");
+            string path = $"{HardMaterialFolder}/{material.name}_NoSoft.mat";
+            var hard = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (hard == null)
+            {
+                hard = new Material(material) { name = material.name + "_NoSoft" };
+                if (hard.HasProperty(SoftParticlesProperty))
+                    hard.SetFloat(SoftParticlesProperty, 0f);
+                hard.DisableKeyword(SoftParticlesKeyword);
+                AssetDatabase.CreateAsset(hard, path);
+            }
+            renderer.sharedMaterial = hard;
+            EditorUtility.SetDirty(renderer);
         }
 
         private static Light FireLight(Transform anchor)
