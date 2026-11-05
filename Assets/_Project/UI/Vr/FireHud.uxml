@@ -1,0 +1,41 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="VrPanels.uss" />
+    <!-- The fire drill HUD (FireHud): follows the view, low and ahead, while a drill session is open. -->
+    <ui:VisualElement class="fhud" picking-mode="Ignore">
+        <ui:VisualElement class="fhud__row fhud__top" picking-mode="Ignore">
+            <ui:VisualElement class="fhud__stat" picking-mode="Ignore">
+                <ui:VisualElement name="icon-score" class="fhud__icon fhud__icon--gold" picking-mode="Ignore" />
+                <ui:Label name="hud-score" text="0" class="fhud__score" picking-mode="Ignore" />
+                <ui:Label text="PTS" class="fhud__unit" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement class="fhud__stat" picking-mode="Ignore">
+                <ui:VisualElement name="icon-timer" class="fhud__icon" picking-mode="Ignore" />
+                <ui:Label name="hud-timer" text="--:--" class="fhud__timer" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement name="hud-badges" class="fhud__badges" picking-mode="Ignore" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="fhud__row" picking-mode="Ignore">
+            <ui:VisualElement class="fhud__block" picking-mode="Ignore">
+                <ui:VisualElement name="icon-fire" class="fhud__icon" picking-mode="Ignore" />
+                <ui:VisualElement picking-mode="Ignore">
+                    <ui:Label name="hud-fire" text="No fire" class="fhud__fire" picking-mode="Ignore" />
+                    <ui:Label name="hud-stage" text="" class="fhud__stage" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="fhud__block fhud__block--ext" picking-mode="Ignore">
+                <ui:VisualElement name="icon-ext" class="fhud__icon" picking-mode="Ignore" />
+                <ui:VisualElement class="fhud__ext" picking-mode="Ignore">
+                    <ui:Label name="hud-ext" text="No extinguisher" class="fhud__fire" picking-mode="Ignore" />
+                    <ui:VisualElement class="fhud__bar" picking-mode="Ignore">
+                        <ui:VisualElement name="hud-charge" class="fhud__bar-fill" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:Label name="hud-distance" text="" class="fhud__distance" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="hud-steps" class="fhud__row fhud__steps" picking-mode="Ignore" />
+        <ui:Label name="hud-advice" text="" class="fhud__advice" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

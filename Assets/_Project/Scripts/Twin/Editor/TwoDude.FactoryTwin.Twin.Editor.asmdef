@@ -2,7 +2,8 @@
     "name": "TwoDude.FactoryTwin.Twin.Editor",
     "rootNamespace": "TwoDude.FactoryTwin.Twin",
     "references": [
-        "TwoDude.FactoryTwin.Twin"
+        "TwoDude.FactoryTwin.Twin",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

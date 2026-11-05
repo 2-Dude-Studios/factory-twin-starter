@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using Unity.XR.CoreUtils;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using UnityEngine.XR.Management;
@@ -36,14 +37,29 @@ namespace TwoDude.FactoryTwin.UI
         private int _frameRateBefore;
         private RenderPipelineAsset _pipelineBefore;
 
+        // VR running when a scene unloads (the menu loading the cell, or back): the next scene's switch starts it
+        // again, whether it came from -vr or F11. Reset by the domain reload on entering Play.
+        private static bool _vrAcrossSceneLoad;
+
         public bool VrRunning => vrRunning;
+
+        /// <summary>True while VR is on, or about to come back on in a scene just loaded.</summary>
+        public bool VrWanted => vrRunning || _switching;
 
         private void Start()
         {
             if (xrRig != null)
                 xrRig.SetActive(false);
-            if (Array.IndexOf(Environment.GetCommandLineArgs(), CommandLineFlag) >= 0)
+            bool carried = _vrAcrossSceneLoad;
+            _vrAcrossSceneLoad = false;
+            if (carried || Array.IndexOf(Environment.GetCommandLineArgs(), CommandLineFlag) >= 0)
                 StartVr();
+        }
+
+        /// <summary>Call before loading another scene: VR comes back on there if it is on now.</summary>
+        public void CarryVrToNextScene()
+        {
+            _vrAcrossSceneLoad = vrRunning;
         }
 
         private void Update()
@@ -97,7 +113,17 @@ namespace TwoDude.FactoryTwin.UI
             }
             SetDesktop(false);
             if (xrRig != null)
+            {
+                // Room scale from the floor: the trainee's own height, never the starter rig's fixed 1.36 m offset
+                // on top of floor tracking (seen as standing ~1.4 m too high, 2026-11-04). Set before the rig wakes.
+                var origin = xrRig.GetComponent<XROrigin>();
+                if (origin != null)
+                {
+                    origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+                    origin.CameraYOffset = 0f;
+                }
                 xrRig.SetActive(true);
+            }
             vrRunning = true;
             lastError = string.Empty;
             _switching = false;

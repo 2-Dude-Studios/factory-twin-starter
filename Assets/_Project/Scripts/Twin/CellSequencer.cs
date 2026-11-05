@@ -6,7 +6,7 @@ namespace TwoDude.FactoryTwin.Twin
     /// Production cell: runs <see cref="CellSequence"/> on the fixed timestep. Reads sensor state from the bus and
     /// publishes drive and pick commands back to it; TwinSignals turns those into realvirtual signal writes.
     /// The line is held for as long as the press station reports a fault, and stops at once on the safety zone's
-    /// protective stop. Start and stop come from the operator's command counts (M11); an isolated CNC holds the
+    /// protective stop. The fire alarm (M14, cell/fire/alarm) holds it like a CNC fault. Start and stop come from the operator's command counts (M11); an isolated CNC holds the
     /// line, and a start while it is locked out or isolated is refused and counted on cell/line/starts_refused. While cell/plc/source hands the line to
     /// an enabled soft PLC link, this component stands aside and writes nothing; taking the line back starts a
     /// fresh sequence.
@@ -73,7 +73,7 @@ namespace TwoDude.FactoryTwin.Twin
                 ReadBool(CellTopics.GatePartPresent),
                 ReadBool(CellTopics.ArmBusy),
                 ReadBool(CellTopics.OutfeedPartExit),
-                PressHealthRule.IsFaulted(_bus) || isolated,
+                PressHealthRule.IsFaulted(_bus) || isolated || ReadBool(CellTopics.FireAlarm),
                 ReadBool(CellTopics.SafetyProtectiveStop),
                 Pressed(CellTopics.LineStartCount, ref _startCount),
                 Pressed(CellTopics.LineStopCount, ref _stopCount),

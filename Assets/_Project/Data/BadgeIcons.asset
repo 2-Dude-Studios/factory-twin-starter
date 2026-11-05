@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c170f4ae506f8854cad6b76c6923adc0, type: 3}
+  m_Name: BadgeIcons
+  m_EditorClassIdentifier: TwoDude.FactoryTwin.UI::TwoDude.FactoryTwin.UI.BadgeIcons
+  badges:
+  - badge: Alarm first
+    icon: {fileID: 2800000, guid: 239658953851b544496514644b3d9ef2, type: 3}
+    colour: {r: 1, g: 0.42, b: 0.36, a: 1}
+  - badge: Right class
+    icon: {fileID: 2800000, guid: 1798156bcc3a4cc43ab8781158270493, type: 3}
+    colour: {r: 1, g: 0.33, b: 0.3, a: 1}
+  - badge: Clean knockdown
+    icon: {fileID: 2800000, guid: 894873a718dae91489e6be2f4d68686e, type: 3}
+    colour: {r: 1, g: 0.6, b: 0.2, a: 1}
+  - badge: Sharp aim
+    icon: {fileID: 2800000, guid: 7086ac824cbe30c41a19cbcd1f420054, type: 3}
+    colour: {r: 0.38, g: 0.78, b: 1, a: 1}
+  - badge: Knew when to leave
+    icon: {fileID: 2800000, guid: 4569cdb8a6d70cd4292f11f7da65b6ea, type: 3}
+    colour: {r: 0.35, g: 0.9, b: 0.55, a: 1}
+  - badge: Perfect drill
+    icon: {fileID: 2800000, guid: 0422a07ce848bb44a954ed6734763122, type: 3}
+    colour: {r: 1, g: 0.78, b: 0.27, a: 1}
+  - badge: Fire marshal
+    icon: {fileID: 2800000, guid: 07b4e33dd02510c40b7056197a9ecfc6, type: 3}
+    colour: {r: 1, g: 0.78, b: 0.27, a: 1}
+  score: {fileID: 2800000, guid: a464b4b14e1c99d4798833d0c7d01b8b, type: 3}
+  timer: {fileID: 2800000, guid: 5afb8f9514432c640a893344cf4cec3f, type: 3}
+  fire: {fileID: 2800000, guid: 894873a718dae91489e6be2f4d68686e, type: 3}
+  extinguisher: {fileID: 2800000, guid: 1798156bcc3a4cc43ab8781158270493, type: 3}
+  done: {fileID: 2800000, guid: bd5003a0e3475ec40af09c7bc687d589, type: 3}
+  todo: {fileID: 2800000, guid: a8ddee48d62011e409f739bc1d2d9002, type: 3}

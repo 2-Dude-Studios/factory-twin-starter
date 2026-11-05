@@ -1,0 +1,51 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="Menu.uss" />
+    <!-- The start menu (MenuController): pick a training; the cell loads and starts it. Same tree on the desktop
+         screen and on the world-space panel in the headset. -->
+    <ui:VisualElement name="menu" class="menu">
+        <ui:VisualElement class="menu__header">
+            <ui:VisualElement>
+                <ui:Label text="FACTORY TWIN · TRAINING" class="menu__eyebrow" />
+                <ui:Label text="Choose a training" class="menu__title" />
+            </ui:VisualElement>
+            <ui:Label name="trainee" text="Trainee: Sam Rivera" class="menu__trainee" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="menu__cards">
+            <ui:Button name="train-fire" class="card card--fire">
+                <ui:Label text="FIRE SAFETY" class="card__tag" />
+                <ui:Label text="Fire safety" class="card__title" />
+                <ui:Label text="Seven fires across the hall. Raise the alarm, pick the right extinguisher, pull the pin, sweep the base, know when to leave." class="card__text" />
+                <ui:Label text="OSHA 1910.38 · .39 · .157 · headset" class="card__ref" />
+                <ui:Label name="badges-fire" text="" class="card__badges" />
+            </ui:Button>
+            <ui:Button name="train-lockout" class="card card--lockout">
+                <ui:Label text="ENERGY CONTROL" class="card__tag" />
+                <ui:Label text="Lockout / tagout" class="card__title" />
+                <ui:Label text="Clear a CNC fault the right way: fourteen steps, lock and tag, try-start, restore." class="card__text" />
+                <ui:Label text="OSHA 1910.147" class="card__ref" />
+                <ui:Label name="badges-lockout" text="" class="card__badges" />
+            </ui:Button>
+            <ui:Button name="train-zone" class="card card--zone">
+                <ui:Label text="ROBOT SAFETY" class="card__tag" />
+                <ui:Label text="Robot safety zone" class="card__title" />
+                <ui:Label text="Walk up to the running cell: the arm slows, then stops. Reset only from outside the zone." class="card__text" />
+                <ui:Label text="ISO 10218 · simulated, not safety-rated" class="card__ref" />
+                <ui:Label name="badges-zone" text="" class="card__badges" />
+            </ui:Button>
+            <ui:Button name="train-free" class="card card--free">
+                <ui:Label text="EXPLORE" class="card__tag" />
+                <ui:Label text="Free roam" class="card__title" />
+                <ui:Label text="Walk the live cell and its dashboard: the line, the arm, the CNC and its data." class="card__text" />
+                <ui:Label text="" class="card__ref" />
+            </ui:Button>
+        </ui:VisualElement>
+
+        <ui:Label name="menu-note" text="" class="menu__note hidden" />
+        <ui:VisualElement class="menu__footer">
+            <ui:Label text="Training demo, not certified training · 2 Dude Studios" class="menu__fine" />
+            <ui:Label name="menu-vr-hint" text="F11: headset (Quest 3 over Link)" class="menu__fine" />
+            <ui:Button name="menu-quit" text="Quit" class="menu__quit" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

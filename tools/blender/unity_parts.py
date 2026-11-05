@@ -147,6 +147,38 @@ class Part:
         bmesh.ops.translate(bm, vec=Vector(center), verts=bm.verts)
         self.merge(bm, mat, smooth=True)
 
+    def prism(self, center, radius, sides, thick, axis, mat, rot_deg=0.0):
+        """A flat regular polygon plate (triangle, hexagon, disc) round an axis; rot_deg turns it about that axis."""
+        bm = bmesh.new()
+        bmesh.ops.create_cone(bm, cap_ends=True, segments=sides, radius1=radius, radius2=radius, depth=thick)
+        bmesh.ops.rotate(bm, matrix=Matrix.Rotation(math.radians(rot_deg), 3, 'Z'), verts=bm.verts, cent=(0, 0, 0))
+        bmesh.ops.rotate(bm, matrix=axis_matrix(axis), verts=bm.verts, cent=(0, 0, 0))
+        bmesh.ops.translate(bm, vec=Vector(center), verts=bm.verts)
+        self.merge(bm, mat)
+
+    def text(self, string, center, size, mat, right=(1, 0, 0), up=(0, 1, 0), depth=0.0006, font=None):
+        """Raised lettering (Unity space): centred on center, reading along right, cap height about 0.7 x size."""
+        mesh = text_mesh(string, size, depth, font)
+        r, u = Vector(right).normalized(), Vector(up).normalized()
+        n = r.cross(u)
+        c = Vector(center)
+        for v in mesh.vertices:
+            v.co = c + v.co.x * r + v.co.y * u + v.co.z * n
+        self.merge_mesh(mesh, mat)
+        bpy.data.meshes.remove(mesh)
+
+    def absorb(self, other, mapping):
+        """Adds another part's geometry, each vertex moved by mapping(Vector) -> Vector, keeping its materials."""
+        for vert in other.bm.verts:
+            vert.co = mapping(vert.co.copy())
+        for face in other.bm.faces:
+            face.material_index = self.slot(other.mats[face.material_index])
+        mesh = bpy.data.meshes.new('tmp')
+        other.bm.to_mesh(mesh)
+        other.bm.free()
+        self.bm.from_mesh(mesh)
+        bpy.data.meshes.remove(mesh)
+
     def lathe(self, profile, mat, center=(0, 0, 0), segments=32):
         """A solid of revolution round Unity's Y axis; profile is (radius, y) pairs in order, a radius of 0 closing
         that end to a point. Shaded smooth; build(sharp_deg=...) keeps its shoulders crisp."""
@@ -188,6 +220,36 @@ class Part:
         # Spread out for viewing in Blender; Unity uses the mesh about the origin, not the object's position.
         obj.location = TO_BLENDER @ Vector(show_at)
         return obj
+
+
+def load_font(name='Inter.woff2'):
+    """One of Blender's bundled fonts (datafiles/fonts), or None for the built-in one."""
+    import os
+    path = os.path.join(bpy.utils.resource_path('LOCAL'), 'datafiles', 'fonts', name)
+    try:
+        return bpy.data.fonts.load(path, check_existing=True) if os.path.exists(path) else None
+    except RuntimeError:
+        return None
+
+
+def text_mesh(string, size, depth=0.0006, font=None):
+    """A mesh of the string in the text's own frame (x along the line, y up, z out of the face), centred."""
+    curve = bpy.data.curves.new('text', 'FONT')
+    curve.body = string
+    curve.size = size
+    curve.align_x = 'CENTER'
+    curve.align_y = 'CENTER'
+    curve.extrude = depth / 2
+    curve.resolution_u = 3
+    if font is not None:
+        curve.font = font
+    obj = bpy.data.objects.new('text', curve)
+    bpy.context.scene.collection.objects.link(obj)
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    mesh = bpy.data.meshes.new_from_object(obj.evaluated_get(depsgraph))
+    bpy.data.objects.remove(obj)
+    bpy.data.curves.remove(curve)
+    return mesh
 
 
 def lathe_bm(bm, profile, center=(0, 0, 0), segments=32):

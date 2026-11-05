@@ -164,6 +164,42 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath LineStopCount = new TopicPath("line", "stop_count");
         public static readonly TopicPath LineStartsRefused = new TopicPath("line", "starts_refused");
 
+        // Fire safety training (M14), a simulated fire for a training drill. fire/scenario (in) starts scenario n
+        // (1–6, a FireScenario's number) and 0 puts any fire out and clears it. fire/stage is a FireStage, fire/size
+        // and fire/smoke 0–1, fire/class a FireClass, fire/location a FireLocation. cabinet/temp_c is the drive
+        // cabinet's temperature, the precursor the dashboard shows before any smoke; cabinet/overheat is true at or
+        // above the scenario's overheat level.
+        public static readonly TopicPath FireScenario = new TopicPath("fire", "scenario");
+        public static readonly TopicPath FireStage = new TopicPath("fire", "stage");
+        public static readonly TopicPath FireSize = new TopicPath("fire", "size");
+        public static readonly TopicPath FireSmoke = new TopicPath("fire", "smoke");
+        public static readonly TopicPath FireClass = new TopicPath("fire", "class");
+        public static readonly TopicPath FireLocation = new TopicPath("fire", "location");
+        public static readonly TopicPath CabinetTemp = new TopicPath("cabinet", "temp_c");
+        public static readonly TopicPath CabinetOverheat = new TopicPath("cabinet", "overheat");
+
+        // Fire alarm panel (M14). Detectors latch fire/smoke_detected and fire/heat_detected; fire/call_point (in) is a
+        // manual call point (M16). fire/alarm is the panel's latched alarm, which holds the line; fire/alarm_source
+        // an AlarmSource; fire/alarm_reset (in, true) resets it, refused while a detector or call point is active.
+        public static readonly TopicPath FireSmokeDetected = new TopicPath("fire", "smoke_detected");
+        public static readonly TopicPath FireHeatDetected = new TopicPath("fire", "heat_detected");
+        public static readonly TopicPath FireCallPoint = new TopicPath("fire", "call_point");
+        public static readonly TopicPath FireAlarm = new TopicPath("fire", "alarm");
+        public static readonly TopicPath FireAlarmSource = new TopicPath("fire", "alarm_source");
+        public static readonly TopicPath FireAlarmReset = new TopicPath("fire", "alarm_reset");
+
+        // The trainee's extinguisher (M15). fire/agent is the FireAgent in hand (0 none); fire/discharge true while
+        // the trigger is held with charge left; fire/charge 0–1 left in it; fire/aim and fire/standoff 0–1, how well
+        // the stream meets the base of the fire and how well the distance suits the agent (ExtinguisherRules).
+        public static readonly TopicPath FireAgent = new TopicPath("fire", "agent");
+        public static readonly TopicPath FireDischarge = new TopicPath("fire", "discharge");
+        public static readonly TopicPath FireCharge = new TopicPath("fire", "charge");
+        public static readonly TopicPath FireAim = new TopicPath("fire", "aim");
+        public static readonly TopicPath FireStandoff = new TopicPath("fire", "standoff");
+
+        // True once the fire is out and soaked, so it cannot reflash (FireModel.Extinguished).
+        public static readonly TopicPath FireExtinguished = new TopicPath("fire", "extinguished");
+
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }

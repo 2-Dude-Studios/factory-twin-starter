@@ -1,0 +1,8 @@
+Material Icons (Google), 11 icons
+
+Source: https://github.com/google/material-design-icons (png/<category>/<name>/materialicons/48dp/2x, 96 px)
+Icons: notifications_active, fire_extinguisher, local_fire_department, my_location, directions_run,
+workspace_premium, military_tech, emoji_events, timer, check_circle, radio_button_unchecked.
+Changed by 2 Dude Studios: recoloured from black to white (alpha kept) so the app can tint them; renamed ms_<name>.png.
+Used as the fire drill's badge and HUD icons.
+Licence: Apache License, Version 2.0. The full licence text is in 05-Apache-License-2.0.txt.

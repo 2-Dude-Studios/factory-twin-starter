@@ -420,3 +420,15 @@
 .training__mistakes { font-size: 12px; color: var(--muted); margin: 0; padding: 0; }
 .training__mistakes.training__mistakes--some { color: var(--warning); }
 .training__who { font-size: 12px; color: var(--ink); margin: 0 0 4px 0; padding: 0; }
+
+/* Fire safety (M14): stage chip, the latched alarm, where and what class, the cabinet precursor, detector heads. */
+.section--fire { border-left-color: var(--warning); }
+.section--fire.fire--burning { border-left-color: var(--fault); }
+.fire.chip { background-color: var(--warning); color: rgb(29, 22, 0); }
+.fire--burning .fire.chip { background-color: var(--fault); color: rgb(255, 255, 255); }
+.fire--out .fire.chip { background-color: var(--ok); color: rgb(8, 24, 15); }
+.fire__alarm { font-size: 12px; color: var(--muted); margin: 0 0 2px 0; padding: 0; }
+.fire__alarm.fire__alarm--on { font-size: 15px; -unity-font-style: bold; color: var(--fault); }
+.fire__where { font-size: 13px; color: var(--ink); white-space: normal; margin: 0 0 4px 0; padding: 0; }
+.fire__detectors { font-size: 12px; color: var(--muted); margin: 2px 0 0 0; padding: 0; }
+.cabinet--hot { color: var(--warning); -unity-font-style: bold; }

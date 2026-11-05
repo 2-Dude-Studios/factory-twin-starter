@@ -85,6 +85,12 @@ namespace TwoDude.FactoryTwin.UI
                     Add(message.UnixMs, "Reset refused: person still in the robot zone", LogSeverity.Warning);
                 return;
             }
+            // A fire drill is a command (M14): every start and reset is news.
+            if (topic == CellTopics.FireScenario)
+            {
+                Add(message.UnixMs, value > 0d ? $"Fire drill F{(int)value} started" : "Fire drill reset", LogSeverity.Info);
+                return;
+            }
             bool seen = _last.TryGetValue(topic, out double previous);
             if (seen && previous.Equals(value))
                 return;
@@ -138,7 +144,72 @@ namespace TwoDude.FactoryTwin.UI
                 LogPressHealth((MachineHealth)(int)previous, (MachineHealth)(int)value, message.UnixMs);
             else if (topic == CellTopics.PressMaintenanceDue && value != 0d)
                 LogMaintenanceDue(message.UnixMs);
+            else if (topic == CellTopics.FireStage)
+                LogFireStage((FireStage)(int)previous, (FireStage)(int)value, message.UnixMs);
+            else if (topic == CellTopics.FireAlarm)
+                LogFireAlarm(value != 0d, message.UnixMs);
+            else if (topic == CellTopics.FireSmokeDetected && value != 0d)
+                Add(message.UnixMs, "Smoke detector tripped", LogSeverity.Fault);
+            else if (topic == CellTopics.FireHeatDetected && value != 0d)
+                Add(message.UnixMs, "Heat detector tripped", LogSeverity.Fault);
+            else if (topic == CellTopics.CabinetOverheat)
+                LogCabinetOverheat(value != 0d, message.UnixMs);
         }
+
+        // Fire safety (M14). The station publishes class and location before the stage, so they are this fire's.
+        private void LogFireStage(FireStage from, FireStage to, long unixMs)
+        {
+            string where = FireWords.Location((FireLocation)(int)LastOr(CellTopics.FireLocation));
+            switch (to)
+            {
+                case FireStage.Smoke:
+                    Add(unixMs, $"Smoke at the {where}", LogSeverity.Warning);
+                    break;
+                case FireStage.Incipient:
+                    Add(unixMs, from == FireStage.Out
+                        ? $"Fire reflashed at the {where}"
+                        : $"Fire at the {where}: incipient stage, {FireWords.Class((FireClass)(int)LastOr(CellTopics.FireClass))}",
+                        LogSeverity.Fault);
+                    break;
+                case FireStage.Growing:
+                    if (from == FireStage.Incipient)
+                        Add(unixMs, "Fire growing", LogSeverity.Fault);
+                    break;
+                case FireStage.BeyondIncipient:
+                    Add(unixMs, "Fire beyond incipient stage: evacuate", LogSeverity.Fault);
+                    break;
+                case FireStage.Out:
+                    Add(unixMs, "Fire out: watch for reflash", LogSeverity.Info);
+                    break;
+            }
+        }
+
+        private void LogFireAlarm(bool on, long unixMs)
+        {
+            if (!on)
+            {
+                Add(unixMs, "Fire alarm reset", LogSeverity.Info);
+                return;
+            }
+            string source = FireWords.Source((AlarmSource)(int)LastOr(CellTopics.FireAlarmSource));
+            Add(unixMs, source.Length > 0 ? "Fire alarm raised by the " + source : "Fire alarm raised", LogSeverity.Fault);
+        }
+
+        private void LogCabinetOverheat(bool on, long unixMs)
+        {
+            if (!on)
+            {
+                Add(unixMs, "Drive cabinet temperature normal", LogSeverity.Info);
+                return;
+            }
+            double temp = LastOr(CellTopics.CabinetTemp);
+            Add(unixMs, "Drive cabinet overheating: " + temp.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " °C",
+                LogSeverity.Warning);
+        }
+
+        private double LastOr(TopicPath topic) => _last.TryGetValue(topic, out double v) ? v : 0d;
+
+        private bool FireAlarmOn() => LastOr(CellTopics.FireAlarm) != 0d;
 
         // The risk reporter publishes tool life before the due flag, so the remaining life here is this reading's.
         // Near the end of tool life the advice is a tool change; further out, a warning from another mode.
@@ -158,7 +229,8 @@ namespace TwoDude.FactoryTwin.UI
         private void LogLineState(CellState from, CellState to, long unixMs)
         {
             if (to == CellState.Held)
-                Add(unixMs, PlcRunsLine() && !PlcLinkUp() ? "Line stopped: PLC link lost" : "Line stopped: CNC fault", LogSeverity.Fault);
+                Add(unixMs, PlcRunsLine() && !PlcLinkUp() ? "Line stopped: PLC link lost"
+                    : FireAlarmOn() ? "Line stopped: fire alarm" : "Line stopped: CNC fault", LogSeverity.Fault);
             else if (to == CellState.Stalled)
                 Add(unixMs, "Line stalled: part not picked", LogSeverity.Warning);
             else if (to == CellState.Stopped)

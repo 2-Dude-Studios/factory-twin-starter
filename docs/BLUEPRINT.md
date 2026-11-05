@@ -12,11 +12,12 @@ Companion documents: `docs/build-plan.md` (why and in what order, Rev 5), `docs/
 
 A Unity prototype of one working production cell: an infeed conveyor, a sensor gate, a six-axis pick-and-place arm, an outfeed conveyor, and a CNC machining centre reporting machine telemetry. Every drive, sensor and joint publishes its state over MQTT to a live dashboard, and the cell can be run either by its own C# sequence or by a soft PLC over Modbus TCP.
 
-It proves two use cases, each with its own video, and is adding a third:
+It proves three use cases, each with its own video (the third added in Rev 5), and Rev 6 (approved 2026-11-04) adds a fourth:
 
 - **Predictive maintenance.** The twin sees a CNC tool failure coming, shows where it is and what it will cost the line, and recommends a tool change in time. Ignored, the machine fails and the line stops; acted on, the line never stops.
 - **Virtual commissioning.** A soft PLC outside Unity runs the cell from Structured Text. A commissioning suite catches a seeded interlock bug, visible in 3D as parts queuing into the pick station, and passes once the one line is fixed.
 - **Workforce training and safety** (Rev 5, planned). A trainee stepping into the arm's protective zone freezes the arm and holds the line until a deliberate reset. A CNC fault is cleared only through the OSHA 1910.147 lockout steps; the soft PLC refuses to start the line while the lock is on, and every step and error is logged as a training record. Desktop first, then Quest 3 over Link. A simulated safety function and a training demo: not safety-rated, not certified training.
+- **Fire safety training** (Rev 6, approved 2026-11-04; M14–M18). In VR on the same cell and crew: a hazard hunt for the fire prevention plan (29 CFR 1910.39). The twin flags an overheating drive cabinet before any smoke. The trainee raises the alarm, the line holds, and the right extinguisher used with PASS puts out an incipient fire (1910.157(g), annual). A fire past the incipient stage means evacuation by the alternate route, with a roll call at the assembly point (1910.38). Every step is logged against its clause in a training record. A training demo, not certified training; the regulatory content is guidance, not legal advice. Full plan: `docs/fire-safety-training.md`.
 
 It ships as a Windows build for live demos and a walkthrough video per use case for the Manufacturing page on 2dudestudios.com.
 
@@ -29,6 +30,8 @@ It ships as a Windows build for live demos and a walkthrough video per use case 
 **For a machine builder or system integrator.** The PLC program tested against the twin before any hardware exists: forced sensors, a dropped part, an arm that never answers, a machine fault, a lost PLC link, each graded pass or fail, with an I/O list exported the way commissioning engineers work. A logic bug found on day 1, not in commissioning week on site.
 
 **For an EHS or training manager (Rev 5).** New starters practise lockout and robot-zone behaviour on the plant's own cell, driven by its own PLC, with a record of every step and mistake, before they stand next to the real machine.
+
+**For an EHS or training manager (Rev 6).** The annual extinguisher training and the fire drill that a running plant rarely gets to stage, done on the plant's own cell: the right extinguisher for each class, fight or flee, a blocked exit, a missing colleague. The record lists each step against its clause, plus a field for the physical discharge that designated employees still need.
 
 ### Not in scope
 
@@ -50,11 +53,16 @@ It ships as a Windows build for live demos and a walkthrough video per use case 
 | M6 Polish and capture | Camera rig, VFX, audio, Windows build, PdM video v02 (111 s, approved) | Done 2026-10-21 |
 | M7 Soft PLC link | OpenPLC Runtime v4 runs the cell over Modbus TCP; logic-source switch; watchdogs | Done 2026-10-23 |
 | M8 Commissioning suite | Six scenarios against either logic source, I/O list, seeded bug caught | Done 2026-10-23 |
-| M9 VC capture | Takes D and E, 76 s picture-only rough cut | **Waiting on your recorded voiceover** |
+| M9 VC capture | VC clip, Part 2 of the series | Done 2026-11-02 |
 | M10 Safety zone | Warning and protective zones, arm freeze, reset, PLC hold, first-person trainee, two suite scenarios | Done 2026-10-24 |
 | M11 Lockout procedure | 1910.147 steps on the CNC (14 since 2026-10-27), PLC refuses start with the lock on, training record, trainee points and step panel | Done 2026-10-26 |
-| M12 Quest 3 view | OpenXR + XR Interaction Toolkit + XR Hands over Link, same signals; hands-on lockout props, tablet, NPC crew | **Current**: checked in the headset at 72 fps; exit runs left |
-| M13 Training capture | Training clip | Next |
+| M12 Quest 3 view | OpenXR + XR Interaction Toolkit + XR Hands over Link, same signals; hands-on lockout props, tablet, NPC crew | Done 2026-11-02 |
+| M13 Training capture | Training clip, Part 3 of the series | Done 2026-11-02 |
+| M14 Fire model and effects | Fire stages, Particle Pack effects from signals, detectors, alarm holds the line, dashboard fire panel | **Current** (opened 2026-11-04) |
+| M15 Extinguisher and hazard hunt | ABC, CO2 and water extinguishers; pre-use check; PASS by hand in VR and on desktop; hazard hunt | Planned (Rev 6) |
+| M16 Alarm and evacuation | Pull station, horn and strobe, exit signs, blocked route, smoke layer, NPC evacuation, roll call | Planned (Rev 6) |
+| M17 Assessment and record | Unguided phase 4, policy modes, scoring by clause, CSV training record | Planned (Rev 6) |
+| M18 Fire capture | Fire safety clip, Part 4 of the series | Planned (Rev 6) |
 
 ---
 
@@ -555,6 +563,8 @@ One test holds the AI4I hit rate: every labelled TWF/HDF/PWF/OSF row warned, pro
 ---
 
 ## 12. What is left
+
+**Rev 6, fire safety training (approved 2026-11-04).** M14 is current. Its start decisions are in `docs/fire-safety-training.md` section 9. No code has been written for it yet. The items below predate Rev 5's close on 2026-11-02; M12, M13 and M9 are done.
 
 **To close M12.** In the Quest 3 over Link, with the broker and the OpenPLC Runtime running: the zone stop (walk into the robot zone; the arm stops; reset from outside); the full 14-step lockout end to end; a wrong-order run; a start with the lock on, refused by the PLC and logged. Then check that training record against a desktop run of the same steps.
 

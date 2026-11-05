@@ -1,0 +1,55 @@
+/* The start menu: dark, four training cards, the trainee's badges on each. */
+.menu {
+    position: absolute;
+    left: 40px;
+    right: 40px;
+    top: 40px;
+    bottom: 40px;
+    padding: 36px 44px;
+    background-color: rgba(14, 16, 18, 0.96);
+    border-radius: 18px;
+    -unity-font-style: normal;
+}
+.menu__header { flex-direction: row; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+.menu__eyebrow { font-size: 16px; letter-spacing: 3px; color: rgb(255, 174, 13); -unity-font-style: bold; margin: 0; padding: 0; }
+.menu__title { font-size: 40px; color: rgb(240, 242, 244); -unity-font-style: bold; margin: 4px 0 0 0; padding: 0; }
+.menu__trainee { font-size: 18px; color: rgb(160, 168, 176); margin: 0; padding: 0; }
+
+.menu__cards { flex-direction: row; flex-grow: 1; justify-content: space-between; }
+.card {
+    width: 24%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 22px 20px;
+    margin: 0;
+    border-radius: 14px;
+    border-width: 0;
+    border-top-width: 6px;
+    background-color: rgb(30, 35, 40);
+    -unity-text-align: upper-left;
+}
+.card:hover { background-color: rgb(44, 50, 57); border-left-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-color: rgb(240, 242, 244); }
+.card:active { background-color: rgb(60, 68, 76); }
+.card--fire { border-top-color: rgb(214, 69, 65); }
+.card--lockout { border-top-color: rgb(255, 174, 13); }
+.card--zone { border-top-color: rgb(54, 168, 108); }
+.card--free { border-top-color: rgb(90, 140, 220); }
+.card__tag { font-size: 15px; letter-spacing: 2px; color: rgb(160, 168, 176); -unity-font-style: bold; margin: 0 0 6px 0; padding: 0; }
+.card__title { font-size: 36px; color: rgb(240, 242, 244); -unity-font-style: bold; margin: 0 0 12px 0; padding: 0; white-space: normal; }
+.card__text { font-size: 23px; color: rgb(200, 206, 212); white-space: normal; margin: 0 0 12px 0; padding: 0; flex-grow: 1; }
+.card__ref { font-size: 16px; color: rgb(140, 148, 156); white-space: normal; margin: 0; padding: 0; }
+.card__badges { font-size: 20px; color: rgb(255, 196, 70); white-space: normal; margin: 10px 0 0 0; padding: 0; }
+
+.menu__note { font-size: 18px; color: rgb(255, 196, 70); margin: 14px 0 0 0; -unity-text-align: middle-center; }
+.menu__footer { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 18px; }
+.menu__fine { font-size: 14px; color: rgb(120, 128, 136); margin: 0; padding: 0; }
+.menu__quit { height: 40px; width: 120px; font-size: 18px; border-radius: 8px; border-width: 0; background-color: rgb(120, 40, 34); color: rgb(240, 242, 244); }
+.menu__quit:hover { background-color: rgb(150, 55, 48); }
+.hidden { display: none; }
+
+/* Badge chips (BadgeChips) under each card's best score */
+.badge-row { flex-direction: row; flex-wrap: wrap; align-items: center; margin: 6px 0 0 0; }
+.badge-chip { flex-direction: row; align-items: center; margin: 0 10px 6px 0; }
+.badge-chip__icon { width: 40px; height: 40px; -unity-background-scale-mode: scale-to-fit; }
+.badge-chip__name { font-size: 18px; color: rgb(255, 196, 70); margin: 0 0 0 4px; padding: 0; }

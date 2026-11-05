@@ -9,7 +9,7 @@ namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
     /// Training (M12): the options on the tablet in the left hand (VrMenu.uxml), pressed with the right controller's
-    /// ray or a fingertip. Lockout training, Fail the CNC and Safety reset send the same bus commands as the dashboard
+    /// ray or a fingertip. Main menu goes back to the start menu (Menu.unity), where trainings are chosen; Fail the CNC and Safety reset send the same bus commands as the dashboard
     /// and keys; the Go to buttons teleport to set spots facing the right way; Exit VR hands back to the desktop. The
     /// left controller's menu button (or Y) shows and hides the tablet, display and options together.
     /// </summary>
@@ -66,6 +66,7 @@ namespace TwoDude.FactoryTwin.UI
             Wire("menu-fail", FailCnc, true);
             Wire("menu-reset", SafetyReset, true);
             Wire("menu-exit", ExitVr, true);
+            Wire("menu-home", BackToMenu, true);
             _goTo = new Action[spots.Length];
             for (int i = 0; i < spots.Length; i++)
             {
@@ -89,6 +90,7 @@ namespace TwoDude.FactoryTwin.UI
             Wire("menu-fail", FailCnc, false);
             Wire("menu-reset", SafetyReset, false);
             Wire("menu-exit", ExitVr, false);
+            Wire("menu-home", BackToMenu, false);
             for (int i = 0; i < spots.Length && i < _goTo.Length; i++)
                 Wire(spots[i].Button, _goTo[i], false);
         }
@@ -120,15 +122,22 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         // Moves the rig so the headset stands over the spot (keeping its height) and faces the given way.
-        private void GoTo(Spot spot)
+        private void GoTo(Spot spot) => RigTeleport.GoTo(origin, spot.FloorPosition, spot.YawDegrees);
+
+        /// <summary>Teleports to the spot behind a Go to button (its name in VrMenu.uxml), e.g. menu-go-station.</summary>
+        public void GoToSpot(string button)
         {
-            if (origin == null)
-                return;
-            Transform head = origin.Camera.transform;
-            origin.RotateAroundCameraUsingOriginUp(Mathf.DeltaAngle(head.eulerAngles.y, spot.YawDegrees));
-            Vector3 headPosition = head.position;
-            origin.transform.position += new Vector3(spot.FloorPosition.x - headPosition.x, 0f, spot.FloorPosition.z - headPosition.z);
+            foreach (Spot spot in spots)
+            {
+                if (spot != null && spot.Button == button)
+                {
+                    GoTo(spot);
+                    return;
+                }
+            }
         }
+
+        private void BackToMenu() => SceneNavigation.ToMenu(vrSwitch);
 
         private void Wire(string buttonName, Action handler, bool wire)
         {

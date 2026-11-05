@@ -44,18 +44,18 @@ namespace TwoDude.FactoryTwin.UI
         private const string HandVisualizer = "HandVisualizer";
         private const string HandMaterialPath = "Assets/_Project/Art/Hands/VrHand.mat";
         private const string UiLayer = "UI";
-        private const string RigPrefabSuffix = "Starter Assets/Prefabs/XR Origin (XR Rig).prefab";
+        internal const string RigPrefabSuffix = "Starter Assets/Prefabs/XR Origin (XR Rig).prefab";
         private const string SettingsPath = "Assets/XR/XRGeneralSettingsPerBuildTarget.asset";
         private const string OpenXRLoaderType = "UnityEngine.XR.OpenXR.OpenXRLoader";
-        private const string VrPipelinePath = "Assets/_Project/Settings/VR_RPAsset.asset";
+        internal const string VrPipelinePath = "Assets/_Project/Settings/VR_RPAsset.asset";
         private const string VrRendererPath = "Assets/_Project/Settings/VR_Renderer.asset";
 
         private static readonly Vector3 RigStart = new Vector3(-2.0f, 0f, -2.6f);
-        private const float VrFarClip = 60f;
+        internal const float VrFarClip = 60f;
 
         // World-space UI Toolkit panels (M12). 100 panel pixels are one unit: a 900 px board at scale 0.1 is 0.9 m.
         private const string WorldPanelPath = "Assets/_Project/UI/Vr/VrWorldPanel.asset";
-        private const string ThemePath = "Assets/_Project/UI/DashboardTheme.tss";
+        internal const string ThemePath = "Assets/_Project/UI/DashboardTheme.tss";
         private const string BoardUxml = "Assets/_Project/UI/Vr/TrainingBoard.uxml";
         private const string MenuUxml = "Assets/_Project/UI/Vr/VrMenu.uxml";
         private const string TabletName = "VrTablet";
@@ -293,7 +293,7 @@ namespace TwoDude.FactoryTwin.UI
                 sample.Import(Sample.ImportOptions.HideImportWindow);
         }
 
-        private static void Body(Transform rig, Transform head)
+        internal static void Body(Transform rig, Transform head)
         {
             var body = new GameObject("HeadBody");
             Undo.RegisterCreatedObjectUndo(body, "Build VR Rig");
@@ -314,7 +314,7 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         // The panel settings every headset panel shares: world space, a trigger collider the controller rays hit.
-        private static PanelSettings WorldPanel()
+        internal static PanelSettings WorldPanel()
         {
             var panel = AssetDatabase.LoadAssetAtPath<PanelSettings>(WorldPanelPath);
             if (panel == null)
@@ -336,7 +336,7 @@ namespace TwoDude.FactoryTwin.UI
             return panel;
         }
 
-        private static UIDocument Document(GameObject go, PanelSettings panel, string uxmlPath, float width, float height, float scale)
+        internal static UIDocument Document(GameObject go, PanelSettings panel, string uxmlPath, float width, float height, float scale)
         {
             var document = GetOrAdd<UIDocument>(go);
             document.panelSettings = panel;
@@ -462,7 +462,7 @@ namespace TwoDude.FactoryTwin.UI
         // One pointer: the right controller's ray. The starter rig's gaze interactor falls back to the head without eye
         // tracking, so it hovered and pressed whatever the trainee looked at, and the left hand holds the selection
         // panel, so its ray only got in the way. Both hands keep teleport and poke.
-        private static void OnePointer(GameObject rig)
+        internal static void OnePointer(GameObject rig)
         {
             foreach (Transform t in rig.GetComponentsInChildren<Transform>(true))
             {
@@ -506,7 +506,7 @@ namespace TwoDude.FactoryTwin.UI
         // (hand tracking over Link), driven joint by joint by XR Hands, with a fingertip poke and a fist-or-pinch
         // grab. XRInputModalityManager shows one pair or the other. Both use the XR Hands sample's hand model; a glove
         // model with the same L_/R_ joint names can replace it.
-        private static void Hands(GameObject rig, XROrigin origin)
+        internal static void Hands(GameObject rig, XROrigin origin)
         {
             Material material = HandMaterial();
             var modality = rig.GetComponentInChildren<XRInputModalityManager>(true);
@@ -687,7 +687,7 @@ namespace TwoDude.FactoryTwin.UI
         // A panel the controllers press: a trigger collider the size of the document (rays), and an interactable
         // with a poke filter on it (touch). The collider is listed on the interactable by hand, since XRI skips
         // trigger colliders when it collects them itself.
-        private static void Pressable(GameObject go, float width, float height)
+        internal static void Pressable(GameObject go, float width, float height)
         {
             var box = go.AddComponent<BoxCollider>();
             box.isTrigger = true;
@@ -706,7 +706,7 @@ namespace TwoDude.FactoryTwin.UI
         // A solid slab behind a panel: the board's back and the tablet's body. World-space UI draws in the transparent
         // pass, so without it the hall, the safety-zone volumes and the decals showed through the panels in the headset.
         // The slab sits just behind the document (whose front faces -Z), a margin larger all round, with no collider.
-        private static void Backing(GameObject panel, float width, float height, float margin, float depth)
+        internal static void Backing(GameObject panel, float width, float height, float margin, float depth)
         {
             const string materialPath = "Assets/_Project/UI/Vr/PanelBacking.mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
