@@ -12,6 +12,7 @@ Assets/_Project/Licenses/ and next to each item.
 - Assets/_Project/Robots/ur (ros-industrial ur_description, UR5e) .. BSD-3-Clause
 - Assets/_Project/Data/ai4i2020.csv (AI4I 2020, UCI) .... CC BY 4.0
 - Assets/_Project/Audio/*.wav, tools/video/sfx/*.wav (Freesound) .. CC0 1.0
+- Assets/_Project/Art/Icons/ms_*.png (Google Material Icons) .... Apache-2.0
 - Assets/Samples, Assets/TextMesh Pro, Packages/com.unity.progrids,
   Assets/_Project/Settings (Unity URP template assets) ... Unity Companion
   License / Unity Package Distribution License

@@ -1,6 +1,6 @@
 # Factory Digital Twin: one twin, three proofs
 
-A working digital twin of one factory production cell, built in Unity 6 by [2 Dude Studios](https://2dudestudios.com/manufacturing). The same cell shows three use cases: predictive maintenance, virtual commissioning against a real soft PLC, and lockout/tagout safety training in VR.
+A working digital twin of one factory production cell, built in Unity 6 by [2 Dude Studios](https://2dudestudios.com/manufacturing). The same cell shows three use cases: predictive maintenance, virtual commissioning against a real soft PLC, and lockout/tagout safety training in VR. A fourth, fire safety training in VR, is being built (see [the use cases](#the-use-cases)).
 
 ![The cell: infeed and outfeed conveyors, the arm inside its red protective zone, the CNC machining centre, and the lockout station with its training board](docs/images/cell.jpg)
 
@@ -32,7 +32,7 @@ Every drive, sensor and joint publishes its state as a signal, and a live dashbo
         └──► Modbus TCP ◄──► OpenPLC Runtime (optional): the PLC can run the line instead of the twin's own logic
 ```
 
-### The three use cases
+### The use cases
 
 **1. Predictive maintenance.** A risk model watches the CNC's tool wear, torque and temperatures. When the failure risk crosses a threshold, the dashboard recommends a tool change before the failure happens. If you change the tool, the line keeps running. If you ignore the warning, the tool fails: the stack light turns red, sparks fly and the line stops, in 3D and on the dashboard at the same moment.
 
@@ -51,6 +51,10 @@ Every drive, sensor and joint publishes its state as a signal, and a live dashbo
 | The protective zone lights up around the arm | Lockout/tagout in a Quest 3: all 14 steps |
 |---|---|
 | ![Workers around the cell, with the warning zone and the protective zone around the arm lit](docs/images/safety-zone.jpg) | ![The headset view at the line control station, next to the 14 lockout steps all done and the live broker values](docs/images/training-lockout.jpg) |
+
+**4. Fire safety training (in progress).** Fires break out across the hall, one fire class at each place: the drive cabinet, the CNC, a waste bin, a storage rack, an electrical panel and solvent drums. A battery fire at the chargers is one to flee from, not fight. Detectors raise the alarm and the line holds. In the headset, the trainee takes an extinguisher from the stand with two hands, pulls the pin, aims the hose and sweeps the base of the fire. The right extinguisher, the right distance and raising the alarm first all earn points and badges. Stepping too close turns the view red and costs points. Every step goes into a training record, tied to its OSHA clause (1910.38, .39 and .157).
+
+Being built now (M15, extinguishers and the hazard hunt); the alarm and evacuation, the assessment and the video follow. Plan: [`docs/fire-safety-training.md`](docs/fire-safety-training.md). After that comes electrical safety and arc flash (Rev 7), with its plan in [`docs/electrical-safety-training.md`](docs/electrical-safety-training.md). This is a training demo, not "compliant" or "certified", and the regulatory content is guidance, not legal advice.
 
 ---
 
@@ -92,7 +96,7 @@ Without realvirtual the project does not compile. The scene holds only reference
    ```
 2. **Open the folder in Unity Hub** (Add → the cloned folder) with 6000.3.19f1. The first import takes a while. Expect compile errors until step 3 is done; if Unity offers Safe Mode, choose **Ignore**.
 3. **Import the three Asset Store packages** at the paths in the table above. Window → Package Manager → My Assets → Download → Import.
-4. **Open the scene** `Assets/_Project/Scenes/Cell.unity`.
+4. **Open a scene.** `Assets/_Project/Scenes/Menu.unity` is the start menu: it lists the trainings and opens the cell for the one you pick. `Assets/_Project/Scenes/Cell.unity` opens the cell directly, with no training started; the steps below use it. Builds start at the menu, and `-cell` skips it.
 5. Optional: **start the broker**:
    ```bash
    docker compose -f tools/broker/docker-compose.yml up -d
@@ -142,6 +146,14 @@ Without realvirtual the project does not compile. The scene holds only reference
 3. Grab the props (isolator, padlock and tag, air valve, tool) with the controllers or your hands.
 
 If the log says "OpenXR did not start", the headset was not in Link yet. Put it on and try again.
+
+### 4. Fire safety (in progress, headset only)
+
+1. Open `Menu.unity` and press Play. Press **F11** with the headset in Link, or start a build with `-vr`.
+2. Choose **Fire safety**. The cell opens at the fire training station.
+3. Start a fire from the tablet in your left hand, at any spot or at random. Raise the alarm, take the right extinguisher from the stand by its handle, pull the pin with your other hand, take the hose, and squeeze while sweeping the base of the fire. The green band on the floor shows the extinguisher's working distance; the red ring is too close.
+
+To see the fires without the headset, open `Cell.unity` and use the **Fire drill** buttons on the dashboard (or publish `cell/fire/scenario`). Fighting a fire is headset-only for now.
 
 ### Keys
 

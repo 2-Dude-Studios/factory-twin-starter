@@ -1,6 +1,6 @@
 # Factory Twin — project blueprint
 
-As of 2026-10-29, commit `ff10a1e`. Status sections (1, 11, 12, 13, 14) updated on 2026-10-29; the reference sections (2–10) were drawn at commit `0c3b0fc` (2026-10-24) and do not yet describe the M11 14-step procedure or the M12 XR code. Both use cases are built: predictive maintenance (M4–M6, video approved) and virtual commissioning (M7–M8 closed, M9 waiting on the voiceover). A third, workforce training and safety (Rev 5, M10–M13): the safety zone (M10) closed on 2026-10-24, the lockout procedure (M11) on 2026-10-26, and the Quest 3 view (M12) is nearly done, with its exit runs in the headset left. Written from the code, `Cell.unity` and the docs in this repo. Where they disagree, the code is described and the difference is listed in section 13.
+As of 2026-10-29, commit `ff10a1e`. Status sections (1, 11, 12, 13, 14) updated on 2026-10-29; the reference sections (2–10) were drawn at commit `0c3b0fc` (2026-10-24) and do not yet describe the M11 14-step procedure or the M12 XR code. Both use cases are built: predictive maintenance (M4–M6, video approved) and virtual commissioning (M7–M8 closed, M9 waiting on the voiceover). A third, workforce training and safety (Rev 5, M10–M13): the safety zone (M10) closed on 2026-10-24, the lockout procedure (M11) on 2026-10-26, and the Quest 3 view (M12) is nearly done, with its exit runs in the headset left. Written from the code, `Cell.unity` and the docs in this repo. **Not yet covered here (2026-11-06):** fire safety training (Rev 6: M14 built with one Editor check left, M15 under way: fire model, extinguishers, scoring, the start menu) and electrical safety (Rev 7, planned, M19 started on a branch). Their plans are `docs/fire-safety-training.md` and `docs/electrical-safety-training.md`; progress is in `docs/STATUS.md`. Where they disagree, the code is described and the difference is listed in section 13.
 
 Companion documents: `docs/build-plan.md` (why and in what order, Rev 5), `docs/STATUS.md` (running log and decisions), `docs/demo-script.md` (video beats), `docs/voiceover.md` and `docs/voiceover_vc*.md` (scripts and cut plans), `docs/LICENSES.md` (what may ship), `CLAUDE.md` (rules for working in the repo).
 
@@ -448,13 +448,14 @@ All project code is under `Assets/_Project/`: about 7,800 lines of runtime and e
 
 **UI** (`UI/`): `DashboardViewModel` (bus → bindable text, series, log), `DashboardController`, `EventLog`, `SparkSeries`, `Sparkline` (Painter2D element), `CommissioningPanel`, `LicenseTextsView`, `TakeControls`, `TakeSequencer`, `ShotDirector`, `DollyMove`, `SplinePath`, `FpsMeter` + `FpsReadout`; Editor `TakeRecorderHook`.
 
-**Editor** (`Twin/Editor/`): `ProjectSettingsGuard` (only `Cell.unity` in the build, Run In Background on, realvirtual layers present), `LicenseFilesPostprocessor` (licence texts next to the .exe), `PlcIoListExporter` (Tools > Factory Twin > Export PLC I-O List).
+**Editor** (`Twin/Editor/`): `ProjectSettingsGuard` (`Menu.unity` then `Cell.unity` in the build, Run In Background on, realvirtual layers present), `LicenseFilesPostprocessor` (licence texts next to the .exe), `PlcIoListExporter` (Tools > Factory Twin > Export PLC I-O List).
 
 ### Other project assets
 
 | Path | What |
 |---|---|
-| `Scenes/Cell.unity` | The only scene; a Save As of the Factory Training hall with the cell on its keep-clear zone |
+| `Scenes/Menu.unity` | The start menu (since 2026-11-04, M15): picks a training and loads the cell; built by Tools > Factory Twin > Build Menu Scene. Capture runs (`-takes`) and `-cell` skip it |
+| `Scenes/Cell.unity` | The cell; a Save As of the Factory Training hall with the cell on its keep-clear zone. Opened directly, it starts no training |
 | `UI/` | `Dashboard.uxml/.uss`, `Commissioning.uxml/.uss`, `Credits.uxml`, `DashboardPanelSettings.asset` (1920×1080 reference), `DashboardTheme.tss` |
 | `Data/` | `TwinConfig.asset`, `PressRiskConfig.asset`, `PlcIoMap.asset` (13 points), `ai4i2020.csv` |
 | `Licenses/` | Six notice files shown under Credits and copied next to the build |

@@ -1,14 +1,14 @@
 # Status
 
-**Current milestone:** M14 fire model and effects (Rev 6, fire safety training, approved 2026-11-04). All fourteen milestones of build plan Rev 5 are closed: M9, M12 and M13 on 2026-11-02 (you), M11 2026-10-26, M10 2026-10-24, M8 and M7 2026-10-23, M6 2026-10-21, M5 and M4 2026-10-20. The three use cases (predictive maintenance, virtual commissioning, workforce training and safety) are built and on video as a three-part series (`Builds/Recordings/Final Series/`).
+**Current milestone:** M15 extinguisher and hazard hunt (Rev 6, fire safety training, approved 2026-11-04); M14 is built, with one Editor check left for its exit (see M14). All fourteen milestones of build plan Rev 5 are closed: M9, M12 and M13 on 2026-11-02 (you), M11 2026-10-26, M10 2026-10-24, M8 and M7 2026-10-23, M6 2026-10-21, M5 and M4 2026-10-20. The three use cases (predictive maintenance, virtual commissioning, workforce training and safety) are built and on video as a three-part series (`Builds/Recordings/Final Series/`). The repo is public at github.com/2-Dude-Studios/factory-twin-starter (MIT, 2026-11-02); Rev 6 so far (M14, M15 to `05b685d`) went in through PR #2 on 2026-11-05.
 **Next:**
-1. Going public: the two decisions from `docs/public-release-check.md` (a LICENSE for the repo; how to treat `Cell.unity`), then its other fixes.
-2. Before a clip ships: OpenPLC Runtime (MIT) and Editor (GPL-3.0, a tool) on `docs/LICENSES.md`. Decide on the uncommitted Rocketbox `.meta` changes under `Assets/ThirdParty/Rocketbox/` (importer state from Build Simulated Workers) and the UnitySkills bump.
-3. Commit the VC capture tooling (`TakeAudioRecorder`, `TakeEventLog`, `capture_build_takes.py`, `render_code_takes.py`, `-targetfps`) and `tools/video/training/` (drop the cloned voice ID from `script.json` first).
-4. M14 (Rev 6, fire safety training, M14–M18, about 14 days): answer its start decisions (`docs/fire-safety-training.md` section 9), then build. Plan in that doc, scope and exits in the build plan.
-5. Rev 7, electrical safety and arc flash (M19–M23, about 13.5 days), approved 2026-11-04 with its defaults, starts after M18. At M19 start, check the NFPA 70E-2027 section numbers. Plan in `docs/electrical-safety-training.md`, scope and exits in the build plan.
+1. M14 exit: run F1–F6 from the dashboard in the Editor and look at each location.
+2. M15: try the latest fire work in the headset (grab points, menu, scoring, HUD, badge icons, too-close warning, distance guide, model detail), then the hazard hunt and the rest of M15. The desktop trainee has no extinguisher yet.
+3. Rev 7, electrical safety and arc flash (M19–M23, about 13.5 days), approved 2026-11-04 with its defaults, planned for after M18. M19 has been started early on branch `claude/rev7-m19-electrical-0923ad` (not pushed, not merged); the NFPA 70E-2027 section numbers are checked there. Plan in `docs/electrical-safety-training.md`, scope and exits in the build plan.
+4. Decide on the uncommitted Rocketbox `.meta` changes under `Assets/ThirdParty/Rocketbox/` (importer state from Build Simulated Workers) and the UnitySkills bump in `Packages/`.
+5. Commit the VC capture tooling (`TakeAudioRecorder`, `TakeEventLog`, `capture_build_takes.py`, `render_code_takes.py`, `-targetfps`) and `tools/video/training/` (drop the cloned voice ID from `script.json` first).
 6. Later use cases (build plan, Later) when a prospect asks.
-**Last updated:** 2026-11-04
+**Last updated:** 2026-11-06
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
