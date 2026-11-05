@@ -171,6 +171,27 @@
                 <ui:Label text="Simulated fire · training demo, not certified training" class="footnote" />
             </ui:VisualElement>
 
+            <ui:VisualElement name="elec-panel" class="section section--elec hidden">
+                <ui:VisualElement class="section__header">
+                    <ui:Label text="Electrical" class="section__title" />
+                    <ui:Label name="elec-disconnect" text="Q1 ON" class="chip elec" />
+                </ui:VisualElement>
+                <ui:Label name="elec-fault" text="Drives OK" class="elec__fault" />
+                <ui:Label name="elec-scenario" text="" class="elec__scenario" />
+                <ui:VisualElement class="telemetry__row">
+                    <ui:Label text="Main bus" class="metric__name" />
+                    <ui:Label name="elec-bus" text="—" class="metric__value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="telemetry__row">
+                    <ui:Label text="DC bus U1" class="metric__name" />
+                    <ui:Label name="elec-dc-bus" text="—" class="metric__value" />
+                </ui:VisualElement>
+                <ui:Label name="elec-locks" text="No lock on Q1" class="elec__line" />
+                <ui:Label name="elec-ups" text="" class="elec__line hidden" />
+                <ui:Label name="elec-door" text="Door shut" class="elec__line" />
+                <ui:Label text="Main bus only: not a test for absence of voltage · training demo, label values for the demo" class="footnote" />
+            </ui:VisualElement>
+
             <ui:VisualElement name="fault-panel" class="section section--faults">
                 <ui:Label text="Scenarios" class="section__title" />
                 <ui:VisualElement class="fault-buttons">
@@ -200,6 +221,20 @@
                     <ui:Button name="fire-9" text="F9 Drums" tooltip="Solvent drums by the far wall (Class B)" class="fault-button" />
                     <ui:Button name="fire-alarm-reset" text="Reset alarm" class="fault-button fault-button--clear" />
                     <ui:Button name="fire-clear" text="Clear fire" class="fault-button fault-button--clear" />
+                </ui:VisualElement>
+                <ui:Label text="Electrical drills" class="metric__name fault-subtitle" />
+                <ui:VisualElement class="fault-buttons">
+                    <ui:Button name="elec-1" text="E1 VFD" tooltip="Replace a failed infeed VFD: the drive trips and the line stops" class="fault-button" />
+                    <ui:Button name="elec-2" text="E2 Backfeed" tooltip="E1 with the UPS control feed live: 120 V on the control terminals with Q1 open" class="fault-button" />
+                    <ui:Button name="elec-3" text="E3 DC bus" tooltip="E1 with a slow DC bus discharge (60 s)" class="fault-button" />
+                    <ui:Button name="elec-4" text="E4 Tester" tooltip="E1 with a tester whose battery goes flat mid-test" class="fault-button" />
+                    <ui:Button name="elec-q1" text="Q1 on/off" class="fault-button" />
+                    <ui:Button name="elec-lock" text="Lock Q1" class="fault-button" />
+                    <ui:Button name="elec-unlock" text="Unlock Q1" class="fault-button" />
+                    <ui:Button name="elec-ups" text="UPS feed on/off" class="fault-button" />
+                    <ui:Button name="elec-ups-lock" text="UPS lock" class="fault-button" />
+                    <ui:Button name="elec-door" text="Door" class="fault-button" />
+                    <ui:Button name="elec-end" text="End drill" class="fault-button fault-button--clear" />
                 </ui:VisualElement>
             </ui:VisualElement>
 

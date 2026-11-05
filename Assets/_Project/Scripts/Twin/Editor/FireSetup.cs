@@ -296,6 +296,17 @@ namespace TwoDude.FactoryTwin.Twin
 
         private static GameObject Cabinet(Transform fire)
         {
+            // Rev 7 (M19): once Build Electrical Cabinet has placed our own cabinet DCP-1 at this spot, F1 burns on it
+            // and realvirtual's scaled box is not brought back.
+            GameObject ours = GameObject.Find(ElectricalSetup.CabinetPath);
+            if (ours != null)
+            {
+                Transform box = fire.Find("DriveCabinet");
+                if (box != null)
+                    Undo.DestroyObjectImmediate(box.gameObject);
+                Transform oursBody = ours.transform.Find("Body");
+                return oursBody != null ? oursBody.gameObject : ours;
+            }
             GameObject cabinet = Prop(fire, "DriveCabinet", CabinetPrefab, CabinetAt, CabinetYaw,
                 "realvirtual ControlCabinet prefab is missing; the cabinet fire has no cabinet.");
             if (cabinet == null)

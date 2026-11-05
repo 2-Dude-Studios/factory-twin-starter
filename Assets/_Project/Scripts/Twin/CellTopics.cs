@@ -200,6 +200,41 @@ namespace TwoDude.FactoryTwin.Twin
         // True once the fire is out and soaked, so it cannot reflash (FireModel.Extinguished).
         public static readonly TopicPath FireExtinguished = new TopicPath("fire", "extinguished");
 
+        // Electrical safety training (M19), a simulated cabinet for a training drill. elec/scenario (in) starts
+        // scenario n (1–4, an ElectricalScenario's number) and 0 ends it, putting the cabinet back to normal.
+        // cabinet/door_open 0/1; cabinet/disconnect is Q1, 0 closed (on) and 1 open (off); cabinet/ups_feed is the UPS
+        // feed's breaker in the hall panel, 0 closed and 1 open; cabinet/locked and cabinet/ups_locked count the locks
+        // on each. cabinet/bus_v is the main AC bus (L1–L2), all the dashboard knows; cabinet/dc_bus_v the infeed
+        // VFD's DC bus; cabinet/control_v the 120 V control circuit, still live from the UPS in E2.
+        // infeed/drive_fault is the VFD trip that starts E1 and stops the line.
+        public static readonly TopicPath ElecScenario = new TopicPath("elec", "scenario");
+        public static readonly TopicPath CabinetDoorOpen = new TopicPath("cabinet", "door_open");
+        public static readonly TopicPath CabinetDisconnect = new TopicPath("cabinet", "disconnect");
+        public static readonly TopicPath CabinetUpsFeed = new TopicPath("cabinet", "ups_feed");
+        public static readonly TopicPath CabinetLocked = new TopicPath("cabinet", "locked");
+        public static readonly TopicPath CabinetUpsLocked = new TopicPath("cabinet", "ups_locked");
+        public static readonly TopicPath CabinetBusVolts = new TopicPath("cabinet", "bus_v");
+        public static readonly TopicPath CabinetDcBusVolts = new TopicPath("cabinet", "dc_bus_v");
+        public static readonly TopicPath CabinetControlVolts = new TopicPath("cabinet", "control_v");
+        public static readonly TopicPath InfeedDriveFault = new TopicPath("infeed", "drive_fault");
+
+        // Commands to the cabinet (in), carried out by CabinetStation under ElectricalModel's rules, like M11's
+        // press/isolator_cmd: door_cmd 1 open, 0 shut; disconnect_cmd and ups_cmd 1 open (off), 0 close (on);
+        // lock_cmd and ups_lock_cmd 1 hang one more lock, 0 take one off.
+        public static readonly TopicPath CabinetDoorCommand = new TopicPath("cabinet", "door_cmd");
+        public static readonly TopicPath CabinetDisconnectCommand = new TopicPath("cabinet", "disconnect_cmd");
+        public static readonly TopicPath CabinetUpsCommand = new TopicPath("cabinet", "ups_cmd");
+        public static readonly TopicPath CabinetLockCommand = new TopicPath("cabinet", "lock_cmd");
+        public static readonly TopicPath CabinetUpsLockCommand = new TopicPath("cabinet", "ups_lock_cmd");
+
+        // The person (M19): elec/boundary is an ApproachBoundary, the deepest point of the trainee's head and hands
+        // (0 outside, 1 arc flash, 2 limited, 3 restricted); elec/ppe_cat the PPE category worn (0–4, from M20);
+        // elec/tester_ok 0/1, the tester as last proved (from M20). The tester's readings are never published: they
+        // go from ElectricalModel straight to the tester's display, so the dashboard cannot give the trainee the answer.
+        public static readonly TopicPath ElecBoundary = new TopicPath("elec", "boundary");
+        public static readonly TopicPath ElecPpeCategory = new TopicPath("elec", "ppe_cat");
+        public static readonly TopicPath ElecTesterOk = new TopicPath("elec", "tester_ok");
+
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }
