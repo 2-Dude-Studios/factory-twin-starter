@@ -129,9 +129,14 @@ namespace TwoDude.FactoryTwin.UI
             menuSo.FindProperty("vrSwitch").objectReferenceValue = vrSwitch;
             menuSo.ApplyModifiedProperties();
             BadgeIcons icons = BadgeIconsAsset();
+            FireHeatWarning heat = HeatWarning(origin, context, extinguisher);
+            DistanceGuide(fire, heat, extinguisher);
+            scorerSo.Update();
+            scorerSo.FindProperty("heat").objectReferenceValue = heat;
+            scorerSo.ApplyModifiedProperties();
             Popups(rigTransform, origin, scorer, icons);
             ScoreBoard(station, scorer, icons);
-            Hud(rigTransform, origin, context, scorer, extinguisher, icons, scenarios);
+            Hud(rigTransform, origin, context, scorer, extinguisher, heat, icons, scenarios);
 
             // The start menu's request, carried out once the cell has loaded.
             var launcher = GetOrAdd<TrainingLauncher>(captureRig);
@@ -174,7 +179,7 @@ namespace TwoDude.FactoryTwin.UI
         private const string HudUxml = "Assets/_Project/UI/Vr/FireHud.uxml";
 
         private static void Hud(Transform rig, XROrigin origin, CellContext context, FireDrillScorer scorer,
-            FireExtinguisher extinguisher, BadgeIcons icons, List<Object> scenarios)
+            FireExtinguisher extinguisher, FireHeatWarning heat, BadgeIcons icons, List<Object> scenarios)
         {
             Transform old = rig.Find("FireHud");
             if (old != null)
@@ -183,17 +188,148 @@ namespace TwoDude.FactoryTwin.UI
             Undo.RegisterCreatedObjectUndo(go, "Fire HUD");
             go.transform.SetParent(rig, false);
             go.transform.localPosition = new Vector3(0f, 1.2f, 0.85f);
-            UIDocument document = XrSetup.Document(go, XrSetup.WorldPanel(), HudUxml, 1000f, 340f, 0.055f);
+            UIDocument document = XrSetup.Document(go, XrSetup.WorldPanel(), HudUxml, 1000f, 370f, 0.055f);
             var hud = go.AddComponent<FireHud>();
             var so = new SerializedObject(hud);
             so.FindProperty("document").objectReferenceValue = document;
             so.FindProperty("context").objectReferenceValue = context;
             so.FindProperty("scorer").objectReferenceValue = scorer;
             so.FindProperty("extinguisher").objectReferenceValue = extinguisher;
+            so.FindProperty("heat").objectReferenceValue = heat;
             so.FindProperty("icons").objectReferenceValue = icons;
             so.FindProperty("head").objectReferenceValue = origin.Camera.transform;
             SetList(so.FindProperty("scenarios"), scenarios);
             so.ApplyModifiedProperties();
+        }
+
+        // The heat warning (M15): a red vignette on a quad just in front of the eyes, faded in by FireHeatWarning.
+        private const string VignettePath = "Assets/_Project/Art/Fire/HeatVignette.png";
+        private const string VignetteMaterialPath = "Assets/_Project/Materials/Fire/HeatVignette.mat";
+        private const string GuideMaterialPath = "Assets/_Project/Materials/Fire/FireDistanceGuide.mat";
+
+        private static FireHeatWarning HeatWarning(XROrigin origin, CellContext context, FireExtinguisher extinguisher)
+        {
+            Transform eye = origin.Camera.transform;
+            Transform old = eye.Find("HeatOverlay");
+            if (old != null)
+                Undo.DestroyObjectImmediate(old.gameObject);
+            var go = new GameObject("HeatOverlay");
+            Undo.RegisterCreatedObjectUndo(go, "Heat overlay");
+            go.transform.SetParent(eye, false);
+            // Just past the near clip plane, wide enough to fill both eyes' view.
+            float at = Mathf.Max(0.06f, origin.Camera.nearClipPlane + 0.03f);
+            go.transform.SetLocalPositionAndRotation(new Vector3(0f, 0f, at), Quaternion.identity);
+            go.transform.localScale = new Vector3(at * 5.2f, at * 4.4f, 1f);
+            go.AddComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = TransparentUnlit(VignetteMaterialPath, VignetteTexture(), 4000);
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.enabled = false;
+            var heat = go.AddComponent<FireHeatWarning>();
+            var so = new SerializedObject(heat);
+            so.FindProperty("context").objectReferenceValue = context;
+            so.FindProperty("extinguisher").objectReferenceValue = extinguisher;
+            so.FindProperty("head").objectReferenceValue = eye;
+            so.FindProperty("overlay").objectReferenceValue = renderer;
+            so.ApplyModifiedProperties();
+            return heat;
+        }
+
+        // The danger ring and the best-distance band on the floor round the burning fire.
+        private static void DistanceGuide(Transform fire, FireHeatWarning heat, FireExtinguisher extinguisher)
+        {
+            Transform old = fire.Find("FireDistanceGuide");
+            if (old != null)
+                Undo.DestroyObjectImmediate(old.gameObject);
+            var go = new GameObject("FireDistanceGuide");
+            Undo.RegisterCreatedObjectUndo(go, "Fire distance guide");
+            go.transform.SetParent(fire, false);
+            Material material = TransparentUnlit(GuideMaterialPath, null, 3010);
+            MeshFilter Ring(string name, float lift)
+            {
+                var ring = new GameObject(name);
+                ring.transform.SetParent(go.transform, false);
+                ring.transform.localPosition = new Vector3(0f, lift, 0f);
+                var filter = ring.AddComponent<MeshFilter>();
+                var r = ring.AddComponent<MeshRenderer>();
+                r.sharedMaterial = material;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+                return filter;
+            }
+            MeshFilter band = Ring("BestBand", 0f);
+            MeshFilter danger = Ring("DangerRing", 0.002f);
+            var guide = go.AddComponent<FireDistanceGuide>();
+            var so = new SerializedObject(guide);
+            so.FindProperty("heat").objectReferenceValue = heat;
+            so.FindProperty("extinguisher").objectReferenceValue = extinguisher;
+            so.FindProperty("dangerRing").objectReferenceValue = danger;
+            so.FindProperty("bestBand").objectReferenceValue = band;
+            so.ApplyModifiedProperties();
+        }
+
+        // White, alpha-blended, unlit (URP), both faces, no depth write; tinted per renderer through _BaseColor.
+        private static Material TransparentUnlit(string path, Texture2D texture, int queue)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.SetFloat("_Surface", 1f);
+            material.SetFloat("_Blend", 0f);
+            material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_SrcBlendAlpha", (float)UnityEngine.Rendering.BlendMode.One);
+            material.SetFloat("_DstBlendAlpha", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_ZWrite", 0f);
+            material.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Off);
+            if (material.HasProperty("_ZTest") && queue >= 4000)
+                material.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Always);
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.SetTexture("_BaseMap", texture);
+            material.SetColor("_BaseColor", Color.white);
+            material.renderQueue = queue;
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssets();
+            return material;
+        }
+
+        // Our own radial ramp: clear in the middle, opaque white at the edges (the material tints it red).
+        private static Texture2D VignetteTexture()
+        {
+            if (!System.IO.File.Exists(VignettePath))
+            {
+                const int size = 256;
+                var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                for (int y = 0; y < size; y++)
+                {
+                    for (int x = 0; x < size; x++)
+                    {
+                        float dx = (x + 0.5f) / size * 2f - 1f;
+                        float dy = (y + 0.5f) / size * 2f - 1f;
+                        float r = Mathf.Sqrt(dx * dx + dy * dy);
+                        float edge = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.12f, 0.62f, r));
+                        texture.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.Lerp(0.18f, 1f, edge)));
+                    }
+                }
+                System.IO.File.WriteAllBytes(VignettePath, texture.EncodeToPNG());
+                Object.DestroyImmediate(texture);
+                AssetDatabase.ImportAsset(VignettePath);
+            }
+            if (AssetImporter.GetAtPath(VignettePath) is TextureImporter importer && importer.mipmapEnabled)
+            {
+                importer.alphaIsTransparency = true;
+                importer.mipmapEnabled = false;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(VignettePath);
         }
 
         // Material Icons (Apache-2.0, docs/LICENSES.md), white, tinted by the UI.

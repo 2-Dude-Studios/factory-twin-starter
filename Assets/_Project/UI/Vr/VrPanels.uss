@@ -179,6 +179,9 @@
 .fhud__bar { height: 12px; margin-top: 6px; background-color: rgb(52, 60, 68); border-radius: 6px; overflow: hidden; }
 .fhud__bar-fill { height: 100%; width: 0%; background-color: rgb(54, 200, 120); border-radius: 6px; }
 .fhud__bar-fill--low { background-color: rgb(255, 90, 80); }
+.fhud__distance { font-size: 19px; color: rgb(220, 226, 232); margin: 6px 0 0 0; padding: 0; }
+.fhud__distance--good { color: rgb(80, 220, 140); -unity-font-style: bold; }
+.fhud__distance--danger { color: rgb(255, 80, 64); -unity-font-style: bold; }
 .fhud__steps { justify-content: space-between; margin-bottom: 6px; }
 .fhud__step { flex-direction: row; align-items: center; padding: 4px 10px; border-radius: 14px; background-color: rgb(32, 37, 42); }
 .fhud__step--done { background-color: rgba(54, 168, 108, 0.35); }

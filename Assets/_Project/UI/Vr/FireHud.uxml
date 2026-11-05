@@ -30,6 +30,7 @@
                     <ui:VisualElement class="fhud__bar" picking-mode="Ignore">
                         <ui:VisualElement name="hud-charge" class="fhud__bar-fill" picking-mode="Ignore" />
                     </ui:VisualElement>
+                    <ui:Label name="hud-distance" text="" class="fhud__distance" picking-mode="Ignore" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

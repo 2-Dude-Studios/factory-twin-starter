@@ -18,6 +18,7 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private CellContext context;
         [SerializeField] private FireDrillScorer scorer;
         [SerializeField] private FireExtinguisher extinguisher;
+        [SerializeField] private FireHeatWarning heat;
         [SerializeField] private BadgeIcons icons;
         [Tooltip("The headset camera the HUD follows.")]
         [SerializeField] private Transform head;
@@ -38,13 +39,13 @@ namespace TwoDude.FactoryTwin.UI
         private static readonly string[] StepNames = { "Alarm", "Right type", "Pin", "Hose", "Squeeze", "Out" };
 
         private VisualElement _root, _badges, _charge;
-        private Label _score, _timer, _fire, _stage, _ext, _advice;
+        private Label _score, _timer, _fire, _stage, _ext, _advice, _distance;
         private readonly List<(VisualElement chip, VisualElement icon)> _steps = new List<(VisualElement, VisualElement)>();
         private readonly bool[] _stepState = new bool[6];
         private bool _shown, _placed, _following;
         private float _nextRefresh;
         private int _lastScore = int.MinValue, _lastBadges = -1, _lastSeconds = int.MinValue, _lastPercent = -1;
-        private string _lastAdvice, _lastFire, _lastStage, _lastExt;
+        private string _lastAdvice, _lastFire, _lastStage, _lastExt, _lastDistance;
         private Vector3 _yawForward = Vector3.forward;
 
         private void Start()
@@ -63,6 +64,7 @@ namespace TwoDude.FactoryTwin.UI
             _stage = _root.Q<Label>("hud-stage");
             _ext = _root.Q<Label>("hud-ext");
             _advice = _root.Q<Label>("hud-advice");
+            _distance = _root.Q<Label>("hud-distance");
             _badges = _root.Q("hud-badges");
             _charge = _root.Q("hud-charge");
             Icon("icon-score", icons != null ? icons.Score : null);
@@ -99,7 +101,7 @@ namespace TwoDude.FactoryTwin.UI
                 _lastBadges = -1;
                 _lastSeconds = int.MinValue;
                 _lastPercent = -1;
-                _lastAdvice = _lastFire = _lastStage = _lastExt = null;
+                _lastAdvice = _lastFire = _lastStage = _lastExt = _lastDistance = null;
                 Refresh();
             }
         }
@@ -186,6 +188,30 @@ namespace TwoDude.FactoryTwin.UI
                 _charge.EnableInClassList("fhud__bar-fill--low", percent < 25);
             }
 
+            // How far from the fire, against where this extinguisher works best and the danger zone.
+            float metres = heat != null ? heat.Distance : float.NaN;
+            bool tooClose = heat != null && heat.TooClose;
+            string distance = string.Empty;
+            bool inBand = false;
+            if (!float.IsNaN(metres))
+            {
+                distance = $"Fire {metres.ToString("0.0", Invariant)} m";
+                if (tooClose)
+                    distance += " · TOO CLOSE";
+                else if (agent != FireAgent.None)
+                {
+                    (double _, double from, double to, double _) = ExtinguisherRules.Range(agent);
+                    inBand = metres >= from && metres <= to;
+                    distance += $" · use from {from.ToString("0.#", Invariant)}–{to.ToString("0.#", Invariant)} m";
+                }
+            }
+            SetText(_distance, distance, ref _lastDistance);
+            if (_distance != null)
+            {
+                _distance.EnableInClassList("fhud__distance--danger", tooClose);
+                _distance.EnableInClassList("fhud__distance--good", inBand && !tooClose);
+            }
+
             // The last run's checklist stays up after it ends, until the next fire starts a new one.
             SetStep(0, score.AlarmDone);
             SetStep(1, score.RightAgentDone);
@@ -197,7 +223,7 @@ namespace TwoDude.FactoryTwin.UI
             string advice = FireDrillText.Advice(stage, fireClass, flee, extinguished, alarm, agent, charge,
                 extinguisher != null && extinguisher.Discharging, extinguisher != null ? extinguisher.Aim : 0f,
                 extinguisher != null ? extinguisher.Standoff : 0f, extinguisher != null ? extinguisher.Distance : 0f,
-                extinguisher != null && extinguisher.PinPulled, extinguisher != null && extinguisher.HoseHeld);
+                extinguisher != null && extinguisher.PinPulled, extinguisher != null && extinguisher.HoseHeld, tooClose);
             SetText(_advice, advice, ref _lastAdvice);
         }
 

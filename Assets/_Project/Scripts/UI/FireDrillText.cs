@@ -31,7 +31,7 @@ namespace TwoDude.FactoryTwin.UI
         /// <summary>The one thing to do or fix now.</summary>
         public static string Advice(FireStage stage, FireClass fireClass, bool fleeOnly, bool extinguished, bool alarm,
             FireAgent agent, float charge, bool discharging, float aim, float standoff, float distance,
-            bool pinPulled = true, bool hoseHeld = true)
+            bool pinPulled = true, bool hoseHeld = true, bool tooClose = false)
         {
             switch (stage)
             {
@@ -41,6 +41,13 @@ namespace TwoDude.FactoryTwin.UI
                     return extinguished
                         ? "Fire out. Watch it for reflash, then report it."
                         : "Knocked down: keep the stream on it a moment longer.";
+            }
+            if (tooClose && FireProximity.Burning(stage))
+            {
+                if (agent == FireAgent.None)
+                    return "Too close: the heat will burn you. Step back out of the red ring.";
+                (double _, double from, double to, double _) = ExtinguisherRules.Range(agent);
+                return $"Too close: step back out of the red ring, to {from.ToString("0.#", Invariant)}–{to.ToString("0.#", Invariant)} m.";
             }
             if (fleeOnly)
                 return "Lithium-ion battery: do not fight it. Raise the alarm and leave.";

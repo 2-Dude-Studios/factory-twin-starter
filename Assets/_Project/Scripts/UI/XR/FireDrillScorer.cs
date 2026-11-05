@@ -16,6 +16,8 @@ namespace TwoDude.FactoryTwin.UI
     {
         [SerializeField] private CellContext context;
         [SerializeField] private FireExtinguisher extinguisher;
+        [Tooltip("The headset's heat warning: stepping inside the fire's danger zone costs points.")]
+        [SerializeField] private FireHeatWarning heat;
         [Tooltip("The drill's fires, to know which are flee-only.")]
         [SerializeField] private FireScenario[] scenarios = Array.Empty<FireScenario>();
         [SerializeField] private string traineeName = "Sam Rivera";
@@ -31,7 +33,7 @@ namespace TwoDude.FactoryTwin.UI
         private float _startedAt;
         private DateTime _startedUtc;
         private bool _sessionOpen;
-        private bool _pin, _hose;
+        private bool _pin, _hose, _tooClose;
         private FireClass _class;
 
         public FireDrillScore Score => _score;
@@ -94,8 +96,18 @@ namespace TwoDude.FactoryTwin.UI
 
         private void Update()
         {
-            if (!_sessionOpen || !_score.Running || extinguisher == null)
+            if (!_sessionOpen || !_score.Running)
                 return;
+            // Each step into the danger zone (not each frame inside it) costs points.
+            bool tooClose = heat != null && heat.isActiveAndEnabled && heat.TooClose;
+            if (tooClose && !_tooClose)
+                _score.TooClose(Now);
+            _tooClose = tooClose;
+            if (extinguisher == null)
+            {
+                Flush();
+                return;
+            }
             if (extinguisher.PinPulled && !_pin)
                 _score.PinPulled(Now);
             if (extinguisher.HoseHeld && !_hose)

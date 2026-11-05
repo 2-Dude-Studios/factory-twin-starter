@@ -44,6 +44,8 @@ namespace TwoDude.FactoryTwin.UI
         public const string BadgeFireMarshal = "Fire marshal";
 
         public const int PerfectRunPoints = 500;
+        public const int TooClosePoints = -30;
+        public const int TooCloseMaxPerRun = 3;
         public const double FastResponseSeconds = 25d;
 
         private readonly List<ScoreEvent> _events = new List<ScoreEvent>();
@@ -59,6 +61,7 @@ namespace TwoDude.FactoryTwin.UI
         private double _ignitedAt = -1d;
         private bool _alarm, _discharged, _pin, _hose, _knockedDown, _foughtBeyond, _judgedAgent, _mistake, _reflashed;
         private bool _rightAgent, _out;
+        private int _tooClose;
         private double _dischargeSeconds, _aimSum, _standoffSum;
         private int _runStartIndex;
 
@@ -78,6 +81,9 @@ namespace TwoDude.FactoryTwin.UI
         public bool KnockedDownDone => _knockedDown;
         public bool OutDone => _out;
         public bool FleeOnly => _fleeOnly;
+
+        /// <summary>Times this run the trainee stepped inside the fire's danger zone.</summary>
+        public int TooCloseCount => _tooClose;
 
         /// <summary>Seconds since the flame took hold in this run, or a negative number before it.</summary>
         public double SinceIgnition(double t) => _ignitedAt < 0d ? -1d : t - _ignitedAt;
@@ -101,6 +107,7 @@ namespace TwoDude.FactoryTwin.UI
             _ignitedAt = -1d;
             _alarm = _discharged = _pin = _hose = _knockedDown = _foughtBeyond = _judgedAgent = _mistake = _reflashed = false;
             _rightAgent = _out = false;
+            _tooClose = 0;
             _dischargeSeconds = _aimSum = _standoffSum = 0d;
             RunPoints = 0;
             _runStartIndex = _events.Count;
@@ -147,6 +154,19 @@ namespace TwoDude.FactoryTwin.UI
                 _mistake = true;
                 Add(t, -50, "It reflashed: keep on it after the knockdown", "1910.157(g)(1)", true);
             }
+        }
+
+        /// <summary>
+        /// The trainee stepped inside the fire's danger zone (FireProximity): points off each time, up to
+        /// <see cref="TooCloseMaxPerRun"/> times a run, and no clean knockdown or perfect drill.
+        /// </summary>
+        public void TooClose(double t)
+        {
+            if (!_running || _tooClose >= TooCloseMaxPerRun)
+                return;
+            _tooClose++;
+            _mistake = true;
+            Add(t, TooClosePoints, "Too close to the fire: keep your distance", "1910.157(g)(1)", true);
         }
 
         /// <summary>One frame of discharge with this agent, aim and stand-off (0–1).</summary>
