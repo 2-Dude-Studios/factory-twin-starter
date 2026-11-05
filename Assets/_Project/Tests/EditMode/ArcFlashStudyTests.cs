@@ -48,6 +48,34 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void DistanceToExposedParts_IgnoresPointsBehindTheCabinet()
+        {
+            // Box x ±0.37, y 0..1.8, z −0.2..0.2 (door on +Z).
+            Assert.AreEqual(0.5d, ApproachBoundaries.DistanceToExposedParts(0, 1, 0.7, -0.37, 0, -0.2, 0.37, 1.8, 0.2), 1e-9);
+            Assert.AreEqual(0.13d, ApproachBoundaries.DistanceToExposedParts(0.5, 1, 0, -0.37, 0, -0.2, 0.37, 1.8, 0.2), 1e-9, "beside it");
+            Assert.IsTrue(double.IsPositiveInfinity(ApproachBoundaries.DistanceToExposedParts(0, 1, -0.5, -0.37, 0, -0.2, 0.37, 1.8, 0.2)), "behind its back");
+        }
+
+        [Test]
+        public void Outline_IsAUOpenAtTheBack_AtTheBoundaryDistance()
+        {
+            double[] p = ApproachBoundaries.Outline(-0.37, 0.37, -0.2, 0.2, 1.0, 4);
+            int n = p.Length / 2;
+            Assert.AreEqual(2 + 2 * 5, n);
+            Assert.AreEqual(-1.37, p[0], 1e-9);
+            Assert.AreEqual(-0.2, p[1], 1e-9, "starts at the back left");
+            Assert.AreEqual(1.37, p[(n - 1) * 2], 1e-9);
+            Assert.AreEqual(-0.2, p[(n - 1) * 2 + 1], 1e-9, "ends at the back right");
+            // Every point in front of the back line is the boundary distance from the box's footprint.
+            for (int i = 0; i < n; i++)
+            {
+                double d = ApproachBoundaries.DistanceToBox(p[i * 2], 0.5, p[i * 2 + 1], -0.37, 0, -0.2, 0.37, 1, 0.2);
+                Assert.AreEqual(1.0, d, 1e-9, $"point {i}");
+            }
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => ApproachBoundaries.Outline(0, 1, 0, 1, 1, 0));
+        }
+
+        [Test]
         public void PpeCategory_IsTheLowestKitThatCoversTheIncidentEnergy()
         {
             Assert.AreEqual(1, ApproachBoundaries.PpeCategoryFor(1.2));

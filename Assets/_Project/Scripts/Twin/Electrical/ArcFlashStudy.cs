@@ -153,6 +153,49 @@ namespace TwoDude.FactoryTwin.Twin
             double dz = Math.Max(Math.Max(minZ - z, 0d), z - maxZ);
             return Math.Sqrt(dx * dx + dy * dy + dz * dz);
         }
+
+        /// <summary>
+        /// Distance from a point to the cabinet's exposed parts (an axis-aligned box in the cabinet's space, door on
+        /// its +Z face), or infinity for a point behind the cabinet's back (z below the box), which the closed back
+        /// and the line keep apart from them.
+        /// </summary>
+        public static double DistanceToExposedParts(double x, double y, double z, double minX, double minY, double minZ,
+            double maxX, double maxY, double maxZ) =>
+            z < minZ ? double.PositiveInfinity : DistanceToBox(x, y, z, minX, minY, minZ, maxX, maxY, maxZ);
+
+        /// <summary>
+        /// The floor outline of one boundary: the box's footprint grown by <paramref name="offset"/>, as a U open at
+        /// the back (matching <see cref="DistanceToExposedParts"/>). (x, z) pairs from the back left, round the front,
+        /// to the back right; each front corner is a quarter circle of <paramref name="arcSteps"/> segments.
+        /// </summary>
+        public static double[] Outline(double minX, double maxX, double backZ, double frontZ, double offset, int arcSteps)
+        {
+            if (arcSteps < 1)
+                throw new ArgumentOutOfRangeException(nameof(arcSteps), "At least 1.");
+            int count = 2 + 2 * (arcSteps + 1);
+            var points = new double[count * 2];
+            int i = 0;
+            void Add(double px, double pz)
+            {
+                points[i++] = px;
+                points[i++] = pz;
+            }
+            Add(minX - offset, backZ);
+            // Front left corner: from facing -X (180°) to facing +Z (90°), round (minX, frontZ).
+            for (int s = 0; s <= arcSteps; s++)
+            {
+                double a = Math.PI - (Math.PI / 2d) * s / arcSteps;
+                Add(minX + offset * Math.Cos(a), frontZ + offset * Math.Sin(a));
+            }
+            // Front right corner: from +Z (90°) to +X (0°), round (maxX, frontZ).
+            for (int s = 0; s <= arcSteps; s++)
+            {
+                double a = (Math.PI / 2d) - (Math.PI / 2d) * s / arcSteps;
+                Add(maxX + offset * Math.Cos(a), frontZ + offset * Math.Sin(a));
+            }
+            Add(maxX + offset, backZ);
+            return points;
+        }
     }
 
     /// <summary>
