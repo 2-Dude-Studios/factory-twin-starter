@@ -25,8 +25,12 @@ namespace TwoDude.FactoryTwin.Twin
         private const string StudyPath = DataFolder + "/ArcFlashStudy.asset";
         private const string ElectricalPanelType = "TwoDude.FactoryTwin.UI.ElectricalPanel, TwoDude.FactoryTwin.UI";
 
-        /// <summary>Where Rev 6 stood the drive cabinet (FireSetup.CabinetAt), facing south (−Z) towards the trainee's side.</summary>
-        public static readonly Vector3 CabinetAt = new Vector3(0.9f, 0f, -1.3f);
+        /// <summary>
+        /// The centre of Rev 6's cabinet footprint, facing south (−Z) towards the trainee's side. realvirtual's box has
+        /// its pivot at (0.9, 1.0, −1.3) but its mesh sits off the pivot: its bounds' centre, where F1's anchor is, was
+        /// read from Cell.unity at (0.9, −1.079) on 2026-11-05. Our cabinet's pivot is its footprint's centre.
+        /// </summary>
+        public static readonly Vector3 CabinetAt = new Vector3(0.9f, 0f, -1.08f);
         public const float CabinetYaw = 180f;
         public const string CabinetPath = "Cell/Electrical/DriveCabinet";
 
