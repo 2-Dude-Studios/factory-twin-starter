@@ -14,6 +14,9 @@
         <ui:Label class="credit__name" text="URDF Importer" />
         <ui:Label class="credit__text" text="Unity Technologies, Apache License 2.0." />
 
+        <ui:Label class="credit__name" text="Material Icons" />
+        <ui:Label class="credit__text" text="Google, Apache License 2.0. Badge and HUD icons in the fire drill, recoloured." />
+
         <ui:Label class="credit__name" text="MQTTnet" />
         <ui:Label class="credit__text" text="The MQTTnet contributors, MIT licence." />
 

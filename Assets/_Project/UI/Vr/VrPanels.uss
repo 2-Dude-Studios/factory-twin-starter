@@ -147,3 +147,54 @@
 .menu__button--key { background-color: rgb(255, 174, 13); color: rgb(29, 22, 0); }
 .menu__button--key:hover { background-color: rgb(255, 196, 70); }
 .menu__button--exit { background-color: rgb(120, 40, 34); }
+
+/* Fire training station score board (FireScoreBoard, M15) */
+.score__header { flex-direction: row; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.score__trainee { font-size: 22px; color: rgb(240, 242, 244); -unity-font-style: bold; margin: 2px 0 0 0; padding: 0; }
+.score__total-box { align-items: flex-end; }
+.score__total { font-size: 64px; color: rgb(255, 196, 70); -unity-font-style: bold; margin: 0; padding: 0; }
+.score__runs { font-size: 18px; color: rgb(160, 168, 176); margin: 0 0 10px 0; padding: 0; }
+.score__badges { font-size: 22px; color: rgb(255, 196, 70); white-space: normal; margin: 2px 0 12px 0; padding: 0; }
+.score__steps { font-size: 20px; color: rgb(220, 226, 232); white-space: normal; margin: 2px 0 8px 0; padding: 0; }
+.score__news { font-size: 20px; color: rgb(54, 200, 120); -unity-font-style: bold; white-space: normal; margin: 0; padding: 0; }
+
+/* Fire drill HUD (FireHud, M15): follows the view, low and ahead. */
+.fhud { width: 100%; height: 100%; padding: 14px 20px; background-color: rgba(12, 14, 16, 0.86); border-radius: 18px; border-width: 2px; border-color: rgba(255, 174, 13, 0.55); }
+.fhud__row { flex-direction: row; align-items: center; margin-bottom: 8px; }
+.fhud__top { justify-content: space-between; }
+.fhud__stat { flex-direction: row; align-items: center; margin-right: 24px; }
+.fhud__icon { width: 40px; height: 40px; margin-right: 10px; -unity-background-scale-mode: scale-to-fit; -unity-background-image-tint-color: rgb(220, 226, 232); flex-shrink: 0; }
+.fhud__icon--gold { -unity-background-image-tint-color: rgb(255, 196, 70); }
+.fhud__score { font-size: 46px; -unity-font-style: bold; color: rgb(255, 196, 70); margin: 0; padding: 0; }
+.fhud__unit { font-size: 18px; color: rgb(160, 168, 176); margin: 14px 0 0 6px; padding: 0; }
+.fhud__timer { font-size: 34px; -unity-font-style: bold; color: rgb(240, 242, 244); margin: 0; padding: 0; }
+.fhud__badges { flex-direction: row; flex-grow: 1; justify-content: flex-end; }
+.fhud__badge { width: 46px; height: 46px; margin-left: 8px; -unity-background-scale-mode: scale-to-fit; }
+.fhud__block { flex-direction: row; align-items: center; flex-grow: 1; flex-basis: 0; }
+.fhud__block--ext { margin-left: 16px; }
+.fhud__fire { font-size: 24px; -unity-font-style: bold; color: rgb(240, 242, 244); margin: 0; padding: 0; white-space: normal; }
+.fhud__stage { font-size: 20px; color: rgb(255, 196, 70); margin: 2px 0 0 0; padding: 0; }
+.fhud__stage--danger { color: rgb(255, 90, 80); -unity-font-style: bold; }
+.fhud__ext { flex-grow: 1; }
+.fhud__bar { height: 12px; margin-top: 6px; background-color: rgb(52, 60, 68); border-radius: 6px; overflow: hidden; }
+.fhud__bar-fill { height: 100%; width: 0%; background-color: rgb(54, 200, 120); border-radius: 6px; }
+.fhud__bar-fill--low { background-color: rgb(255, 90, 80); }
+.fhud__distance { font-size: 19px; color: rgb(220, 226, 232); margin: 6px 0 0 0; padding: 0; }
+.fhud__distance--good { color: rgb(80, 220, 140); -unity-font-style: bold; }
+.fhud__distance--danger { color: rgb(255, 80, 64); -unity-font-style: bold; }
+.fhud__steps { justify-content: space-between; margin-bottom: 6px; }
+.fhud__step { flex-direction: row; align-items: center; padding: 4px 10px; border-radius: 14px; background-color: rgb(32, 37, 42); }
+.fhud__step--done { background-color: rgba(54, 168, 108, 0.35); }
+.fhud__step-icon { width: 24px; height: 24px; margin-right: 6px; -unity-background-scale-mode: scale-to-fit; -unity-background-image-tint-color: rgb(120, 128, 136); }
+.fhud__step--done .fhud__step-icon { -unity-background-image-tint-color: rgb(80, 220, 140); }
+.fhud__step-text { font-size: 18px; color: rgb(170, 178, 186); margin: 0; padding: 0; }
+.fhud__step--done .fhud__step-text { color: rgb(230, 240, 234); }
+.fhud__advice { font-size: 22px; color: rgb(255, 196, 70); white-space: normal; margin: 0; padding: 0; -unity-text-align: middle-center; }
+
+/* Badge chips (BadgeChips): the score board and the HUD */
+.badge-row { flex-direction: row; flex-wrap: wrap; align-items: center; margin: 4px 0 10px 0; }
+.badge-chip { flex-direction: row; align-items: center; margin: 0 14px 6px 0; }
+.badge-chip__icon { width: 38px; height: 38px; margin-right: 6px; -unity-background-scale-mode: scale-to-fit; }
+.badge-chip__name { font-size: 18px; color: rgb(255, 196, 70); margin: 0; padding: 0; }
+.fhud__badges .badge-chip { margin: 0 0 0 8px; }
+.fhud__badges .badge-chip__icon { width: 44px; height: 44px; margin-right: 0; }

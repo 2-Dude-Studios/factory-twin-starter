@@ -61,6 +61,35 @@ namespace TwoDude.FactoryTwin.UI
             return samples;
         }
 
+        /// <summary>Two rising bell tones: a badge earned.</summary>
+        public static float[] ChimeSamples(float level)
+        {
+            float[] first = Bell(880f, 0.35f, level);
+            float[] second = Bell(1320f, 0.5f, level);
+            int gap = SampleRate / 8;
+            var samples = new float[gap + second.Length];
+            for (int i = 0; i < first.Length && i < samples.Length; i++)
+                samples[i] += first[i];
+            for (int i = 0; i < second.Length; i++)
+                samples[gap + i] += second[i];
+            for (int i = 0; i < samples.Length; i++)
+                samples[i] = Mathf.Clamp(samples[i], -1f, 1f);
+            return samples;
+        }
+
+        private static float[] Bell(float hertz, float seconds, float level)
+        {
+            int count = Mathf.RoundToInt(seconds * SampleRate);
+            var samples = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                float t = i / (float)SampleRate;
+                float envelope = Mathf.Exp(-t * 7f) * Mathf.Min(1f, t * 400f);
+                samples[i] = level * envelope * (Mathf.Sin(2f * Mathf.PI * hertz * t) + 0.3f * Mathf.Sin(2f * Mathf.PI * hertz * 2.01f * t));
+            }
+            return samples;
+        }
+
         public static AudioClip Clip(string name, float[] samples)
         {
             if (samples == null)
