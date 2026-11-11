@@ -178,8 +178,9 @@ namespace TwoDude.FactoryTwin.UI
             mat.SetFloat("_Smoothness", 0.2f);
             if (emission.maxColorComponent > 0f)
             {
+                // Realtime emissive: with the flags at None, URP drops the emission keyword when it validates the material.
                 mat.EnableKeyword("_EMISSION");
-                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
                 mat.SetColor("_EmissionColor", emission);
             }
             EditorUtility.SetDirty(mat);
