@@ -243,6 +243,12 @@ You asked for a dedicated area in the scene for each drill, and for the drill ac
 **M24 — Training areas and game layer (≈4 days), runs before the rest of M20.** `TrainingAreas` asset and `Build Training Areas`; `DrillScore` generalised from `FireDrillScore`, with tests; levels, badges and spot-the-mistake activities for the robot and lockout drills.
 Exit: each drill starts at its own area on desktop and in the headset, and nothing from another drill sits in it; the hub shows every trainee's stars and badges; a critical mistake fails a level whatever the points; the robot and lockout drills score by level and clause; 72 fps over Link standing in each area.
 
+### Standalone Quest for SideQuest and the Meta Horizon Store (Rev 8, proposed 2026-11-11, not yet approved)
+
+You asked for a VR-specific version to host on SideQuest and the Meta app store. Plan in `docs/quest-standalone.md`: one Android app for Quest 3 and 3S with the menu, the hub and the drills, running on the headset alone (no PC, broker, PLC or dashboard). It needs a Quest variant of the scene (the hall is over Meta's budget as it stands), a standalone mode with in-headset controls, and the stores' packaging, performance and listing requirements. This moves "standalone Quest 3" out of Later.
+
+**M25 Quest spike (≈2 days)** · **M26 Quest scene variant (≈4)** · **M27 Standalone mode (≈2.5)** · **M28 Store readiness (≈2.5)** · **M29 Listings and release (≈2, plus one to two weeks of review).** About 13 days. Exits and the seven open decisions are in the plan.
+
 ## Later (not scheduled)
 
 Planned in Rev 2 (commit `ee852e9` has the full exit conditions). Virtual commissioning moved into Rev 4 as M7–M9, workforce training and safety into Rev 5 as M10–M13. Each builds on the same signal contract and can be picked up when a prospect asks for it:
