@@ -73,6 +73,9 @@ namespace TwoDude.FactoryTwin.UI
             _subscriptions = Array.Empty<IDisposable>();
         }
 
+        /// <summary>Starts a level (1 to 4) or ends the one running (0), as cell/training/robot_level does.</summary>
+        public void StartLevel(int wanted) => Publish(CellTopics.TrainingRobotLevel, wanted);
+
         private void OnLevel(SignalMessage message)
         {
             int wanted = (int)message.Value.AsNumber;
