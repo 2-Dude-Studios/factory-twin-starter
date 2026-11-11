@@ -1,14 +1,17 @@
 using System.Collections;
+using System;
 using TwoDude.FactoryTwin.Twin;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 
 namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
     /// Training (M15): starts the training the start menu asked for once Cell.unity has loaded (and the headset is
-    /// back on, if it was on): the fire drill at the fire training station, the lockout run at the line control
-    /// station, the robot zone from the cell's start; free roam starts nothing. Opening Cell.unity directly asks for
-    /// nothing, so the cell behaves as before.
+    /// back on, if it was on), in its own area of the hall (M24): the fire drill at the fire training station, the
+    /// lockout run at the line control station, the robot zone south of the cell, the electrical drill in its bay,
+    /// free roam at the hub. The desktop trainee and the headset rig are put on the same start spot. Opening
+    /// Cell.unity directly asks for nothing, so the cell behaves as before.
     /// </summary>
     public sealed class TrainingLauncher : MonoBehaviour
     {
@@ -16,6 +19,10 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private VrSwitch vrSwitch;
         [SerializeField] private VrMenu vrMenu;
         [SerializeField] private VrFireMenu fireMenu;
+        [Tooltip("The start spot of each training area (Build Training Areas). Left empty, the tablet's Go to spots are used.")]
+        [SerializeField] private TrainingAreaStart[] starts = Array.Empty<TrainingAreaStart>();
+        [SerializeField] private TraineeWalker trainee;
+        [SerializeField] private XROrigin origin;
         [SerializeField, Min(1f)] private float vrWaitSeconds = 10f;
 
         [Header("Status (play mode, read-only)")]
@@ -37,24 +44,52 @@ namespace TwoDude.FactoryTwin.UI
             yield return null;
             bool vr = vrSwitch != null && vrSwitch.VrRunning;
 
+            TrainingAreaStart start = StartOf(TrainingLaunch.AreaFor(mode));
+            if (start != null && trainee != null)
+                trainee.Teleport(start.FloorPosition.x, start.FloorPosition.z, start.YawDegrees, 0f);
+
             switch (mode)
             {
                 case TrainingMode.FireSafety:
+                    // The fire page takes the headset to the station itself and swaps the tablet to the drill.
                     if (vr && fireMenu != null)
                         fireMenu.EnterDrill();
                     break;
                 case TrainingMode.Lockout:
                     TrainingCommands.StartTraining(context.Bus);
-                    if (vr && vrMenu != null)
-                        vrMenu.GoToSpot("menu-go-station");
+                    if (vr)
+                        GoTo(start, "menu-go-station");
                     break;
                 case TrainingMode.RobotZone:
-                    if (vr && vrMenu != null)
-                        vrMenu.GoToSpot("menu-go-cell");
+                    if (vr)
+                        GoTo(start, "menu-go-cell");
+                    break;
+                default:
+                    if (vr)
+                        GoTo(start, null);
                     break;
             }
             started = mode;
             Debug.Log($"[TrainingLauncher] {TrainingLaunch.Title(mode)} started ({(vr ? "headset" : "desktop")}).", this);
+        }
+
+        private TrainingAreaStart StartOf(TrainingArea area)
+        {
+            foreach (TrainingAreaStart start in starts)
+            {
+                if (start != null && start.Area == area)
+                    return start;
+            }
+            return null;
+        }
+
+        // The headset over the area's start spot; without one, the tablet's own Go to spot (as before M24).
+        private void GoTo(TrainingAreaStart start, string fallbackSpot)
+        {
+            if (start != null && origin != null)
+                RigTeleport.GoTo(origin, start.FloorPosition, start.YawDegrees);
+            else if (fallbackSpot != null && vrMenu != null)
+                vrMenu.GoToSpot(fallbackSpot);
         }
     }
 }

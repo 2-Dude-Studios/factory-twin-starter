@@ -11,10 +11,11 @@ namespace TwoDude.FactoryTwin.Twin
     /// Electrical safety (M19): builds the drive cabinet into Cell.unity, repeatably. Writes the scenario assets E1–E4
     /// and the arc flash study (Assets/_Project/Data/Electrical; an existing study is left as it is), adds
     /// Cell/Electrical with the CabinetStation, our own cabinet DCP-1 from Drive_Cabinet.fbx
-    /// (tools/blender/drive_cabinet.py) at Rev 6's cabinet spot with its door, Q1 handle, DC bus LEDs, 15 probe
-    /// points and the arc flash label, the three boundary rings, the boundary monitor on the trainee's head and hands,
-    /// and the dashboard's electrical panel. It removes realvirtual's scaled ControlCabinet box from Cell/Fire and
-    /// moves the F1 fire to the top of the new cabinet. Running it again updates what is there.
+    /// (tools/blender/drive_cabinet.py) in the electrical training bay (M24; the layout asset says where) with its
+    /// door, Q1 handle, DC bus LEDs, 15 probe points and the arc flash label, the three boundary rings, the boundary
+    /// monitor on the trainee's head and hands, a cable tray to the infeed drive, and the dashboard's electrical
+    /// panel. It removes realvirtual's scaled ControlCabinet box from Cell/Fire and moves the F1 fire and its two
+    /// detector heads to the new cabinet. Running it again updates what is there.
     /// </summary>
     internal static class ElectricalSetup
     {
@@ -25,14 +26,22 @@ namespace TwoDude.FactoryTwin.Twin
         private const string StudyPath = DataFolder + "/ArcFlashStudy.asset";
         private const string ElectricalPanelType = "TwoDude.FactoryTwin.UI.ElectricalPanel, TwoDude.FactoryTwin.UI";
 
-        /// <summary>
-        /// The centre of Rev 6's cabinet footprint, facing south (−Z) towards the trainee's side. realvirtual's box has
-        /// its pivot at (0.9, 1.0, −1.3) but its mesh sits off the pivot: its bounds' centre, where F1's anchor is, was
-        /// read from Cell.unity at (0.9, −1.079) on 2026-11-05. Our cabinet's pivot is its footprint's centre.
-        /// </summary>
-        public static readonly Vector3 CabinetAt = new Vector3(0.9f, 0f, -1.08f);
-        public const float CabinetYaw = 180f;
         public const string CabinetPath = "Cell/Electrical/DriveCabinet";
+        public const string AreasPath = "Assets/_Project/Data/Training/TrainingAreas.asset";
+
+        /// <summary>
+        /// Where the cabinet stands and which way its door faces: the electrical training bay's machine spot (M24),
+        /// from the layout asset when there is one, else the default layout. Until 2026-11-11 it stood on Rev 6's
+        /// cabinet footprint at (0.9, −1.08), inside the cell; its pivot is its footprint's centre.
+        /// </summary>
+        public static AreaSpot CabinetSpot()
+        {
+            var layout = AssetDatabase.LoadAssetAtPath<TrainingAreas>(AreasPath);
+            TrainingAreaSettings bay = layout != null ? layout.Find(TrainingArea.Electrical) : null;
+            if (bay == null || !bay.HasMachine)
+                bay = TrainingAreaDefaults.For(TrainingArea.Electrical);
+            return bay.Machine;
+        }
 
         // The exposed parts behind the door, in the cabinet's space (Drive_Cabinet.fbx): the mounting plate's face to
         // the door opening, the inside of the side walls, floor to roof.
@@ -79,6 +88,7 @@ namespace TwoDude.FactoryTwin.Twin
 
             Rings(cabinet, context, study);
             Monitor(root, context, study, exposed);
+            CableTray(root, cabinet);
             ReplaceFireBox(cabinet);
             DashboardPanel(context);
 
@@ -183,7 +193,8 @@ namespace TwoDude.FactoryTwin.Twin
         private static Transform Cabinet(Transform root, Dictionary<string, Transform> parts, CellContext context, ArcFlashStudy study)
         {
             Transform cabinet = Child(root, "DriveCabinet");
-            cabinet.SetPositionAndRotation(CabinetAt, Quaternion.Euler(0f, CabinetYaw, 0f));
+            AreaSpot spot = CabinetSpot();
+            cabinet.SetPositionAndRotation(new Vector3(spot.X, 0f, spot.Z), Quaternion.Euler(0f, spot.YawDegrees, 0f));
 
             Transform body = Visual(cabinet, "Body", parts["Cab_Body"], Vector3.zero);
             Transform door = Visual(cabinet, "Door", parts["Cab_Door"], Vector3.zero);
@@ -412,7 +423,91 @@ namespace TwoDude.FactoryTwin.Twin
                 Undo.RecordObject(anchor, "Move F1");
                 anchor.position = FireCabinetSpot(b);
                 Debug.Log($"[ElectricalSetup] F1 fire anchor moved to {anchor.position:F2}.");
+                // Its detector heads hang under the ceiling above it; they keep their height and their spacing.
+                Transform smoke = fire.transform.Find("SmokeHead_" + FireLocation.DriveCabinet);
+                Transform heat = fire.transform.Find("HeatHead_" + FireLocation.DriveCabinet);
+                Vector3 offset = smoke != null && heat != null ? heat.position - smoke.position : new Vector3(0.6f, 0f, 0f);
+                if (smoke != null)
+                {
+                    Undo.RecordObject(smoke, "Move F1 heads");
+                    smoke.position = new Vector3(anchor.position.x, smoke.position.y, anchor.position.z);
+                }
+                if (heat != null)
+                {
+                    Undo.RecordObject(heat, "Move F1 heads");
+                    heat.position = new Vector3(anchor.position.x + offset.x, heat.position.y, anchor.position.z + offset.z);
+                }
             }
+        }
+
+        // ---- Cable tray ------------------------------------------------------------------------------------------
+
+        private const float TrayHeight = 2.7f;
+
+        // The feed from the cabinet to the infeed drive: up out of the cabinet's roof, west along an overhead tray on
+        // posts, across to the south side of the conveyor, down in conduit and into the drive. Dressing only: it shows
+        // why a cabinet a few metres from its conveyor still belongs to it. Rebuilt from scratch on each run.
+        private static void CableTray(Transform root, Transform cabinet)
+        {
+            Transform old = root.Find("CableTray");
+            if (old != null)
+                Undo.DestroyObjectImmediate(old.gameObject);
+            GameObject drive = GameObject.Find("Cell/Infeed/Drive");
+            if (drive == null || !TryBounds(cabinet.Find("Body").gameObject, out Bounds body))
+            {
+                Debug.Log("[ElectricalSetup] No Cell/Infeed/Drive (or no cabinet body); no cable tray.");
+                return;
+            }
+            Vector3 d = TryBounds(drive, out Bounds driveBounds) ? driveBounds.center : drive.transform.position;
+            Vector3 top = new Vector3(body.center.x, body.max.y, body.center.z);
+            float dropX = d.x + 0.15f, dropZ = d.z - 0.5f;
+            if (Mathf.Abs(top.x - dropX) < 1.5f)
+            {
+                Debug.Log("[ElectricalSetup] The cabinet stands by the infeed drive; no cable tray needed.");
+                return;
+            }
+
+            Transform tray = Child(root, "CableTray");
+            tray.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            Material steel = Lit("CableTray", new Color(0.62f, 0.64f, 0.66f), emission: false);
+            var up = new Vector3(top.x, TrayHeight, top.z);
+            var corner = new Vector3(dropX, TrayHeight, top.z);
+            var over = new Vector3(dropX, TrayHeight, dropZ);
+            var down = new Vector3(dropX, d.y, dropZ);
+            var into = new Vector3(dropX, d.y, d.z - 0.12f);
+            Run(tray, "Riser", top, up, 0.09f, 0.09f, steel);
+            Run(tray, "Tray_Run", up, corner, 0.22f, 0.06f, steel);
+            Run(tray, "Tray_Cross", corner, over, 0.22f, 0.06f, steel);
+            Run(tray, "Drop", over, down, 0.07f, 0.07f, steel);
+            Run(tray, "Stub", down, into, 0.07f, 0.07f, steel);
+
+            // Posts under the long run, clear of both ends, no more than 2.4 m apart.
+            float from = Mathf.Min(up.x, corner.x) + 0.9f, to = Mathf.Max(up.x, corner.x) - 1.2f;
+            int posts = Mathf.Max(1, Mathf.CeilToInt((to - from) / 2.4f) + 1);
+            for (int i = 0; i < posts; i++)
+            {
+                float x = posts == 1 ? (from + to) * 0.5f : Mathf.Lerp(from, to, i / (float)(posts - 1));
+                Run(tray, "Post_" + (i + 1), new Vector3(x, 0f, top.z), new Vector3(x, TrayHeight - 0.03f, top.z), 0.06f, 0.06f, steel);
+            }
+            Debug.Log($"[ElectricalSetup] Cable tray from the cabinet to the infeed drive at {d:F2}: {Mathf.Abs(up.x - corner.x):F1} m run, {posts} posts.");
+        }
+
+        // A straight box between two points, as wide and deep as given (a tray, a conduit, a post).
+        private static void Run(Transform parent, string name, Vector3 a, Vector3 b, float width, float depth, Material mat)
+        {
+            GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.name = name;
+            go.transform.SetParent(parent, false);
+            Undo.RegisterCreatedObjectUndo(go, name);
+            Vector3 along = b - a;
+            go.transform.position = (a + b) * 0.5f;
+            bool vertical = Mathf.Abs(along.y) > Mathf.Max(Mathf.Abs(along.x), Mathf.Abs(along.z));
+            bool alongX = Mathf.Abs(along.x) >= Mathf.Abs(along.z);
+            float length = along.magnitude + (vertical ? 0f : width);
+            go.transform.localScale = vertical ? new Vector3(width, length, depth)
+                : alongX ? new Vector3(length, depth, width) : new Vector3(width, depth, length);
+            go.GetComponent<Renderer>().sharedMaterial = mat;
         }
 
         /// <summary>Where the F1 fire burns on the drive cabinet: the top centre, 0.25 m down (as FireSetup placed it).</summary>
