@@ -1,4 +1,5 @@
 using System;
+using TwoDude.FactoryTwin.Twin;
 
 namespace TwoDude.FactoryTwin.UI
 {
@@ -10,6 +11,9 @@ namespace TwoDude.FactoryTwin.UI
         Lockout = 2,
         RobotZone = 3,
         FireSafety = 4,
+
+        /// <summary>Electrical safety and arc flash (Rev 7); its menu card comes with M22.</summary>
+        Electrical = 5,
     }
 
     /// <summary>
@@ -57,7 +61,21 @@ namespace TwoDude.FactoryTwin.UI
                 case TrainingMode.Lockout: return "Lockout / tagout";
                 case TrainingMode.RobotZone: return "Robot safety zone";
                 case TrainingMode.FreeRoam: return "Free roam";
+                case TrainingMode.Electrical: return "Electrical safety";
                 default: return string.Empty;
+            }
+        }
+
+        /// <summary>The area in the hall where a training starts (M24); free roam starts at the hub.</summary>
+        public static TrainingArea AreaFor(TrainingMode mode)
+        {
+            switch (mode)
+            {
+                case TrainingMode.FireSafety: return TrainingArea.Fire;
+                case TrainingMode.Lockout: return TrainingArea.Lockout;
+                case TrainingMode.RobotZone: return TrainingArea.RobotCell;
+                case TrainingMode.Electrical: return TrainingArea.Electrical;
+                default: return TrainingArea.Hub;
             }
         }
 

@@ -236,11 +236,11 @@ Exit: the clip is captured from the project and approved.
 
 M19–M23 come to roughly 13.5 days of focused time.
 
-### Training areas and game layer (proposed 2026-11-11, not yet approved)
+### Training areas and game layer (approved 2026-11-11)
 
 You asked for a dedicated area in the scene for each drill, and for the drill activities, gamified by clause. Plan in `docs/training-areas.md`: five areas (a hub, robot cell safety, lockout, electrical, fire), each built round its real machine with its own floor border, sign, briefing post, kit station, start spot and score board; the drive cabinet moved to its own bay east of the cell; one game layer for all four drills (four levels, stars, a compliance gate where a critical mistake fails whatever the points, clauses on every step, badges, one record format, refresher reminders).
 
-**M24 — Training areas and game layer (≈4 days), proposed to run before the rest of M20.** `TrainingAreas` asset and `Build Training Areas`; `DrillScore` generalised from `FireDrillScore`, with tests; levels, badges and spot-the-mistake activities for the robot and lockout drills.
+**M24 — Training areas and game layer (≈4 days), runs before the rest of M20.** `TrainingAreas` asset and `Build Training Areas`; `DrillScore` generalised from `FireDrillScore`, with tests; levels, badges and spot-the-mistake activities for the robot and lockout drills.
 Exit: each drill starts at its own area on desktop and in the headset, and nothing from another drill sits in it; the hub shows every trainee's stars and badges; a critical mistake fails a level whatever the points; the robot and lockout drills score by level and clause; 72 fps over Link standing in each area.
 
 ## Later (not scheduled)
