@@ -208,6 +208,14 @@
                     <ui:Button name="clear-fault" text="Clear" class="fault-button fault-button--clear" />
                     <ui:Button name="start-training" text="Lockout training" class="fault-button fault-button--key" />
                 </ui:VisualElement>
+                <ui:Label text="Robot cell drill" class="metric__name fault-subtitle" />
+                <ui:VisualElement class="fault-buttons">
+                    <ui:Button name="robot-1" text="L1 Zones" tooltip="Awareness: step into each zone, reset from outside" class="fault-button" />
+                    <ui:Button name="robot-2" text="L2 Stop, reset" tooltip="Skills: stop the line, go in, come out, reset, restart" class="fault-button" />
+                    <ui:Button name="robot-3" text="L3 Jam" tooltip="Procedure: clear a part at the gate, then stop a colleague walking in" class="fault-button" />
+                    <ui:Button name="robot-4" text="L4 Assess" tooltip="Assessment: a jam, a walker or both, no hints" class="fault-button" />
+                    <ui:Button name="robot-end" text="End drill" class="fault-button fault-button--clear" />
+                </ui:VisualElement>
                 <ui:Label text="Fire drills" class="metric__name fault-subtitle" />
                 <ui:VisualElement class="fault-buttons">
                     <ui:Button name="fire-1" text="F1 Cabinet" tooltip="Drive cabinet overheats, then smokes (Class C)" class="fault-button" />

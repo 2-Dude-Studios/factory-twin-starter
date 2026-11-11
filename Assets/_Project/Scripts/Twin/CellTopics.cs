@@ -153,6 +153,13 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath TrainingErrors = new TopicPath("training", "errors");
         public static readonly TopicPath TrainingResult = new TopicPath("training", "result");
 
+        // Robot cell safety drill (M24). training/robot_level (in) starts a level, 1 to 4 (0 ends the one running);
+        // training/robot_step is the count of its required steps done; training/robot_stars the stars of the level
+        // just finished (0 failed, 1 to 3 passed), published once at its end.
+        public static readonly TopicPath TrainingRobotLevel = new TopicPath("training", "robot_level");
+        public static readonly TopicPath TrainingRobotStep = new TopicPath("training", "robot_step");
+        public static readonly TopicPath TrainingRobotStars = new TopicPath("training", "robot_stars");
+
         // Line start and stop (M11). line/start and line/stop (in) are button presses: each true is one press.
         // LineCommands counts them on line/start_count and line/stop_count, which is what both logic sources read: a
         // press is the count going up by exactly one, so a press cannot fall between two Modbus polls, and a count

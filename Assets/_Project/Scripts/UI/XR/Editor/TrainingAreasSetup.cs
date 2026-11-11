@@ -74,6 +74,15 @@ namespace TwoDude.FactoryTwin.UI
                 scorerSo.FindProperty("controller").objectReferenceValue = controller;
                 scorerSo.ApplyModifiedProperties();
             }
+            // The robot cell drill (M24): scored on Cell/Training, started from the dashboard or the start menu.
+            var robotScorer = GetOrAdd<RobotCellScorer>(training.gameObject);
+            var robotSo = new SerializedObject(robotScorer);
+            robotSo.FindProperty("context").objectReferenceValue = cell.GetComponent<CellContext>();
+            robotSo.FindProperty("traineeName").stringValue = trainee;
+            if (controller != null)
+                robotSo.FindProperty("trainerName").stringValue = controller.TrainerName;
+            robotSo.ApplyModifiedProperties();
+            DashboardButtons(cell.GetComponent<CellContext>());
             var starts = new List<Object>();
             int teleportFloors = 0;
             foreach (TrainingAreaSettings area in layout.Areas)
@@ -105,6 +114,7 @@ namespace TwoDude.FactoryTwin.UI
                     fillerSo.FindProperty("area").intValue = (int)area.Area;
                     fillerSo.FindProperty("body").objectReferenceValue = text;
                     fillerSo.FindProperty("traineeName").stringValue = trainee;
+                    fillerSo.FindProperty("liveSource").objectReferenceValue = area.Area == TrainingArea.RobotCell ? robotScorer : null;
                     fillerSo.ApplyModifiedProperties();
                 }
                 if (TeleportFloor(node, area, cellTeleport))
@@ -306,6 +316,23 @@ namespace TwoDude.FactoryTwin.UI
             if (box == null)
                 return null;
             return new Bounds(floor.TransformPoint(box.center), Vector3.Scale(box.size, floor.lossyScale));
+        }
+
+        // The dashboard's Robot cell drill buttons (Dashboard.uxml), wired by RobotDrillButtons on the Dashboard.
+        private static void DashboardButtons(CellContext context)
+        {
+            GameObject dashboard = GameObject.Find("Dashboard");
+            var document = dashboard != null ? dashboard.GetComponent<UnityEngine.UIElements.UIDocument>() : null;
+            if (document == null)
+            {
+                Debug.LogWarning("[TrainingAreasSetup] No Dashboard with a UIDocument; add RobotDrillButtons by hand.");
+                return;
+            }
+            var buttons = GetOrAdd<RobotDrillButtons>(dashboard);
+            var so = new SerializedObject(buttons);
+            so.FindProperty("document").objectReferenceValue = document;
+            so.FindProperty("context").objectReferenceValue = context;
+            so.ApplyModifiedProperties();
         }
 
         // ---- The launcher ----------------------------------------------------------------------------------------
