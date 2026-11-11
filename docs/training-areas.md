@@ -97,8 +97,8 @@ Rev 6 already has the pieces: `FireDrillScore` (points, mistakes by clause, badg
 
 | Level | Activity | Clause it practises | Badge |
 |---|---|---|---|
-| 1 Awareness | Walk the fence line: find the warning zone, the protective zone, the E-stops and the reset station; quiz card (what slows the arm, what stops it, who may reset) | ISO 10218-2 (safeguarding, restart), ISO 13855 (zone size) | Zone aware |
-| 2 Skills | E-stop and reset: stop the arm from the nearest E-stop, then reset from outside the zone; a reset tried from inside is refused and counts as a mistake | IEC 60204-1 (stop category, reset); ISO 10218-2 (restart only from outside) | Reset right |
+| 1 Awareness | Step into the warning zone and out again, into the protective zone and out again, then reset from outside: see what slows the arm, what stops it and what restarts it (as built; the quiz card is not built) | ISO 10218-2 (safeguarding, restart), ISO 13855 (zone size) | Zone aware |
+| 2 Skills | Stop and reset: stop the line at the control station, go in, come out, reset from outside the zone, restart; a reset tried from inside is refused and counts as a mistake (the cell has no E-stop prop yet, so the line stop stands in) | IEC 60204-1 (stop category, reset); ISO 10218-2 (restart only from outside) | Reset right |
 | 3 Procedure | Clear a jam at the gate: stop the line, enter (protective stop), clear it, leave, check the zone is clear, reset; entering while the arm moves is critical | ISO 10218-2; 1910.147(a)(2)(ii) (minor servicing needs effective alternative protection) | Clean clear |
 | 3 Spot the mistake | A colleague walks into the running cell (the existing `ZoneWalker`): stop them at the warning zone or hit the E-stop | ISO 10218-2 (protection of others) | Eagle eye |
 | 4 Assessment | Random: a jam, a walker, or both | All | Cell keeper (all three stars) |
@@ -153,4 +153,4 @@ The fire and electrical activities stay in their own milestones: the fire practi
 2. ~~The drive cabinet~~ **Moved to its own bay** east of the cell (2026-11-11, you).
 3. The hub: build it (recommended; it is where the badge wall and the hall map live), or start each drill straight at its area from the start menu.
 4. Positions: built and checked in Scene view pictures 2026-11-11 (the hub moved out of a storage rack; the lockout and fire signs moved to the edge people arrive at). Still yours to look at in the headset; the fire practice pan's spot comes with M15.
-5. Robot level 3 (jam clearing under the protective stop): keep it, framed as minor servicing with alternative protection under 1910.147(a)(2)(ii), or replace it with a full lockout of the cell.
+5. ~~Robot level 3 (jam clearing)~~ **Zone stop only** (2026-11-11, you): the trainee stops the line and clears the part under the zone's protective stop, framed as minor servicing with effective alternative protection under 1910.147(a)(2)(ii).

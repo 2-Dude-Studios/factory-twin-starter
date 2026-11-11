@@ -65,8 +65,8 @@ namespace TwoDude.FactoryTwin.Twin
 
         private static readonly DrillLevel[] Robot =
         {
-            new DrillLevel(1, LevelNames[0], "Find the warning zone, the protective zone, the E-stops and the reset station.", "ISO 10218-2; ISO 13855", "Zone aware"),
-            new DrillLevel(2, LevelNames[1], "Stop the arm from the nearest E-stop, then reset from outside the zone.", "IEC 60204-1; ISO 10218-2", "Reset right"),
+            new DrillLevel(1, LevelNames[0], "Step into each zone and see what the arm does; reset from outside the zone.", "ISO 10218-2; ISO 13855", "Zone aware"),
+            new DrillLevel(2, LevelNames[1], "Stop the line, go in, come out, reset from outside the zone, restart.", "IEC 60204-1; ISO 10218-2", "Reset right"),
             new DrillLevel(3, LevelNames[2], "Clear a jam at the gate under the protective stop; stop a colleague walking in.", "ISO 10218-2; 1910.147(a)(2)(ii)", "Clean clear"),
             new DrillLevel(4, LevelNames[3], "A jam, a walker, or both, with no hints.", "All of the above", "Cell keeper"),
         };
