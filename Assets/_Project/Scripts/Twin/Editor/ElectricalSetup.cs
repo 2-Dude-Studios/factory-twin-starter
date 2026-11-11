@@ -168,7 +168,9 @@ namespace TwoDude.FactoryTwin.Twin
             {
                 mat.EnableKeyword("_EMISSION");
                 mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
-                mat.SetColor("_EmissionColor", Color.black);
+                // Not quite black: URP switches the emission keyword off on a material whose emission is black, and
+                // the property blocks that light the LEDs and the rings at run time would then show nothing.
+                mat.SetColor("_EmissionColor", new Color(0.002f, 0.002f, 0.002f));
             }
             EditorUtility.SetDirty(mat);
             return mat;
