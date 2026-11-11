@@ -52,7 +52,8 @@ namespace TwoDude.FactoryTwin.UI
                 xrRig.SetActive(false);
             bool carried = _vrAcrossSceneLoad;
             _vrAcrossSceneLoad = false;
-            if (carried || Array.IndexOf(Environment.GetCommandLineArgs(), CommandLineFlag) >= 0)
+            // On the headset itself (the standalone Quest build) there is no desktop view to start in.
+            if (carried || Application.platform == RuntimePlatform.Android || Array.IndexOf(Environment.GetCommandLineArgs(), CommandLineFlag) >= 0)
                 StartVr();
         }
 
