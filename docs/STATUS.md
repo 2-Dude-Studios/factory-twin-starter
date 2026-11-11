@@ -8,7 +8,8 @@
 4. Decide on the uncommitted Rocketbox `.meta` changes under `Assets/ThirdParty/Rocketbox/` (importer state from Build Simulated Workers) and the UnitySkills bump in `Packages/`.
 5. Commit the VC capture tooling (`TakeAudioRecorder`, `TakeEventLog`, `capture_build_takes.py`, `render_code_takes.py`, `-targetfps`) and `tools/video/training/` (drop the cloned voice ID from `script.json` first).
 6. Later use cases (build plan, Later) when a prospect asks.
-**Last updated:** 2026-11-06
+7. Training areas and game layer (asked 2026-11-11): plan in `docs/training-areas.md`, proposed as M24 before the rest of M20, waiting for your approval and the five positions. M20 (tester, PPE, gloves) is paused until then; nothing of it is written yet.
+**Last updated:** 2026-11-11
 
 ## Done
 - Repo scaffold, CLAUDE.md, licence register, broker + replayer tooling.
