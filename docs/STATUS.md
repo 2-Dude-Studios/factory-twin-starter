@@ -9,7 +9,7 @@
 5. Commit the VC capture tooling (`TakeAudioRecorder`, `TakeEventLog`, `capture_build_takes.py`, `render_code_takes.py`, `-targetfps`) and `tools/video/training/` (drop the cloned voice ID from `script.json` first).
 6. Later use cases (build plan, Later) when a prospect asks.
 7. Training areas and game layer (M24, approved 2026-11-11, cabinet to its own bay): the areas are built in Cell.unity, the shared game layer is in, lockout runs score through it and the robot cell drill has its four levels (see M24); next the lockout's levels 1, 2 and 4, then the headset check. M20 (tester, PPE, gloves) follows M24; nothing of it is written yet.
-8. Standalone Quest version for SideQuest and the Meta Horizon Store (asked 2026-11-11): plan in `docs/quest-standalone.md`, proposed as Rev 8 (M25–M29, about 13 days plus store review), waiting for your decisions (what ships first, devices, free or paid, name, when). Nothing of it is built.
+8. Standalone Quest version for SideQuest and the Meta Horizon Store (asked 2026-11-11): plan in `docs/quest-standalone.md`, proposed as Rev 8 (M25–M29, about 13 days plus store review). **The M25 spike is under way** (see M25): the Editor is on Android and the first APK build was still running when you said not to wait. The other decisions (what ships first, devices, free or paid, name) are still open.
 **Last updated:** 2026-11-11
 
 ## Done
@@ -480,6 +480,20 @@ You asked for a dedicated area per drill and gamified activities by clause; plan
 - [ ] Lockout levels 1, 2 and 4 and its spot-the-mistake. Fire takes the layer in M17, electrical in M20–M22.
 - [ ] **Yours to try:** the robot drill's levels 2–4 from the dashboard (desktop trainee or headset): the gate clearing, the colleague walking in, and a run where you go in with the arm moving.
 - [ ] Headset: start each training from the menu and check the start spot; 72 fps standing in each area.
+
+## M25 — Quest spike, opened 2026-11-11 (exit: docs/quest-standalone.md, M25)
+You said to run the spike, in your open Editor (your choice over a separate copy of the project).
+- [x] A Quest 3 is connected over USB (adb); Unity 6000.3.19f1 has the Android module with its SDK, NDK and JDK.
+- [x] **realvirtual's licence, read 2026-11-11** (realvirtual.io/en/terms, Part A): the user may integrate the software into their own products and distribute them commercially, as long as it is included only as a compiled component (1.5), and never as source, assets, scenes or prefabs, nor on another marketplace (1.7). A store app is a compiled product, so this does not stand in the way. Read through a summariser: please read 1.5 to 1.7 yourself before the first public upload. The asset's own LICENSE.txt says it is under the Asset Store EULA and lists the open-source parts it bundles.
+- [x] `Tools > Factory Twin > Quest` (`QuestBuild`): **1 Switch to Android**, **2 Configure for Quest** (OpenXR for Android with the Meta Quest feature, the Oculus Touch and Touch Plus profiles and hand tracking; XR not started at launch; IL2CPP, ARM64, Vulkan, ASTC, min SDK 32; a spike package id `com.twodudestudios.factorytwin.spike`, so the real id is not used up), **3 Build APK** (Menu and Cell into `Builds/Quest/FactoryTwin-spike.apk`), and **Back to Windows**. `VrSwitch` now starts VR by itself on Android.
+- [x] In your Editor (2026-11-11, through UnitySkills): switched to Android in 330 s with no compile errors; configured (all four OpenXR features found); the APK build started at 21:54.
+- [ ] **The build was still running at 22:21** (compressing the hall's textures to ASTC; first Android build) when you said not to wait. When it ends, the Console has a `[QuestBuild] Build …` line with the result, size, time and any errors.
+- [ ] Then: install on the Quest (`adb install -r Builds/Quest/FactoryTwin-spike.apk`), start it, and measure frame rate, draw calls and triangles in each training area; list what breaks.
+- **Found so far:**
+  - **Input handling is set to Both** (old and new). Unity warns that Android does not support that; you clicked through the dialog for the spike. realvirtual's code uses the old input, so going to "new only" needs testing before a store build.
+  - VR is started by `VrSwitch` after launch, and stopped and started again when the menu loads the cell. On the headset that may show as a black gap or end the session; to be seen in the first run.
+  - The MQTT bridge will try 127.0.0.1 on the headset and fail quietly; it is to be switched off in the standalone mode (M27).
+- **Left changed in the main checkout, not committed:** `ProjectSettings/ProjectSettings.asset` (Android player settings, and the Android package id; it also holds earlier changes of yours), `Assets/XR/XRGeneralSettingsPerBuildTarget.asset` and `Assets/XR/Settings/OpenXR Package Settings.asset` (Android XR settings). **The Editor is on the Android platform**; `Tools > Factory Twin > Quest > Back to Windows` switches it back.
 
 ## Manual steps pending
 - **UnitySkills does not start by itself after an Editor restart** (seen 2026-10-24): start it from its toolbar button, or Claude Code cannot reach the Editor.
