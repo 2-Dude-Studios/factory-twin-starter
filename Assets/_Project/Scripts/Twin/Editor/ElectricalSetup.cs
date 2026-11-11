@@ -166,11 +166,12 @@ namespace TwoDude.FactoryTwin.Twin
             mat.SetFloat("_Smoothness", 0.35f);
             if (emission)
             {
+                // Realtime emissive, as StackLightLamp.mat has it: with the flags at None, URP drops the emission
+                // keyword when it next validates the material, and the property blocks that light the LEDs and the
+                // rings at run time would then show nothing. The colour itself comes from those blocks.
                 mat.EnableKeyword("_EMISSION");
-                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
-                // Not quite black: URP switches the emission keyword off on a material whose emission is black, and
-                // the property blocks that light the LEDs and the rings at run time would then show nothing.
-                mat.SetColor("_EmissionColor", new Color(0.002f, 0.002f, 0.002f));
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                mat.SetColor("_EmissionColor", Color.black);
             }
             EditorUtility.SetDirty(mat);
             return mat;
