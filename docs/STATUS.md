@@ -9,6 +9,7 @@
 5. Commit the VC capture tooling (`TakeAudioRecorder`, `TakeEventLog`, `capture_build_takes.py`, `render_code_takes.py`, `-targetfps`) and `tools/video/training/` (drop the cloned voice ID from `script.json` first).
 6. Later use cases (build plan, Later) when a prospect asks.
 7. Training areas and game layer (M24, approved 2026-11-11, cabinet to its own bay): the areas are built in Cell.unity, the shared game layer is in, lockout runs score through it and the robot cell drill has its four levels (see M24); next the lockout's levels 1, 2 and 4, then the headset check. M20 (tester, PPE, gloves) follows M24; nothing of it is written yet.
+8. Standalone Quest version for SideQuest and the Meta Horizon Store (asked 2026-11-11): plan in `docs/quest-standalone.md`, proposed as Rev 8 (M25–M29, about 13 days plus store review), waiting for your decisions (what ships first, devices, free or paid, name, when). Nothing of it is built.
 **Last updated:** 2026-11-11
 
 ## Done
