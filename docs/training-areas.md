@@ -36,7 +36,8 @@ The hall is about 50 × 75 m (x −30.5 to 20, z −37.6 to 38, read from the op
  −1│  │ start (−2.0, −3.2)                         │ gear station      │
    │  └─────────────────┘                          │ (5…9, −4…1)       │
    │                                               └───────────────────┘
- −9│        HUB (−9, −9): arrivals, four signposts, badge wall
+−10│   ════ walkway (z −12.3…−10.0), crossing at x −2.4…1.1 ════      HUB (white): x 0.6…5.6, z −18.6…−13.6,
+   │                                                         south of the walkway, east of the fire area
    │
 −14│   ┌ FIRE (red) ───────────┐
    │   │ training station       │   fires across the hall stay where they are:
@@ -50,11 +51,11 @@ The hall is about 50 × 75 m (x −30.5 to 20, z −37.6 to 38, read from the op
 
 | Area | Colour | Footprint (proposed) | Start spot, facing | Briefing post | Kit station | The machine | Score board |
 |---|---|---|---|---|---|---|---|
-| **Hub** | white | x −13.6…−8.4, z −11.5…−5.5 | (−11, −10.6), north | Map of the hall with the four areas | — | — | Badge wall: each trainee's stars and badges for all four drills, refresher due dates |
+| **Hub** | white | open floor south of the walkway, by its crossing: x 0.6…5.6, z −18.6…−13.6 (the first spot, round (−9, −9), turned out to be inside a storage rack) | (3.1, −17.8), north | Map of the hall with the four areas | — | — | Badge wall: each trainee's stars and badges for all four drills, refresher due dates |
 | **Robot cell safety** | orange | the cell with an apron to the south, x −5.2…0.5, z −4.2…4.2; start and posts outside the warning zone | (−2.0, −3.4), north | South of the cell at (−3.7, −1.9) | E-stop and reset station (exists), a jam-clearing hook | The arm and its two zones (M10) | Beside the briefing post |
 | **Lockout** | yellow | the CNC's east end and the line control station, x 0.7…4.4, z 0.85…5.6 (north of the waste bin, a fire location) | (1.84, 1.35), north, at the control station | The existing training board at (1.8, 2.0) | A lock board: personal lock, tag, hasp, try-start card (M11 props) | The CNC (M11) | On the board's second page |
 | **Electrical** | blue | its own bay east of the cell, x 5…9, z −4…1 | (7.0, −3.4), north | Arc flash label, drawings and the PPE chart | PPE locker, glove inspection table with an inflator, tester rack (two testers, one CAT II decoy, one flat), proving unit, barrier tape stand | Drive cabinet DCP-1 at (7.0, 0.55), door to the south, **moved here** from (0.9, −1.08), with a cable tray to the infeed drive | Beside the gear station |
-| **Fire** | red | round the training station, x −8…−1.6, z −18.8…−11.4 | (−4.8, −12.6), south (today's station floor spot) | Fire classes, extinguisher types, PASS, exit routes | The extinguisher stand (exists), a pre-use inspection rack | The fires across the hall, plus a **practice pan** at (−4.8, −17.5) | The station's score board (exists) |
+| **Fire** | red | round the training station, south of the walkway's curb: x −8…−1.6, z −18.8…−12.25; its sign faces the hub | (−4.8, −12.6), south (today's station floor spot) | Fire classes, extinguisher types, PASS, exit routes | The extinguisher stand (exists), a pre-use inspection rack | The fires across the hall, plus a **practice pan** at (−4.8, −17.5) | The station's score board (exists) |
 
 **Moving the drive cabinet.** Its own bay solves both overlaps: its arc flash ring no longer reaches the robot drill's start, and the gear station has room in front of it. A drive cabinet a few metres from its conveyor, fed by a tray, is how most plants have it. Rev 6's F1 fire follows the cabinet (its anchor is placed from the cabinet's top), and its two detector heads move with it. The cabinet's place is the electrical bay's machine spot in the layout asset. A test checks that all three boundary rings stay inside the bay and that the start spot, the briefing post, the gear station and the score board are outside the arc flash boundary.
 
@@ -151,5 +152,5 @@ The fire and electrical activities stay in their own milestones: the fire practi
 1. ~~Approve the areas and M24.~~ Approved 2026-11-11 (you), to run before the rest of M20.
 2. ~~The drive cabinet~~ **Moved to its own bay** east of the cell (2026-11-11, you).
 3. The hub: build it (recommended; it is where the badge wall and the hall map live), or start each drill straight at its area from the start menu.
-4. Positions: confirm or mark the five spots in the Scene view (hub, robot start, lockout start, electrical bay, fire practice pan).
+4. Positions: built and checked in Scene view pictures 2026-11-11 (the hub moved out of a storage rack; the lockout and fire signs moved to the edge people arrive at). Still yours to look at in the headset; the fire practice pan's spot comes with M15.
 5. Robot level 3 (jam clearing under the protective stop): keep it, framed as minor servicing with alternative protection under 1910.147(a)(2)(ii), or replace it with a full lockout of the cell.
