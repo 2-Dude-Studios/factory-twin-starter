@@ -43,7 +43,7 @@ namespace TwoDude.FactoryTwin.Tests
                 .WithBoard(9f, 5f);
             List<string> problems = TrainingAreaRules.Problems(new[] { a, b });
             CollectionAssert.Contains(problems, "B and A share floor.");
-            CollectionAssert.Contains(problems, "B: the start spot is not at least 0.5 m inside its border.");
+            CollectionAssert.Contains(problems, "B: the start spot is not at least 0.3 m inside its border.");
             CollectionAssert.Contains(problems, "B: the score board is outside its border.");
             Assert.AreEqual(3, problems.Count);
 
@@ -51,6 +51,18 @@ namespace TwoDude.FactoryTwin.Tests
             var c = new TrainingAreaSettings(TrainingArea.Hub, "C", TrainingAreaDefaults.HubColour, 4f, 8f, 0f, 3f, new AreaSpot(6f, 1.5f));
             CollectionAssert.IsEmpty(TrainingAreaRules.Problems(new[] { a, c }));
             CollectionAssert.Contains(TrainingAreaRules.Problems(new TrainingAreaSettings[0]), "No areas.");
+        }
+
+        [Test]
+        public void HubAndFire_KeepClearOfTheWalkwayAndTheRack()
+        {
+            // Read from the open Editor 2026-11-11: the walkway's south curb is at z −12.3; the storage rack stands
+            // north of the walkway over x −14…−3, z −10.5…−5.
+            TrainingAreaSettings hub = TrainingAreaDefaults.For(TrainingArea.Hub);
+            TrainingAreaSettings fire = TrainingAreaDefaults.For(TrainingArea.Fire);
+            Assert.Less(hub.MaxZ, -12.3f - 1f, "the hub is at least a metre south of the walkway");
+            Assert.LessOrEqual(fire.MaxZ, -12.25f, "the fire area ends at the walkway's south curb");
+            Assert.AreEqual(-12.6f, fire.Start.Z, "M15's spot in front of the stand");
         }
 
         [Test]
@@ -126,6 +138,12 @@ namespace TwoDude.FactoryTwin.Tests
             Assert.AreEqual(AreaEdge.North, TrainingAreaRules.NearestEdge(fire, fire.Start.X, fire.Start.Z));
             Assert.AreEqual(AreaEdge.East, TrainingAreaRules.NearestEdge(bay, 8.9, -1.5));
             Assert.AreEqual(AreaEdge.West, TrainingAreaRules.NearestEdge(bay, 5.1, -1.5));
+
+            // The sign stands by the start unless the layout puts it where people arrive.
+            Assert.AreEqual(AreaEdge.South, TrainingAreaRules.SignEdge(bay));
+            Assert.AreEqual(AreaEdge.East, TrainingAreaRules.SignEdge(fire), "towards the hub");
+            Assert.AreEqual(AreaEdge.East, TrainingAreaRules.SignEdge(TrainingAreaDefaults.For(TrainingArea.Lockout)));
+            Assert.AreEqual(AreaEdge.North, TrainingAreaRules.SignEdge(TrainingAreaDefaults.For(TrainingArea.Hub)), "towards the walkway");
         }
 
         [Test]
@@ -173,10 +191,10 @@ namespace TwoDude.FactoryTwin.Tests
             TrainingAreaSettings hub = TrainingAreaRules.Find(areas, TrainingArea.Hub);
             string[] lines = TrainingAreaText.HallMap(areas, hub.Start.X, hub.Start.Z).Split('\n');
             Assert.AreEqual(4, lines.Length);
-            CollectionAssert.Contains(lines, "Fire safety: 7 m east");
-            CollectionAssert.Contains(lines, "Lockout / tagout: 18 m north-east");
-            CollectionAssert.Contains(lines, "Robot cell safety: 12 m north-east");
-            CollectionAssert.Contains(lines, "Electrical safety: 19 m east");
+            CollectionAssert.Contains(lines, "Fire safety: 9 m north-west");
+            CollectionAssert.Contains(lines, "Lockout / tagout: 19 m north");
+            CollectionAssert.Contains(lines, "Robot cell safety: 15 m north");
+            CollectionAssert.Contains(lines, "Electrical safety: 15 m north");
         }
 
         [Test]

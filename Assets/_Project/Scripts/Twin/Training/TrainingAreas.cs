@@ -69,6 +69,9 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField] private AreaSpot kit = new AreaSpot();
         [SerializeField] private bool buildBoard = true;
         [SerializeField] private AreaSpot board = new AreaSpot();
+        [Tooltip("Off: the entry sign goes on the border edge nearest the start spot.")]
+        [SerializeField] private bool chooseSignEdge;
+        [SerializeField] private AreaEdge signEdge;
         [Tooltip("Where the area's machine stands (the arm, the CNC, the drive cabinet, the extinguisher stand).")]
         [SerializeField] private bool hasMachine;
         [SerializeField] private AreaSpot machine = new AreaSpot();
@@ -108,6 +111,8 @@ namespace TwoDude.FactoryTwin.Twin
         public AreaSpot Kit => kit;
         public bool BuildBoard => buildBoard;
         public AreaSpot Board => board;
+        public bool ChooseSignEdge => chooseSignEdge;
+        public AreaEdge SignEdge => signEdge;
         public bool HasMachine => hasMachine;
         public AreaSpot Machine => machine;
 
@@ -133,6 +138,14 @@ namespace TwoDude.FactoryTwin.Twin
             return this;
         }
 
+        /// <summary>Puts the entry sign on a given edge: the one people arrive at, when that is not the one by the start.</summary>
+        public TrainingAreaSettings WithSign(AreaEdge edge)
+        {
+            chooseSignEdge = true;
+            signEdge = edge;
+            return this;
+        }
+
         public TrainingAreaSettings WithMachine(float x, float z, float yawDegrees = 0f)
         {
             hasMachine = true;
@@ -144,7 +157,9 @@ namespace TwoDude.FactoryTwin.Twin
     /// <summary>
     /// Training areas (M24): the default layout, proposed 2026-11-11 from the hall as read from the open Editor
     /// (hall x −30.5…20, z −37.6…38; the cell at (−5…0.5, −1…3.9); the arm's warning zone ±2.2 m round (−2.0, 1.2);
-    /// the line control station at (1.84, 1.97); the fire stand at (−4.8, −13.9)). The asset holds the layout in use.
+    /// the line control station at (1.84, 1.97); the fire stand at (−4.8, −13.9); a storage rack over x −14…−3,
+    /// z −10.5…−5; the walkway between its curbs at z −12.3 and −10.0, with a crossing at x −2.4…1.1). Checked in
+    /// Scene view pictures after the first build. The asset holds the layout in use.
     /// </summary>
     public static class TrainingAreaDefaults
     {
@@ -156,9 +171,10 @@ namespace TwoDude.FactoryTwin.Twin
 
         public static TrainingAreaSettings[] All() => new[]
         {
-            // Open floor south-west of the cell, between it and the fire area.
-            new TrainingAreaSettings(TrainingArea.Hub, "Training hub", HubColour, -13.6f, -8.4f, -11.5f, -5.5f, new AreaSpot(-11f, -10.6f))
-                .WithBriefing(-11f, -6.2f).WithBoard(-9.0f, -8.4f),
+            // Open floor south of the walkway, east of the fire area, by the crossing that leads north to the cell.
+            // Its sign faces the walkway, where people arrive.
+            new TrainingAreaSettings(TrainingArea.Hub, "Training hub", HubColour, 0.6f, 5.6f, -18.6f, -13.6f, new AreaSpot(3.1f, -17.8f))
+                .WithBriefing(3.1f, -14.4f).WithBoard(5.0f, -16.2f).WithSign(AreaEdge.North),
             // The cell's own footprint with an apron to the south, the trainee's side. The start and both posts are
             // outside the warning zone (its south edge is z −1.0).
             new TrainingAreaSettings(TrainingArea.RobotCell, "Robot cell safety", RobotColour, -5.2f, 0.5f, -4.2f, 4.2f, new AreaSpot(-2.0f, -3.4f))
@@ -167,10 +183,11 @@ namespace TwoDude.FactoryTwin.Twin
             // The CNC's body stands in the cell; what the lockout works on is its isolator, on the east face.
             // The south border stays north of the waste bin at (2.4, 0.4), which is a fire location.
             new TrainingAreaSettings(TrainingArea.Lockout, "Lockout / tagout", LockoutColour, 0.7f, 4.4f, 0.85f, 5.6f, new AreaSpot(1.84f, 1.35f))
-                .WithBoard(3.6f, 2.0f).WithMachine(1.0f, 3.23f),
-            // Round the fire training station. Its stand and score board exist (M15); the fires stay across the hall.
-            new TrainingAreaSettings(TrainingArea.Fire, "Fire safety", FireColour, -8.0f, -1.6f, -18.8f, -11.4f, new AreaSpot(-4.8f, -12.6f, 180f))
-                .WithBriefing(-6.7f, -13.6f).WithMachine(-4.8f, -13.9f),
+                .WithBoard(3.6f, 2.0f).WithSign(AreaEdge.East).WithMachine(1.0f, 3.23f),
+            // Round the fire training station, south of the walkway's curb. Its stand and score board exist (M15); the
+            // fires stay across the hall. The start is M15's spot in front of the stand; the sign faces the hub.
+            new TrainingAreaSettings(TrainingArea.Fire, "Fire safety", FireColour, -8.0f, -1.6f, -18.8f, -12.25f, new AreaSpot(-4.8f, -12.6f, 180f))
+                .WithBriefing(-6.7f, -13.6f).WithSign(AreaEdge.East).WithMachine(-4.8f, -13.9f),
             // Its own bay east of the cell: the drive cabinet against the north edge, door to the south, with room
             // for all three boundary rings inside the bay and the gear station outside them.
             new TrainingAreaSettings(TrainingArea.Electrical, "Electrical safety", ElectricalColour, 5.0f, 9.0f, -4.0f, 1.0f, new AreaSpot(7.0f, -3.4f))
@@ -225,6 +242,10 @@ namespace TwoDude.FactoryTwin.Twin
             return Math.Atan2(dx, dz) * 180d / Math.PI;
         }
 
+        /// <summary>The edge an area's entry sign stands on: the one chosen for it, else the one nearest its start spot.</summary>
+        public static AreaEdge SignEdge(TrainingAreaSettings area) =>
+            area.ChooseSignEdge ? area.SignEdge : NearestEdge(area, area.Start.X, area.Start.Z);
+
         /// <summary>The border edge nearest a point: where the entry sign goes, by the start spot.</summary>
         public static AreaEdge NearestEdge(TrainingAreaSettings area, double x, double z)
         {
@@ -256,8 +277,8 @@ namespace TwoDude.FactoryTwin.Twin
 
         /// <summary>
         /// What is wrong with a layout, in words; empty when it is sound. Areas must not share floor, and each area's
-        /// start, posts and machine must stand inside its own border (the start half a metre in, so the trainee does
-        /// not begin on the line).
+        /// start, posts and machine must stand inside its own border (the start 0.3 m in, so the trainee does not
+        /// begin on the line).
         /// </summary>
         public static List<string> Problems(IReadOnlyList<TrainingAreaSettings> areas)
         {
@@ -284,8 +305,8 @@ namespace TwoDude.FactoryTwin.Twin
                     if (Overlap(a, areas[j]))
                         problems.Add($"{a.Title} and {areas[j].Title} share floor.");
                 }
-                if (!Contains(a, a.Start.X, a.Start.Z, 0.5d))
-                    problems.Add($"{a.Title}: the start spot is not at least 0.5 m inside its border.");
+                if (!Contains(a, a.Start.X, a.Start.Z, 0.3d))
+                    problems.Add($"{a.Title}: the start spot is not at least 0.3 m inside its border.");
                 if (a.BuildBriefing && !Contains(a, a.Briefing.X, a.Briefing.Z))
                     problems.Add($"{a.Title}: the briefing post is outside its border.");
                 if (a.BuildKit && !Contains(a, a.Kit.X, a.Kit.Z))
