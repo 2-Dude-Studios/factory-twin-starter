@@ -63,6 +63,7 @@ namespace TwoDude.FactoryTwin.UI
                 case TrainingMode.RobotZone:
                     if (vr)
                         GoTo(start, "menu-go-cell");
+                    StartRobotDrill();
                     break;
                 default:
                     if (vr)
@@ -71,6 +72,25 @@ namespace TwoDude.FactoryTwin.UI
             }
             started = mode;
             Debug.Log($"[TrainingLauncher] {TrainingLaunch.Title(mode)} started ({(vr ? "headset" : "desktop")}).", this);
+        }
+
+        // The robot cell drill's next level for this trainee: the first one without a star (the assessment once all
+        // have one).
+        private void StartRobotDrill()
+        {
+            var controller = context.GetComponentInChildren<TrainingController>(true);
+            BadgeBook book = BadgeBook.Load(controller != null ? controller.TraineeName : "Sam Rivera");
+            System.Collections.Generic.IReadOnlyList<int> stars = book.Stars(TrainingMode.RobotZone);
+            int level = DrillLevels.Count;
+            for (int i = 0; i < stars.Count; i++)
+            {
+                if (stars[i] == 0)
+                {
+                    level = i + 1;
+                    break;
+                }
+            }
+            context.Bus.Publish(CellTopics.TrainingRobotLevel, SignalValue.FromNumber(level), CellContext.NowUnixMs);
         }
 
         private TrainingAreaStart StartOf(TrainingArea area)
