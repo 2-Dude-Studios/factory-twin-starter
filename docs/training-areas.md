@@ -138,7 +138,7 @@ A new milestone, **M24 Training areas and game layer** (about 4 days), approved 
 | Part | Work | Days |
 |---|---|---|
 | Areas | `TrainingAreas` asset and `Build Training Areas`: five areas with floor borders, entry signs, briefing posts and score boards; start spots for desktop and headset; the cabinet moved to its bay with a cable tray; the hub's badge wall | 1.5 |
-| Game layer | `DrillScore` generalised from `FireDrillScore` (levels, stars, the compliance gate, clauses, badges) with EditMode tests; one record format; the badge book across drills | 1.5 |
+| Game layer | `DrillScore` beside `FireDrillScore` (levels, stars, the compliance gate, clauses, badges) with EditMode tests; one record format; the badge book across drills. **Done 2026-11-11**, with lockout runs scored as level 3; fire adopts it in M17 | 1.5 |
 | Rev 5 drills | Levels, badges and the spot-the-mistake activities for robot cell safety and lockout, on the existing M10 and M11 models | 1 |
 
 Exit: each drill starts at its own area on desktop and in the headset, and nothing from another drill sits in it; the hub shows every trainee's stars and badges; a critical mistake fails a level whatever the points; the robot and lockout drills score by level and clause; 72 fps over Link standing in each area.
