@@ -194,10 +194,11 @@ namespace TwoDude.FactoryTwin.UI
             return spot;
         }
 
-        // A gateway on the border edge nearest the start: two posts and a banner with the drill's name on both sides.
+        // A gateway on the area's sign edge (by the start, unless the layout says otherwise): two posts and a banner
+        // with the drill's name on both sides.
         private static void Sign(Transform node, TrainingAreaSettings area, Material accent, Material steel)
         {
-            AreaEdge edge = TrainingAreaRules.NearestEdge(area, area.Start.X, area.Start.Z);
+            AreaEdge edge = TrainingAreaRules.SignEdge(area);
             bool alongX = edge == AreaEdge.South || edge == AreaEdge.North;
             float min = (alongX ? area.MinX : area.MinZ) + SignHalfWidth + 0.1f;
             float max = (alongX ? area.MaxX : area.MaxZ) - SignHalfWidth - 0.1f;
