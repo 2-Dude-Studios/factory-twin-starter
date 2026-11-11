@@ -79,6 +79,19 @@ namespace TwoDude.FactoryTwin.UI
             }
         }
 
+        /// <summary>The training whose drill an area holds (M24); the hub holds none.</summary>
+        public static TrainingMode ModeFor(TrainingArea area)
+        {
+            switch (area)
+            {
+                case TrainingArea.Fire: return TrainingMode.FireSafety;
+                case TrainingArea.Lockout: return TrainingMode.Lockout;
+                case TrainingArea.RobotCell: return TrainingMode.RobotZone;
+                case TrainingArea.Electrical: return TrainingMode.Electrical;
+                default: return TrainingMode.None;
+            }
+        }
+
         /// <summary>Whether the training needs the headset (the fire drill is worked with two hands).</summary>
         public static bool NeedsHeadset(TrainingMode mode) => mode == TrainingMode.FireSafety;
     }

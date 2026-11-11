@@ -13,8 +13,9 @@ namespace TwoDude.FactoryTwin.UI
     /// (Assets/_Project/Data/Training/TrainingAreas.asset, written with the defaults the first time and left alone
     /// after that, so it can be edited in the Inspector). Each area gets a floor border in its colour, an entry sign,
     /// its start spot, a briefing post, a kit station and a score board where the scene has none yet, and a teleport
-    /// floor where the cell's own does not reach. The start spots are handed to the TrainingLauncher, so each training
-    /// starts in its area on desktop and in the headset. Run Build Electrical Cabinet afterwards: it stands the drive
+    /// floor where the cell's own does not reach. The score boards and the hub's badge wall are filled from the
+    /// trainee's badge book while the scene runs (TrainingAreaBoard). The start spots are handed to the
+    /// TrainingLauncher, so each training starts in its area on desktop and in the headset. Run Build Electrical Cabinet afterwards: it stands the drive
     /// cabinet in the electrical bay.
     /// </summary>
     internal static class TrainingAreasSetup
@@ -63,6 +64,16 @@ namespace TwoDude.FactoryTwin.UI
             Material board = Lit("Area_Board", BoardColour, Color.black);
             Material steel = Lit("Area_Steel", SteelColour, Color.black);
             Bounds? cellTeleport = CellTeleportFloor(training);
+            var controller = Object.FindAnyObjectByType<TrainingController>(FindObjectsInactive.Include);
+            string trainee = controller != null ? controller.TraineeName : "Sam Rivera";
+            if (controller != null)
+            {
+                // The lockout run, scored with the shared stars when it ends.
+                var lockoutScorer = GetOrAdd<LockoutScorer>(controller.gameObject);
+                var scorerSo = new SerializedObject(lockoutScorer);
+                scorerSo.FindProperty("controller").objectReferenceValue = controller;
+                scorerSo.ApplyModifiedProperties();
+            }
             var starts = new List<Object>();
             int teleportFloors = 0;
             foreach (TrainingAreaSettings area in layout.Areas)
@@ -84,11 +95,17 @@ namespace TwoDude.FactoryTwin.UI
                     Kit(node, area, accent, board, steel);
                 if (area.BuildBoard)
                 {
-                    string header = area.Area == TrainingArea.Hub ? "BADGE WALL" : "SCORES";
-                    string body = area.Area == TrainingArea.Hub
-                        ? "Stars and badges for every drill.\n\n" + TrainingAreaText.Stars()
-                        : TrainingAreaText.Stars();
-                    Post(node, "ScoreBoard", area, area.Board, header, body, accent, board, steel, 0.9f, 0.7f);
+                    // Shown until the scene runs; TrainingAreaBoard then writes the trainee's stars and badges.
+                    bool hub = area.Area == TrainingArea.Hub;
+                    string body = hub ? "Stars and badges for every drill.\n\n" + TrainingAreaText.Stars() : TrainingAreaText.Stars();
+                    TMPro.TextMeshPro text = Post(node, "ScoreBoard", area, area.Board, hub ? "BADGE WALL" : "SCORES", body,
+                        accent, board, steel, hub ? 1.2f : 0.95f, hub ? 1.35f : 1.0f);
+                    var filler = GetOrAdd<TrainingAreaBoard>(text.transform.parent.gameObject);
+                    var fillerSo = new SerializedObject(filler);
+                    fillerSo.FindProperty("area").intValue = (int)area.Area;
+                    fillerSo.FindProperty("body").objectReferenceValue = text;
+                    fillerSo.FindProperty("traineeName").stringValue = trainee;
+                    fillerSo.ApplyModifiedProperties();
                 }
                 if (TeleportFloor(node, area, cellTeleport))
                     teleportFloors++;
@@ -225,8 +242,9 @@ namespace TwoDude.FactoryTwin.UI
             Text(sign, "Text_In", TrainingAreaText.Sign(area), new Vector3(0f, SignHeight, 0.027f), 180f, size, 2.4f, true, ink, TMPro.TextAlignmentOptions.Center);
         }
 
-        // A board on a post, turned to face the start spot: a header band in the area's colour and a body text.
-        private static void Post(Transform node, string name, TrainingAreaSettings area, AreaSpot spot, string header, string body,
+        // A board on a post, turned to face the start spot: a header band in the area's colour and a body text
+        // (returned, so a board that is filled at run time can be given it).
+        private static TMPro.TextMeshPro Post(Transform node, string name, TrainingAreaSettings area, AreaSpot spot, string header, string body,
             Material accent, Material board, Material steel, float width, float height)
         {
             Transform post = Child(node, name);
@@ -241,7 +259,7 @@ namespace TwoDude.FactoryTwin.UI
             Box(post, "Band", new Vector3(0f, bandY, -0.004f), new Vector3(width, bandHeight, 0.04f), accent, false);
             Text(post, "Header", header, new Vector3(0f, bandY, -0.026f), 0f, new Vector2(width - 0.06f, bandHeight - 0.03f), 1.0f, true,
                 InkOn(area.Colour), TMPro.TextAlignmentOptions.Center);
-            Text(post, "Body", body, new Vector3(0f, centre - bandHeight * 0.5f, -0.022f), 0f, new Vector2(width - 0.1f, height - bandHeight - 0.08f), 0.5f, false,
+            return Text(post, "Body", body, new Vector3(0f, centre - bandHeight * 0.5f, -0.022f), 0f, new Vector2(width - 0.1f, height - bandHeight - 0.08f), 0.5f, false,
                 Color.white, TMPro.TextAlignmentOptions.TopLeft);
         }
 
@@ -338,7 +356,7 @@ namespace TwoDude.FactoryTwin.UI
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
-        private static void Text(Transform parent, string name, string text, Vector3 localPosition, float localYaw, Vector2 size, float fontSize,
+        private static TMPro.TextMeshPro Text(Transform parent, string name, string text, Vector3 localPosition, float localYaw, Vector2 size, float fontSize,
             bool bold, Color colour, TMPro.TextAlignmentOptions alignment)
         {
             Transform t = Child(parent, name);
@@ -356,6 +374,7 @@ namespace TwoDude.FactoryTwin.UI
             tmp.fontSize = fontSize;
             tmp.rectTransform.sizeDelta = size;
             EditorUtility.SetDirty(tmp);
+            return tmp;
         }
 
         private static Transform Child(Transform parent, string name)
