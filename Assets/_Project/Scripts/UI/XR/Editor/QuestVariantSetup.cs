@@ -40,6 +40,17 @@ namespace TwoDude.FactoryTwin.UI
         /// </summary>
         private static readonly string[] Shelving = { "shelf", "pallet", "trailer", "truck" };
 
+        /// <summary>
+        /// The hall's materials on the headset: copies on URP's Baked Lit shader (one colour texture and the baked
+        /// lightmap; no realtime light, specular or reflections), generated here and kept out of git. The hall's own
+        /// shader graph samples eight textures and computes noise, hue and contrast for every pixel.
+        /// </summary>
+        public const string QuestMaterialsFolder = "Assets/_Project/Generated/QuestMaterials";
+        private const string BakedLit = "Universal Render Pipeline/Baked Lit";
+
+        /// <summary>Textures on Android drop this many mip levels: 1 is half the width and height.</summary>
+        private const int AndroidTextureMipLimit = 1;
+
         /// <summary>The headset camera's reach, with fog fading the far hall out before it is cut off.</summary>
         private const float FarClipMetres = 30f;
         private const float FogStartMetres = 18f;
@@ -71,6 +82,8 @@ namespace TwoDude.FactoryTwin.UI
                 if (env != null)
                     Trim(env, AreasBox(), log);
                 Lights(scene, log);
+                if (env != null)
+                    LightMaterials(env, log);
                 Distance(scene, log);
                 Wire(scene, env, questPipeline, log);
                 EditorSceneManager.SaveScene(scene);
@@ -121,8 +134,11 @@ namespace TwoDude.FactoryTwin.UI
                 if (level.FindPropertyRelative("name").stringValue != "Mobile")
                     continue;
                 level.FindPropertyRelative("customRenderPipeline").objectReferenceValue = pipeline;
+                SerializedProperty mips = level.FindPropertyRelative("globalTextureMipmapLimit");
+                if (mips != null)
+                    mips.intValue = AndroidTextureMipLimit;
                 so.ApplyModifiedPropertiesWithoutUndo();
-                log.Append("Quality level Mobile (Android) uses the Quest pipeline. ");
+                log.Append($"Quality level Mobile (Android) uses the Quest pipeline, textures {AndroidTextureMipLimit} mip down (half size). ");
                 return;
             }
         }
@@ -210,6 +226,100 @@ namespace TwoDude.FactoryTwin.UI
                        $"{removed} props removed ({trianglesRemoved / 1000} k triangles), {kept} kept; shell kept whole. ");
         }
 
+        /// <summary>Gives the hall's renderers Baked Lit copies of their materials (decals and glass keep their own).</summary>
+        private static void LightMaterials(GameObject env, StringBuilder log)
+        {
+            if (!AssetDatabase.IsValidFolder("Assets/_Project/Generated"))
+                AssetDatabase.CreateFolder("Assets/_Project", "Generated");
+            if (AssetDatabase.IsValidFolder(QuestMaterialsFolder))
+                AssetDatabase.DeleteAsset(QuestMaterialsFolder);
+            AssetDatabase.CreateFolder("Assets/_Project/Generated", "QuestMaterials");
+            Shader bakedLit = Shader.Find(BakedLit);
+            if (bakedLit == null)
+            {
+                log.Append("Baked Lit shader not found; hall materials left as they are. ");
+                return;
+            }
+
+            var copies = new Dictionary<Material, Material>();
+            int slots = 0;
+            foreach (Renderer r in env.GetComponentsInChildren<Renderer>(true))
+            {
+                Material[] materials = r.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    Material m = materials[i];
+                    if (m == null || !Lightable(m))
+                        continue;
+                    if (!copies.TryGetValue(m, out Material copy))
+                    {
+                        copy = BakedLitCopy(m, bakedLit);
+                        AssetDatabase.CreateAsset(copy, $"{QuestMaterialsFolder}/{copies.Count:D4} {Safe(m.name)}.mat");
+                        copies[m] = copy;
+                    }
+                    materials[i] = copy;
+                    changed = true;
+                    slots++;
+                }
+                if (changed)
+                    r.sharedMaterials = materials;
+            }
+            log.Append($"Hall on Baked Lit: {copies.Count} materials copied, {slots} slots. ");
+        }
+
+        /// <summary>Opaque hall materials: the hall's basic shader graph and URP Lit. Decals, glass and the rest keep theirs.</summary>
+        private static bool Lightable(Material m)
+        {
+            string shader = m.shader.name;
+            if (shader.IndexOf("decal", System.StringComparison.OrdinalIgnoreCase) >= 0 || shader.IndexOf("glass", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                return false;
+            if (m.renderQueue >= (int)RenderQueue.AlphaTest)
+                return false;
+            return shader == "Shader Graphs/shdr_basic_01" || shader == "Universal Render Pipeline/Lit" || shader == "Universal Render Pipeline/Simple Lit";
+        }
+
+        private static Material BakedLitCopy(Material source, Shader bakedLit)
+        {
+            var copy = new Material(bakedLit) { name = source.name + " (Quest)", enableInstancing = true };
+            Texture baseMap = null;
+            Vector2 tiling = Vector2.one, offset = Vector2.zero;
+            Color colour = Color.white;
+            if (source.HasProperty("_baseMap"))
+            {
+                // The hall's shader graph: colour map with its own tiling and offset, tinted by _Color_Map.
+                baseMap = source.GetTexture("_baseMap");
+                if (source.HasProperty("_BASE_Tiling"))
+                    tiling = source.GetVector("_BASE_Tiling");
+                if (source.HasProperty("_BASE_Offset"))
+                    offset = source.GetVector("_BASE_Offset");
+                if (source.HasProperty("_Color_Map"))
+                    colour = source.GetColor("_Color_Map");
+            }
+            else if (source.HasProperty("_BaseMap"))
+            {
+                baseMap = source.GetTexture("_BaseMap");
+                tiling = source.GetTextureScale("_BaseMap");
+                offset = source.GetTextureOffset("_BaseMap");
+                if (source.HasProperty("_BaseColor"))
+                    colour = source.GetColor("_BaseColor");
+            }
+            if (tiling == Vector2.zero)
+                tiling = Vector2.one;
+            copy.SetTexture("_BaseMap", baseMap);
+            copy.SetTextureScale("_BaseMap", tiling);
+            copy.SetTextureOffset("_BaseMap", offset);
+            copy.SetColor("_BaseColor", colour);
+            return copy;
+        }
+
+        private static string Safe(string name)
+        {
+            foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+                name = name.Replace(c, '_');
+            return name.Length > 60 ? name.Substring(0, 60) : name;
+        }
+
         /// <summary>The headset camera draws to FarClipMetres; linear fog in the hall's grey hides the edge.</summary>
         private static void Distance(Scene scene, StringBuilder log)
         {
@@ -287,6 +397,7 @@ namespace TwoDude.FactoryTwin.UI
             QuestCostProbe probe = quest.AddComponent<QuestCostProbe>();
             var p = new SerializedObject(probe);
             p.FindProperty("env").objectReferenceValue = env != null ? env.transform : null;
+            p.FindProperty("sun").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<Light>(true)).FirstOrDefault(l => l.type == LightType.Directional);
             p.FindProperty("origin").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<XROrigin>(true)).FirstOrDefault();
             TrainingAreaStart[] starts = roots.SelectMany(g => g.GetComponentsInChildren<TrainingAreaStart>(true)).ToArray();
             SerializedProperty list = p.FindProperty("starts");
