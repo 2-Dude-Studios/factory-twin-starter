@@ -77,6 +77,28 @@ namespace TwoDude.FactoryTwin.UI
             foreach (KeyValuePair<string, int> s in shaders.OrderByDescending(s => s.Value))
                 text.Append($"  {s.Value}  {s.Key}\n");
 
+            // The meshes that carry the triangles: name, how many times placed, triangles each and in all, and the part.
+            var meshes = new Dictionary<string, (int Count, long Each, string Part)>();
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (MeshFilter f in root.GetComponentsInChildren<MeshFilter>(false))
+                {
+                    if (f.sharedMesh == null || !f.TryGetComponent(out MeshRenderer mr) || !mr.enabled)
+                        continue;
+                    long each = 0;
+                    for (int i = 0; i < f.sharedMesh.subMeshCount; i++)
+                        each += f.sharedMesh.GetIndexCount(i) / 3;
+                    Transform part = f.transform;
+                    while (part.parent != null && part.parent.parent != null)
+                        part = part.parent;
+                    string key = f.sharedMesh.name;
+                    meshes[key] = meshes.TryGetValue(key, out var m) ? (m.Count + 1, each, m.Part) : (1, each, part.name);
+                }
+            }
+            text.Append("Meshes by triangles in all (top 40): count x each = all, part\n");
+            foreach (var m in meshes.OrderByDescending(m => m.Value.Count * m.Value.Each).Take(40))
+                text.Append($"  {m.Value.Count} x {m.Value.Each} = {m.Value.Count * m.Value.Each / 1000} k  {m.Key}  ({m.Value.Part})\n");
+
             var lights = Active<Light>(scene).ToList();
             text.Append($"Lights: {lights.Count} active; ");
             foreach (IGrouping<string, Light> g in lights.GroupBy(l => $"{l.type} {l.lightmapBakeType}{(l.shadows != LightShadows.None ? " shadowed" : "")}"))
