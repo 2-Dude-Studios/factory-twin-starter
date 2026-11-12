@@ -22,12 +22,19 @@ namespace TwoDude.FactoryTwin.UI
     /// 3 builds Menu.unity and Cell.unity into Builds/Quest. Back to Windows switches the Editor back. XR is not
     /// started at launch: VrSwitch starts it, as on the PC, and always does on Android.
     /// </summary>
+    [InitializeOnLoad]
     internal static class QuestBuild
     {
+        static QuestBuild() => KeepDesktopPluginsOffAndroid();
+
         public const string ApkPath = "Builds/Quest/FactoryTwin-spike.apk";
 
         /// <summary>The spike's own id. The store id is decided separately and never changes after the first upload.</summary>
         public const string SpikePackageId = "com.twodudestudios.factorytwin.spike";
+
+        // URDF Importer's Assimp natives are Windows, Linux and macOS libraries marked "any platform" in the package, so an
+        // Android build tries to pack both Windows assimp.dll files and fails. Only the Editor's URDF import uses them.
+        private const string DesktopOnlyNatives = "/UnityMeshImporter/Plugins/AssimpNet/Native/";
 
         private const string OpenXRLoaderType = "UnityEngine.XR.OpenXR.OpenXRLoader";
         private const int MinSdk = 32;
@@ -110,6 +117,23 @@ namespace TwoDude.FactoryTwin.UI
                       $"{(missing.Length > 0 ? " (NOT FOUND: " + missing + ")" : string.Empty)}; IL2CPP, ARM64, Vulkan, ASTC, min SDK {MinSdk}, id {SpikePackageId}.");
         }
 
+        /// <summary>
+        /// Leaves the package's desktop natives out of Android builds, without editing the package (it is read-only):
+        /// the include-in-build delegate is not saved, so it is set again on every domain load and before each build.
+        /// </summary>
+        private static int KeepDesktopPluginsOffAndroid()
+        {
+            int count = 0;
+            foreach (PluginImporter plugin in PluginImporter.GetAllImporters())
+            {
+                if (plugin == null || !plugin.isNativePlugin || !plugin.assetPath.Contains(DesktopOnlyNatives))
+                    continue;
+                plugin.SetIncludeInBuildDelegate(_ => EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android);
+                count++;
+            }
+            return count;
+        }
+
         [MenuItem("Tools/Factory Twin/Quest/3 Build APK")]
         private static void Build()
         {
@@ -128,6 +152,8 @@ namespace TwoDude.FactoryTwin.UI
                 targetGroup = BuildTargetGroup.Android,
                 options = BuildOptions.None,
             };
+            int filtered = KeepDesktopPluginsOffAndroid();
+            Debug.Log($"[QuestBuild] Keeping {filtered} desktop-only native plugins out of the Android build.");
             BuildReport report = BuildPipeline.BuildPlayer(options);
             BuildSummary summary = report.summary;
             var text = new System.Text.StringBuilder();
