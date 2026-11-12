@@ -19,7 +19,7 @@ One production cell: infeed conveyor → sensor gate → six-axis arm pick-and-p
 
 ## Conventions
 - C#: namespaces `TwoDude.FactoryTwin.<Area>`; `[SerializeField] private` fields; events via C# `event Action<T>`; no `FindObjectOfType` at runtime, wire references in prefabs or a small `CellContext`.
-- Scenes: `Menu.unity` (the start menu that picks the training; loads first, decided 2026-11-04) and `Cell.unity` (the cell, everything else). Built by Tools > Factory Twin > Build Menu Scene; `ProjectSettingsGuard` keeps the build settings to Menu then Cell. Capture runs (`-takes`) and `-cell` skip the menu. Sub-areas as prefabs under `Assets/_Project/Prefabs/`.
+- Scenes: `Menu.unity` (the start menu that picks the training; loads first, decided 2026-11-04) and `Cell.unity` (the cell, everything else). `CellQuest.unity` is the standalone Quest copy of the cell (Rev 8, approved 2026-11-12): derived from `Cell.unity` by Tools > Factory Twin > Quest > Build Quest Variant, loaded only on Android, never edited by hand. Built by Tools > Factory Twin > Build Menu Scene; `ProjectSettingsGuard` keeps the build settings to Menu then Cell. Capture runs (`-takes`) and `-cell` skip the menu. Sub-areas as prefabs under `Assets/_Project/Prefabs/`.
 - UI: UI Toolkit with runtime data binding; UXML/USS under `Assets/_Project/UI/`. No uGUI.
 - Tests: EditMode tests under `Assets/_Project/Tests/` for the signal bus, topic parsing and the dataset replayer. Run with `unity -runTests` (see `.claude/commands/test.md`).
 - Commit messages: `M<n>: <what>` where n is the milestone from `docs/build-plan.md`.
@@ -29,7 +29,7 @@ The `unity` CLI / MCP is available on this machine. Prefer it for scene edits ov
 Log location on Windows: `%LOCALAPPDATA%\Unity\Editor\Editor.log` — read the tail when a compile fails.
 
 ## Milestones (exit conditions in docs/build-plan.md)
-M0 setup · M1 cell loop · M2 arm · M3 data spine · M4 dashboard · M5 prediction · M6 polish + capture · M7 soft PLC link · M8 commissioning suite · M9 VC capture · M10 safety zone · M11 lockout procedure · M12 Quest 3 view (Link) · M13 training capture · M14 fire model + effects · M15 extinguisher + hazard hunt · M16 alarm + evacuation · M17 assessment + record · M18 fire capture · M19 electrical model + cabinet · M20 tester + PPE · M21 safe work procedure + hunt · M22 electrical assessment + record · M23 electrical capture.
+M0 setup · M1 cell loop · M2 arm · M3 data spine · M4 dashboard · M5 prediction · M6 polish + capture · M7 soft PLC link · M8 commissioning suite · M9 VC capture · M10 safety zone · M11 lockout procedure · M12 Quest 3 view (Link) · M13 training capture · M14 fire model + effects · M15 extinguisher + hazard hunt · M16 alarm + evacuation · M17 assessment + record · M18 fire capture · M19 electrical model + cabinet · M20 tester + PPE · M21 safe work procedure + hunt · M22 electrical assessment + record · M23 electrical capture · M24 training areas and game layer · M25 Quest spike · M26 Quest scene variant · M27 standalone mode · M28 store readiness · M29 listings and release.
 Current milestone is recorded at the top of `docs/STATUS.md`. Update it when a milestone's exit condition is met.
 
 ## When unsure
