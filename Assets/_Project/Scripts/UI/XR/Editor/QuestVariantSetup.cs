@@ -34,12 +34,16 @@ namespace TwoDude.FactoryTwin.UI
         private const float KeepMarginMetres = 8f;
 
         /// <summary>
-        /// Shelving, pallets and boxes are kept only this close to an area: they are thousands of small pieces, and the
-        /// probe on the Quest (2026-11-12) showed them costing about 14 ms of a 13.9 ms frame.
+        /// Storage racks, boxes, pallets and the trailer are left out of the headset's hall altogether: no drill uses
+        /// them, and on the Quest (2026-11-12) they were the biggest single cost (thousands of boxes, and two rack frames
+        /// of 190 k triangles each that no trim or merge can split).
         /// </summary>
-        private const float ShelvingMarginMetres = 2f;
-
         private static readonly string[] Shelving = { "shelf", "pallet", "trailer", "truck" };
+
+        /// <summary>The headset camera's reach, with fog fading the far hall out before it is cut off.</summary>
+        private const float FarClipMetres = 30f;
+        private const float FogStartMetres = 18f;
+        private static readonly Color HallFog = new Color(0.72f, 0.74f, 0.76f);
 
         /// <summary>The hall's shell: kept whole, so no area looks out through a hole. What it costs is measured first.</summary>
         private static readonly string[] Shell = { "walls", "ceiling", "floor", "wallTopSpacer" };
@@ -67,6 +71,7 @@ namespace TwoDude.FactoryTwin.UI
                 if (env != null)
                     Trim(env, AreasBox(), log);
                 Lights(scene, log);
+                Distance(scene, log);
                 Wire(scene, env, questPipeline, log);
                 EditorSceneManager.SaveScene(scene);
                 QuestSceneCost.Report(scene, ReportPath);
@@ -164,7 +169,17 @@ namespace TwoDude.FactoryTwin.UI
             {
                 if (Shell.Contains(part.name))
                     continue;
-                Rect keep = Grow(areas, IsShelving(part.name) ? ShelvingMarginMetres : KeepMarginMetres);
+                if (IsShelving(part.name))
+                {
+                    foreach (Renderer r in part.GetComponentsInChildren<Renderer>(true))
+                    {
+                        trianglesRemoved += Triangles(r);
+                        removed++;
+                    }
+                    Object.DestroyImmediate(part.gameObject);
+                    continue;
+                }
+                Rect keep = Grow(areas, KeepMarginMetres);
                 foreach (Renderer r in part.GetComponentsInChildren<Renderer>(true))
                 {
                     Bounds b = r.bounds;
@@ -191,8 +206,34 @@ namespace TwoDude.FactoryTwin.UI
                 if (part != null && part.GetComponentsInChildren<Renderer>(true).Length == 0 && part.GetComponentsInChildren<Light>(true).Length == 0)
                     Object.DestroyImmediate(part.gameObject);
             }
-            log.Append($"Hall trimmed to the areas + {KeepMarginMetres:F0} m (shelving and pallets + {ShelvingMarginMetres:F0} m): " +
+            log.Append($"Hall trimmed to the areas + {KeepMarginMetres:F0} m, racks, boxes, pallets and trailer left out: " +
                        $"{removed} props removed ({trianglesRemoved / 1000} k triangles), {kept} kept; shell kept whole. ");
+        }
+
+        /// <summary>The headset camera draws to FarClipMetres; linear fog in the hall's grey hides the edge.</summary>
+        private static void Distance(Scene scene, StringBuilder log)
+        {
+            Scene before = SceneManager.GetActiveScene();
+            SceneManager.SetActiveScene(scene);
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.Linear;
+            RenderSettings.fogColor = HallFog;
+            RenderSettings.fogStartDistance = FogStartMetres;
+            RenderSettings.fogEndDistance = FarClipMetres;
+            SceneManager.SetActiveScene(before);
+
+            int cameras = 0;
+            foreach (XROrigin origin in scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<XROrigin>(true)))
+            {
+                Camera eye = origin.Camera;
+                if (eye == null)
+                    continue;
+                eye.farClipPlane = FarClipMetres;
+                eye.clearFlags = CameraClearFlags.SolidColor;
+                eye.backgroundColor = HallFog;
+                cameras++;
+            }
+            log.Append($"Headset camera draws to {FarClipMetres:F0} m with fog from {FogStartMetres:F0} m ({cameras} camera). ");
         }
 
         private static long Triangles(Renderer r)
