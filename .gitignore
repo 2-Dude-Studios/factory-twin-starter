@@ -58,3 +58,7 @@ tools/video/build/
 
 # Claude Code local overrides
 .claude/settings.local.json
+
+# Standalone Quest (M26): derived from Cell.unity by Tools > Factory Twin > Quest > Build Quest Variant, rebuilt before every APK
+/Assets/_Project/Scenes/CellQuest.unity
+/Assets/_Project/Scenes/CellQuest.unity.meta
