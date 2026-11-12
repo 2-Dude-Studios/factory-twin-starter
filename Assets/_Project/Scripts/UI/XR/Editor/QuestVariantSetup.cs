@@ -33,6 +33,14 @@ namespace TwoDude.FactoryTwin.UI
         /// <summary>How far past the training areas the hall is kept, in metres: what the trainee sees from inside them.</summary>
         private const float KeepMarginMetres = 8f;
 
+        /// <summary>
+        /// Shelving, pallets and boxes are kept only this close to an area: they are thousands of small pieces, and the
+        /// probe on the Quest (2026-11-12) showed them costing about 14 ms of a 13.9 ms frame.
+        /// </summary>
+        private const float ShelvingMarginMetres = 2f;
+
+        private static readonly string[] Shelving = { "shelf", "pallet", "trailer", "truck" };
+
         /// <summary>The hall's shell: kept whole, so no area looks out through a hole. What it costs is measured first.</summary>
         private static readonly string[] Shell = { "walls", "ceiling", "floor", "wallTopSpacer" };
 
@@ -57,7 +65,7 @@ namespace TwoDude.FactoryTwin.UI
             {
                 GameObject env = scene.GetRootGameObjects().FirstOrDefault(g => g.name == "env");
                 if (env != null)
-                    Trim(env, KeepBox(), log);
+                    Trim(env, AreasBox(), log);
                 Lights(scene, log);
                 Wire(scene, env, questPipeline, log);
                 EditorSceneManager.SaveScene(scene);
@@ -114,7 +122,7 @@ namespace TwoDude.FactoryTwin.UI
             }
         }
 
-        private static Rect KeepBox()
+        private static Rect AreasBox()
         {
             var asset = AssetDatabase.LoadAssetAtPath<TrainingAreas>(AreasPath);
             IReadOnlyList<TrainingAreaSettings> areas = asset != null && asset.Areas.Count > 0 ? asset.Areas : TrainingAreaDefaults.All();
@@ -126,11 +134,23 @@ namespace TwoDude.FactoryTwin.UI
                 maxX = Mathf.Max(maxX, (float)a.MaxX);
                 maxZ = Mathf.Max(maxZ, (float)a.MaxZ);
             }
-            return Rect.MinMaxRect(minX - KeepMarginMetres, minZ - KeepMarginMetres, maxX + KeepMarginMetres, maxZ + KeepMarginMetres);
+            return Rect.MinMaxRect(minX, minZ, maxX, maxZ);
         }
 
         /// <summary>Removes the hall's props that lie wholly outside the box; the shell stays.</summary>
-        private static void Trim(GameObject env, Rect keep, StringBuilder log)
+        private static Rect Grow(Rect r, float m) => Rect.MinMaxRect(r.xMin - m, r.yMin - m, r.xMax + m, r.yMax + m);
+
+        private static bool IsShelving(string name)
+        {
+            foreach (string word in Shelving)
+            {
+                if (name.IndexOf(word, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+            }
+            return false;
+        }
+
+        private static void Trim(GameObject env, Rect areas, StringBuilder log)
         {
             foreach (Transform t in env.GetComponentsInChildren<Transform>(true))
             {
@@ -144,6 +164,7 @@ namespace TwoDude.FactoryTwin.UI
             {
                 if (Shell.Contains(part.name))
                     continue;
+                Rect keep = Grow(areas, IsShelving(part.name) ? ShelvingMarginMetres : KeepMarginMetres);
                 foreach (Renderer r in part.GetComponentsInChildren<Renderer>(true))
                 {
                     Bounds b = r.bounds;
@@ -170,7 +191,7 @@ namespace TwoDude.FactoryTwin.UI
                 if (part != null && part.GetComponentsInChildren<Renderer>(true).Length == 0 && part.GetComponentsInChildren<Light>(true).Length == 0)
                     Object.DestroyImmediate(part.gameObject);
             }
-            log.Append($"Hall trimmed to {keep.xMin:F0}..{keep.xMax:F0} x {keep.yMin:F0}..{keep.yMax:F0} (areas + {KeepMarginMetres:F0} m): " +
+            log.Append($"Hall trimmed to the areas + {KeepMarginMetres:F0} m (shelving and pallets + {ShelvingMarginMetres:F0} m): " +
                        $"{removed} props removed ({trianglesRemoved / 1000} k triangles), {kept} kept; shell kept whole. ");
         }
 
