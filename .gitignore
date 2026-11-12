@@ -62,3 +62,5 @@ tools/video/build/
 # Standalone Quest (M26): derived from Cell.unity by Tools > Factory Twin > Quest > Build Quest Variant, rebuilt before every APK
 /Assets/_Project/Scenes/CellQuest.unity
 /Assets/_Project/Scenes/CellQuest.unity.meta
+/Assets/_Project/Generated/
+/Assets/_Project/Generated.meta

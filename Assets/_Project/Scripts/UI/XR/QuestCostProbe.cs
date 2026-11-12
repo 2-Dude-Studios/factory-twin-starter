@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using TwoDude.FactoryTwin.Twin;
 using Unity.XR.CoreUtils;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.XR;
 
 namespace TwoDude.FactoryTwin.UI
@@ -12,7 +14,7 @@ namespace TwoDude.FactoryTwin.UI
     /// Standalone Quest (M26): a measuring run for the headset, started only with the -probe argument
     /// (adb shell am start ... -e unity "-cell -probe"). It stands the rig at each training area's start, then hides
     /// one kind of content at a time (decals, glass, walls, ceiling, shelving and pallets, the whole hall) and tries a
-    /// lower render scale and no foveation, each for a fixed time, logging "[QuestProbe] ..." at every step. Read
+    /// lower render scale, no MSAA, no sun and no foveation, each for a fixed time, logging "[QuestProbe] ..." at every step. Read
     /// against the headset's own once-a-second frame line (logcat VrApi), it shows what each part costs.
     /// </summary>
     public sealed class QuestCostProbe : MonoBehaviour
@@ -20,6 +22,7 @@ namespace TwoDude.FactoryTwin.UI
         public const string CommandLineFlag = "-probe";
 
         [SerializeField] private Transform env;
+        [SerializeField] private Light sun;
         [SerializeField] private XROrigin origin;
         [SerializeField] private TrainingAreaStart[] starts = Array.Empty<TrainingAreaStart>();
         [SerializeField, Min(1f)] private float settleSeconds = 15f;
@@ -69,11 +72,29 @@ namespace TwoDude.FactoryTwin.UI
             yield return Hide("no shelving and pallets", ByRootName());
             yield return Hide("no hall at all", all);
 
-            float scale = XRSettings.eyeTextureResolutionScale;
-            XRSettings.eyeTextureResolutionScale = 0.7f;
-            Debug.Log("[QuestProbe] step render scale 0.7");
-            yield return new WaitForSeconds(stepSeconds);
-            XRSettings.eyeTextureResolutionScale = scale;
+            // URP takes the render scale and MSAA from its pipeline asset, not from XRSettings.
+            if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset urp)
+            {
+                float scale = urp.renderScale;
+                urp.renderScale = 0.7f;
+                Debug.Log($"[QuestProbe] step render scale 0.7 (was {scale:F2})");
+                yield return new WaitForSeconds(stepSeconds);
+                urp.renderScale = scale;
+
+                int msaa = urp.msaaSampleCount;
+                urp.msaaSampleCount = 1;
+                Debug.Log($"[QuestProbe] step MSAA off (was {msaa}x)");
+                yield return new WaitForSeconds(stepSeconds);
+                urp.msaaSampleCount = msaa;
+            }
+
+            if (sun != null)
+            {
+                sun.enabled = false;
+                Debug.Log("[QuestProbe] step sun off");
+                yield return new WaitForSeconds(stepSeconds);
+                sun.enabled = true;
+            }
 
             var displays = new List<XRDisplaySubsystem>();
             SubsystemManager.GetSubsystems(displays);
