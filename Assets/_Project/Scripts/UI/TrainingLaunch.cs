@@ -24,7 +24,15 @@ namespace TwoDude.FactoryTwin.UI
     public static class TrainingLaunch
     {
         public const string MenuScene = "Menu";
-        public const string CellScene = "Cell";
+        public const string DesktopCellScene = "Cell";
+
+        /// <summary>The headset's lighter copy of the cell (M26), built from Cell.unity by Tools > Factory Twin > Quest.</summary>
+        public const string QuestCellScene = "CellQuest";
+
+        /// <summary>The cell scene this player loads: the Quest variant on the standalone headset, Cell everywhere else.</summary>
+        public static string CellScene =>
+            UnityEngine.Application.platform == UnityEngine.RuntimePlatform.Android ? QuestCellScene : DesktopCellScene;
+
         public const string SkipMenuFlag = "-cell";
 
         private static readonly string[] SkipFlags = { SkipMenuFlag, "-takes" };

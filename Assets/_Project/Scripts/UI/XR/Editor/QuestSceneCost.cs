@@ -30,7 +30,7 @@ namespace TwoDude.FactoryTwin.UI
         [MenuItem("Tools/Factory Twin/Quest/Report Scene Cost")]
         private static void ReportMenu() => Report(SceneManager.GetActiveScene());
 
-        public static string Report(Scene scene)
+        public static string Report(Scene scene, string path = ReportPath)
         {
             var text = new StringBuilder();
             text.Append("[QuestSceneCost] ").Append(scene.path).Append('\n');
@@ -93,15 +93,15 @@ namespace TwoDude.FactoryTwin.UI
                 if (map.lightmapColor != null)
                     texels += (long)map.lightmapColor.width * map.lightmapColor.height;
             }
-            text.Append($"Lightmaps: {maps.Length}, {texels / 1000000.0:F1} M texels (colour)\n");
+            text.Append($"Lightmaps (active scene): {maps.Length}, {texels / 1000000.0:F1} M texels (colour)\n");
 
             int lods = Active<LODGroup>(scene).Count();
             text.Append($"LOD groups: {lods}\n");
 
             string report = text.ToString();
             Debug.Log(report);
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(ReportPath) ?? ".");
-            System.IO.File.WriteAllText(ReportPath, report);
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path) ?? ".");
+            System.IO.File.WriteAllText(path, report);
             return report;
         }
 

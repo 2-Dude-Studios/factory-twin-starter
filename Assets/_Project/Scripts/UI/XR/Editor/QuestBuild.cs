@@ -20,7 +20,8 @@ namespace TwoDude.FactoryTwin.UI
     /// project up for the headset: OpenXR for Android with the Meta Quest features, the Touch controller profiles and
     /// hand tracking; IL2CPP, ARM64, Vulkan, ASTC textures; a spike package id, so the real one is not used up.
     /// 3 builds Menu.unity and Cell.unity into Builds/Quest. Back to Windows switches the Editor back. XR is not
-    /// started at launch: VrSwitch starts it, as on the PC, and always does on Android.
+    /// started at launch: VrSwitch starts it, as on the PC, and always does on Android. With the Quest variant built
+    /// (Build Quest Variant, M26) the APK holds Menu.unity and CellQuest.unity; the player loads CellQuest on Android.
     /// </summary>
     [InitializeOnLoad]
     internal static class QuestBuild
@@ -43,6 +44,7 @@ namespace TwoDude.FactoryTwin.UI
         private static readonly string[] Features =
         {
             "MetaQuestFeature", "OculusTouchControllerProfile", "MetaQuestTouchPlusControllerProfile", "HandTracking",
+            "FoveatedRenderingFeature",
         };
 
         [MenuItem("Tools/Factory Twin/Quest/1 Switch to Android")]
@@ -94,6 +96,15 @@ namespace TwoDude.FactoryTwin.UI
                 if (feature != null && Features.Contains(feature.GetType().Name))
                 {
                     feature.enabled = true;
+                    if (feature.GetType().Name == "FoveatedRenderingFeature")
+                    {
+                        // Quest 3 has no eye tracking: fixed foveation, and no eye-tracking permission asked for.
+                        var so = new SerializedObject(feature);
+                        SerializedProperty eyes = so.FindProperty("useEyeTracking");
+                        if (eyes != null)
+                            eyes.boolValue = false;
+                        so.ApplyModifiedPropertiesWithoutUndo();
+                    }
                     EditorUtility.SetDirty(feature);
                     enabled.Add(feature.GetType().Name);
                 }
@@ -142,7 +153,10 @@ namespace TwoDude.FactoryTwin.UI
                 Debug.LogError("[QuestBuild] Switch to Android first (Tools > Factory Twin > Quest > 1 Switch to Android).");
                 return;
             }
-            string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
+            // The headset gets the menu and the Quest variant of the cell (M26) when it has been built; else the PC's list.
+            string[] scenes = AssetDatabase.LoadAssetAtPath<SceneAsset>(QuestVariantSetup.QuestScene) != null
+                ? new[] { "Assets/_Project/Scenes/Menu.unity", QuestVariantSetup.QuestScene }
+                : EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(ApkPath) ?? ".");
             var options = new BuildPlayerOptions
             {
