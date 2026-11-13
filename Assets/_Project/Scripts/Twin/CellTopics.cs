@@ -246,6 +246,13 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath ElecPpeCategory = new TopicPath("elec", "ppe_cat");
         public static readonly TopicPath ElecTesterOk = new TopicPath("elec", "tester_ok");
 
+        // Gearing up (M27, ahead of M20): elec/gear_up (in) 1 starts the PPE stage at the bay's gear bench (the start
+        // menu's Electrical card sends it); elec/ppe_worn (out) how many kit items are on, in order; elec/ppe_refused
+        // (out) the index of an item offered out of order. When the kit is complete elec/ppe_cat goes to its category.
+        public static readonly TopicPath ElecGearUp = new TopicPath("elec", "gear_up");
+        public static readonly TopicPath ElecPpeWorn = new TopicPath("elec", "ppe_worn");
+        public static readonly TopicPath ElecPpeRefused = new TopicPath("elec", "ppe_refused");
+
         // Capture tools (M6): true starts a new take. Parts lost goes back to 0 and the dashboard's event log empties.
         public static readonly TopicPath DemoFreshTake = new TopicPath("demo", "fresh_take");
     }
