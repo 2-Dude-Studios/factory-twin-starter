@@ -28,10 +28,30 @@ namespace TwoDude.FactoryTwin.UI
     {
         static QuestBuild() => KeepDesktopPluginsOffAndroid();
 
-        public const string ApkPath = "Builds/Quest/FactoryTwin-spike.apk";
+        public const string ApkPath = "Builds/Quest/FactoryTwinTraining.apk";
+        public const string ReleaseApkPath = "Builds/Quest/FactoryTwinTraining-release.apk";
 
-        /// <summary>The spike's own id. The store id is decided separately and never changes after the first upload.</summary>
+        /// <summary>The spike's own id (M25 to M27), kept here so its old install can be found and removed.</summary>
         public const string SpikePackageId = "com.twodudestudios.factorytwin.spike";
+
+        // The store identity (M28, decided 2026-11-13: free, Quest 3 and 3S). The package id never changes after the
+        // first upload to the Meta Horizon Store. The name and company are applied to Android builds only and put back
+        // after each build, so the desktop build's name and its data folder stay as they are.
+        public const string StorePackageId = "com.twodudestudios.factorytwin";
+        public const string StoreProductName = "Factory Twin Training";
+        public const string StoreCompanyName = "2 Dude Studios";
+
+        // The version: bump it before every upload; the code must only ever go up (major*10000 + minor*100 + patch).
+        public const int VersionMajor = 0, VersionMinor = 1, VersionPatch = 0;
+        public static string VersionName => $"{VersionMajor}.{VersionMinor}.{VersionPatch}";
+        public static int VersionCode => VersionMajor * 10000 + VersionMinor * 100 + VersionPatch;
+
+        // Quest 3 (eureka) and Quest 3S only, as decided; the Meta Quest feature's names for them.
+        private static readonly string[] TargetDevices = { "eureka", "quest3s" };
+
+        // The release keystore lives outside the repo and its passwords are never written down here: the release build
+        // reads them from these environment variables, set by you before starting Unity.
+        private const string KeystoreVar = "FT_KEYSTORE", KeystorePassVar = "FT_KEYSTORE_PASS", KeyAliasVar = "FT_KEY_ALIAS", KeyPassVar = "FT_KEY_PASS";
 
         // URDF Importer's Assimp natives are Windows, Linux and macOS libraries marked "any platform" in the package, so an
         // Android build tries to pack both Windows assimp.dll files and fails. Only the Editor's URDF import uses them.
@@ -96,6 +116,8 @@ namespace TwoDude.FactoryTwin.UI
                 if (feature != null && Features.Contains(feature.GetType().Name))
                 {
                     feature.enabled = true;
+                    if (feature.GetType().Name == "MetaQuestFeature")
+                        MetaQuestStoreSettings(feature);
                     if (feature.GetType().Name == "FoveatedRenderingFeature")
                     {
                         // Quest 3 has no eye tracking: fixed foveation, and no eye-tracking permission asked for.
@@ -119,13 +141,31 @@ namespace TwoDude.FactoryTwin.UI
             PlayerSettings.Android.minSdkVersion = (AndroidSdkVersions)MinSdk;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.Vulkan });
-            PlayerSettings.SetApplicationIdentifier(android, SpikePackageId);
+            PlayerSettings.SetApplicationIdentifier(android, StorePackageId);
+            PlayerSettings.Android.bundleVersionCode = VersionCode;
             EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ASTC;
             AssetDatabase.SaveAssets();
 
             string missing = string.Join(", ", Features.Except(enabled));
             Debug.Log($"[QuestBuild] Configured for Quest: OpenXR on Android with {string.Join(", ", enabled)}" +
-                      $"{(missing.Length > 0 ? " (NOT FOUND: " + missing + ")" : string.Empty)}; IL2CPP, ARM64, Vulkan, ASTC, min SDK {MinSdk}, id {SpikePackageId}.");
+                      $"{(missing.Length > 0 ? " (NOT FOUND: " + missing + ")" : string.Empty)}; IL2CPP, ARM64, Vulkan, ASTC, min SDK {MinSdk}, id {StorePackageId} {VersionName} ({VersionCode}), Quest 3 and 3S, no internet permission.");
+        }
+
+        // The Meta Quest feature's store settings: only the headsets decided on, and no internet permission (the
+        // standalone app has no network use; Unity would otherwise add it for the MQTT and Modbus code it links).
+        private static void MetaQuestStoreSettings(OpenXRFeature feature)
+        {
+            var so = new SerializedObject(feature);
+            SerializedProperty devices = so.FindProperty("targetDevices");
+            for (int i = 0; devices != null && i < devices.arraySize; i++)
+            {
+                SerializedProperty device = devices.GetArrayElementAtIndex(i);
+                device.FindPropertyRelative("enabled").boolValue = TargetDevices.Contains(device.FindPropertyRelative("manifestName").stringValue);
+            }
+            SerializedProperty internet = so.FindProperty("forceRemoveInternetPermission");
+            if (internet != null)
+                internet.boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>
@@ -146,8 +186,23 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         [MenuItem("Tools/Factory Twin/Quest/3 Build APK")]
-        private static void Build()
+        private static void Build() => Build(release: false);
+
+        /// <summary>
+        /// The store build: release-signed with your keystore (path and passwords from FT_KEYSTORE, FT_KEYSTORE_PASS,
+        /// FT_KEY_ALIAS, FT_KEY_PASS), to Builds/Quest/FactoryTwinTraining-release.apk. Nothing about the key is saved.
+        /// </summary>
+        [MenuItem("Tools/Factory Twin/Quest/4 Build Release APK")]
+        private static void BuildRelease() => Build(release: true);
+
+        private static void Build(bool release)
         {
+            string keystore = System.Environment.GetEnvironmentVariable(KeystoreVar);
+            if (release && (string.IsNullOrEmpty(keystore) || !System.IO.File.Exists(keystore) || string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(KeyAliasVar))))
+            {
+                Debug.LogError($"[QuestBuild] Release build: set {KeystoreVar} (the keystore file, outside the repo), {KeystorePassVar}, {KeyAliasVar} and {KeyPassVar} before starting Unity.");
+                return;
+            }
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
             {
                 Debug.LogError("[QuestBuild] Switch to Android first (Tools > Factory Twin > Quest > 1 Switch to Android).");
@@ -159,21 +214,53 @@ namespace TwoDude.FactoryTwin.UI
             string[] scenes = AssetDatabase.LoadAssetAtPath<SceneAsset>(QuestVariantSetup.QuestScene) != null
                 ? new[] { "Assets/_Project/Scenes/Menu.unity", QuestVariantSetup.QuestScene }
                 : EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(ApkPath) ?? ".");
+            string apk = release ? ReleaseApkPath : ApkPath;
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(apk) ?? ".");
             var options = new BuildPlayerOptions
             {
                 scenes = scenes,
-                locationPathName = ApkPath,
+                locationPathName = apk,
                 target = BuildTarget.Android,
                 targetGroup = BuildTargetGroup.Android,
                 options = BuildOptions.None,
             };
             int filtered = KeepDesktopPluginsOffAndroid();
             Debug.Log($"[QuestBuild] Keeping {filtered} desktop-only native plugins out of the Android build.");
-            BuildReport report = BuildPipeline.BuildPlayer(options);
+            // The store name and version for this build only; the desktop's name, company and signing come back after.
+            string productName = PlayerSettings.productName, companyName = PlayerSettings.companyName;
+            bool customKeystore = PlayerSettings.Android.useCustomKeystore;
+            string keystoreName = PlayerSettings.Android.keystoreName, aliasName = PlayerSettings.Android.keyaliasName;
+            BuildReport report;
+            try
+            {
+                PlayerSettings.productName = StoreProductName;
+                PlayerSettings.companyName = StoreCompanyName;
+                PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, StorePackageId);
+                PlayerSettings.Android.bundleVersionCode = VersionCode;
+                PlayerSettings.bundleVersion = VersionName;
+                if (release)
+                {
+                    PlayerSettings.Android.useCustomKeystore = true;
+                    PlayerSettings.Android.keystoreName = keystore;
+                    PlayerSettings.Android.keystorePass = System.Environment.GetEnvironmentVariable(KeystorePassVar);
+                    PlayerSettings.Android.keyaliasName = System.Environment.GetEnvironmentVariable(KeyAliasVar);
+                    PlayerSettings.Android.keyaliasPass = System.Environment.GetEnvironmentVariable(KeyPassVar);
+                }
+                report = BuildPipeline.BuildPlayer(options);
+            }
+            finally
+            {
+                PlayerSettings.productName = productName;
+                PlayerSettings.companyName = companyName;
+                PlayerSettings.Android.useCustomKeystore = customKeystore;
+                PlayerSettings.Android.keystoreName = keystoreName;
+                PlayerSettings.Android.keyaliasName = aliasName;
+                PlayerSettings.Android.keystorePass = string.Empty;
+                PlayerSettings.Android.keyaliasPass = string.Empty;
+            }
             BuildSummary summary = report.summary;
             var text = new System.Text.StringBuilder();
-            text.Append($"[QuestBuild] Build {summary.result}: {summary.totalSize / (1024d * 1024d):F0} MB, {summary.totalTime.TotalMinutes:F1} min, " +
+            text.Append($"[QuestBuild] Build{(release ? " (release)" : string.Empty)} {summary.result}: {StorePackageId} {VersionName} ({VersionCode}), {summary.totalSize / (1024d * 1024d):F0} MB, {summary.totalTime.TotalMinutes:F1} min, " +
                         $"{summary.totalErrors} errors, {summary.totalWarnings} warnings, scenes {string.Join(", ", scenes)} -> {summary.outputPath}");
             int shown = 0;
             foreach (BuildStep step in report.steps)
