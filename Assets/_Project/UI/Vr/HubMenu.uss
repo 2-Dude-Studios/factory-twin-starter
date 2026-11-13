@@ -58,7 +58,7 @@
 .hub__credits-head { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .hub__credits-title { font-size: 36px; -unity-font-style: bold; color: rgb(240, 242, 244); letter-spacing: 3px; margin: 0; padding: 0; }
 .hub__credits-page { font-size: 22px; color: rgb(160, 168, 176); margin: 0; padding: 0; }
-.hub__credits-text { flex-grow: 1; font-size: 21px; color: rgb(220, 224, 228); white-space: normal; margin: 0; padding: 18px 22px;
+.hub__credits-text { flex-grow: 1; font-size: 27px; color: rgb(220, 224, 228); white-space: normal; margin: 0; padding: 18px 22px;
     border-radius: 14px; background-color: rgb(30, 35, 40); overflow: hidden; }
 .hub__credits-buttons { flex-direction: row; justify-content: flex-end; margin-top: 16px; }
 .hub__credits-button { width: 220px; height: 60px; margin: 0 0 0 16px; font-size: 24px; -unity-font-style: bold; border-radius: 12px;

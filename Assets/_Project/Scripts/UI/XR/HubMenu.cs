@@ -28,8 +28,8 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField, TextArea(6, 20)] private string credits = DefaultCredits;
         [Tooltip("The third-party notices in full, in order (Assets/_Project/Licenses).")]
         [SerializeField] private TextAsset[] notices = Array.Empty<TextAsset>();
-        [SerializeField, Min(5)] private int creditLines = 24;
-        [SerializeField, Min(20)] private int creditChars = 130;
+        [SerializeField, Min(5)] private int creditLines = 20;
+        [SerializeField, Min(20)] private int creditChars = 105;
 
         public const string DefaultCredits =
             "Factory VR Safety Training, by 2 Dude Studios (2dudestudios.com).\n\n" +
