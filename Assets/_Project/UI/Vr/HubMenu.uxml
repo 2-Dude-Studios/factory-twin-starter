@@ -1,0 +1,25 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="HubMenu.uss" />
+    <!-- The headset hub's menu (HubMenu, M28): in the cell at the hub, facing the trainee as the app opens. -->
+    <ui:VisualElement name="hub" class="hub">
+        <ui:VisualElement class="hub__header">
+            <ui:VisualElement name="hub-logo" class="hub__logo" />
+            <ui:VisualElement class="hub__titles">
+                <ui:Label text="FACTORY TWIN TRAINING" class="hub__title" />
+                <ui:Label name="hub-trainee" text="Trainee" class="hub__trainee" />
+            </ui:VisualElement>
+            <ui:VisualElement class="hub__rank">
+                <ui:Label name="hub-rank" text="TRAINEE" class="hub__rank-name" />
+                <ui:VisualElement class="hub__bar">
+                    <ui:VisualElement name="hub-bar-fill" class="hub__bar-fill" />
+                </ui:VisualElement>
+                <ui:Label name="hub-progress" text="" class="hub__progress" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="hub-cards" class="hub__cards" />
+        <ui:VisualElement class="hub__footer">
+            <ui:Label name="hub-note" text="Point and pull the trigger, or touch a button. The tablet (Y) brings you back here." class="hub__note" />
+            <ui:Label text="Training demo, not certified training  ·  2 Dude Studios" class="hub__fine" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

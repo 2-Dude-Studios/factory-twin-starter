@@ -127,6 +127,16 @@ namespace TwoDude.FactoryTwin.UI
         {
             TopicPath topic = message.Topic;
             double v = message.Value.AsNumber;
+            if (topic == CellTopics.TrainingHub)
+            {
+                // Back at the headset hub (M28): the tablet's main page again.
+                if (live && _shown)
+                {
+                    _shown = false;
+                    TabletPages.ShowOnly(_root, "main-options", "hud");
+                }
+                return;
+            }
             if (topic == CellTopics.ElecGearUp)
             {
                 if (live && v != 0d)

@@ -83,7 +83,63 @@ namespace TwoDude.FactoryTwin.UI
 
             log.Append($"Standalone: MQTT bridge, PLC link, shot director and take sequencer off ({off}), dashboard off ({dashboards}), " +
                        $"{urdf} URDF components left out, headset pause on the rig. ");
+            Hub(scene, roots, origin, log);
         }
+
+        private const string HubMenuUxml = "Assets/_Project/UI/Vr/HubMenu.uxml";
+        private const float HubMenuWidthPx = 1800f, HubMenuHeightPx = 1000f, HubMenuWidthMetres = 2.2f;
+        private const float HubMenuAhead = 2.3f, HubMenuHeight = 1.5f;
+
+        /// <summary>
+        /// The headset hub (M28): the menu inside the cell. A HubSession beside the VR switch (SceneNavigation hands it the
+        /// menu's choices and every main-menu button) and the hub menu, a world-space panel 2.3 m ahead of the hub's start,
+        /// facing the trainee.
+        /// </summary>
+        private static void Hub(Scene scene, GameObject[] roots, XROrigin origin, StringBuilder log)
+        {
+            CellContext context = roots.SelectMany(g => g.GetComponentsInChildren<CellContext>(true)).FirstOrDefault();
+            VrSwitch vrSwitch = roots.SelectMany(g => g.GetComponentsInChildren<VrSwitch>(true)).FirstOrDefault();
+            TrainingLauncher launcher = roots.SelectMany(g => g.GetComponentsInChildren<TrainingLauncher>(true)).FirstOrDefault();
+            TrainingAreaStart hubStart = roots.SelectMany(g => g.GetComponentsInChildren<TrainingAreaStart>(true)).FirstOrDefault(t => t.Area == TrainingArea.Hub);
+            if (vrSwitch == null || launcher == null || hubStart == null)
+            {
+                log.Append("No VR switch, launcher or hub start: hub skipped. ");
+                return;
+            }
+            HubSession session = vrSwitch.GetComponent<HubSession>() ?? vrSwitch.gameObject.AddComponent<HubSession>();
+            var so = new SerializedObject(session);
+            so.FindProperty("context").objectReferenceValue = context;
+            so.FindProperty("vrSwitch").objectReferenceValue = vrSwitch;
+            so.FindProperty("launcher").objectReferenceValue = launcher;
+            so.FindProperty("origin").objectReferenceValue = origin;
+            so.FindProperty("hubStart").objectReferenceValue = hubStart;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            GameObject old = roots.SelectMany(g => g.GetComponentsInChildren<HubMenu>(true)).Select(m => m.gameObject).FirstOrDefault();
+            if (old != null)
+                Object.DestroyImmediate(old);
+            var go = new GameObject("HubMenu") { layer = LayerMask.NameToLayer("UI") };
+            SceneManager.MoveGameObjectToScene(go, scene);
+            if (context != null)
+                go.transform.SetParent(context.transform, false);
+            Quaternion facing = Quaternion.Euler(0f, hubStart.YawDegrees, 0f);
+            go.transform.SetPositionAndRotation(hubStart.FloorPosition + facing * Vector3.forward * HubMenuAhead + Vector3.up * HubMenuHeight, facing);
+            UIDocument document = XrSetup.Document(go, XrSetup.WorldPanel(), HubMenuUxml, HubMenuWidthPx, HubMenuHeightPx,
+                HubMenuWidthMetres / (HubMenuWidthPx / 100f));
+            XrSetup.Pressable(go, HubMenuWidthPx, HubMenuHeightPx);
+            XrSetup.Backing(go, HubMenuWidthPx, HubMenuHeightPx, 16f, 0.03f);
+            var menu = go.AddComponent<HubMenu>();
+            var ms = new SerializedObject(menu);
+            ms.FindProperty("document").objectReferenceValue = document;
+            ms.FindProperty("hub").objectReferenceValue = session;
+            ms.FindProperty("context").objectReferenceValue = context;
+            ms.FindProperty("logo").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>(StudioLogoPath);
+            ms.ApplyModifiedPropertiesWithoutUndo();
+            log.Append($"Hub: session on {vrSwitch.name}, menu at {go.transform.position.x:F1}, {go.transform.position.z:F1}. ");
+        }
+
+        /// <summary>The 2 Dude Studios logo, when there is one (M28, banners and the hub menu's header).</summary>
+        public const string StudioLogoPath = "Assets/_Project/Art/Brand/2DudeStudios_Logo.png";
 
         /// <summary>The headset's own controls: the robot drill page on the tablet and the walkway teleport floor.</summary>
         public static void Controls(Scene scene, StringBuilder log)

@@ -33,6 +33,18 @@ namespace TwoDude.FactoryTwin.UI
             TrainingMode mode = TrainingLaunch.Take();
             if (mode == TrainingMode.None)
                 yield break;
+            yield return Run(mode);
+        }
+
+        /// <summary>Starts a training in this scene, as a scene load with a request does (the headset hub, M28).</summary>
+        public void Launch(TrainingMode mode)
+        {
+            if (mode != TrainingMode.None)
+                StartCoroutine(Run(mode));
+        }
+
+        private IEnumerator Run(TrainingMode mode)
+        {
             // Let VrSwitch.Start run, then wait for OpenXR to come back if it is coming.
             yield return null;
             float waited = 0f;
