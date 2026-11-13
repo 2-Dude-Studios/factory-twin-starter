@@ -70,7 +70,7 @@ Contents: 1 What stands in the way · 2 What the stores require · 3 Milestones 
 - Host the privacy policy and give a support address (2dudestudios.com is the natural place).
 - Pricing and payout details, if the app is paid.
 - Wear the headset: store screenshots, the trailer and the performance checks all come from a real device.
-- Added 2026-11-13 with M28: create the app on the Developer Dashboard and send the App ID; create the four leaderboards; submit the Data Use Checkup; self-certify the age group; answer the IARC questionnaire; put the privacy policy page live on 2dudestudios.com (prompt in `docs/website-privacy-page-prompt.md`) with a support inbox that is read; the studio logo as a large PNG.
+- Added 2026-11-13 with M28: create the app on the Developer Dashboard and set its App ID as the `FT_QUEST_APP_ID` environment variable on the build PC; create the four leaderboards; submit the Data Use Checkup; self-certify the age group; answer the IARC questionnaire; put the privacy policy page live on 2dudestudios.com (prompt in `docs/website-privacy-page-prompt.md`) with a support inbox that is read; the studio logo as a large PNG.
 
 ## 5. Decisions
 
@@ -95,9 +95,9 @@ Everything left between today's build and the app being live, in order. **You** 
 - 72 fps at the hub with the menu up (part of M28's exit).
 
 **Step 2. Meta account live** (you first, then me; a day plus Meta's set-up time)
-- **You:** create the app on the Developer Dashboard (Meta Horizon Store, Quest 3 and 3S); add your account and any testers to the organisation; create Meta test users for screenshots; send the App ID.
+- **You:** create the app on the Developer Dashboard (Meta Horizon Store, Quest 3 and 3S); add your account and any testers to the organisation; create Meta test users for screenshots; set the App ID as the `FT_QUEST_APP_ID` environment variable on the build PC (Windows: System Properties, Environment Variables), then restart Unity. It is not secret, but it stays out of the public repo so forks build an offline app. **Never** put the App Secret (the dashboard's API page) anywhere in the repo or the app.
 - **You:** create the leaderboards `robot_cell`, `lockout`, `fire`, `electrical` (higher is better, each user's best kept).
-- **Me:** the App ID into `TwinConfig.asset`, a build, then on the headset: the entitlement check passes, the hub shows your Meta name, a scored run posts to its leaderboard and the hub card shows the top five. That closes M28's exit.
+- **Me:** a build (the build puts the App ID into the APK for that build only and empties `TwinConfig` again; a release build refuses to start without it), then on the headset: the entitlement check passes, the hub shows your Meta name, a scored run posts to its leaderboard and the hub card shows the top five. That closes M28's exit.
 
 **Step 3. Data Use Checkup and the privacy page** (you; an hour, then automatic approval while in development)
 - Put the privacy page live (prompt in `docs/website-privacy-page-prompt.md`; the text is `docs/privacy-policy.md`, filled with the address, support inbox and date) and its URL in App Submission, Additional Details, Privacy Policy.
