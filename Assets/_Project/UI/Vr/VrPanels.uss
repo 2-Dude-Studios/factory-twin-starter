@@ -129,6 +129,8 @@
 /* The robot cell drill page (VrRobotMenu, M27): level buttons on two lines, name then stars */
 #robot-levels .menu__button { height: 54px; margin: 2px 0; font-size: 15px; white-space: normal; -unity-text-align: middle-center; }
 #robot-options .menu__group { margin: 4px 0 2px 0; font-size: 14px; }
+/* The main page's areas row (M27): five small buttons, three to a line */
+#main-areas .menu__button { width: 32%; height: 32px; margin: 2px 0; font-size: 14px; }
 /* The electrical drill page (VrElectricalMenu, M27): many controls, so compact buttons; scenario titles on two lines */
 #elec-options .menu__button { height: 34px; margin: 2px 0; font-size: 14px; }
 #elec-scenarios .menu__button { height: 46px; font-size: 13px; white-space: normal; -unity-text-align: middle-center; }
