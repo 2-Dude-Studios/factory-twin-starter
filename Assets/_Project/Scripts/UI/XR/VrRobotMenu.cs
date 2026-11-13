@@ -79,6 +79,12 @@ namespace TwoDude.FactoryTwin.UI
 
         private void Update()
         {
+            // The tablet's UI was rebuilt (the panel woke again): wire the new one.
+            if (document != null && document.rootVisualElement != _root)
+            {
+                OnDisable();
+                OnEnable();
+            }
             if (!_shown || Time.unscaledTime < _nextRefresh)
                 return;
             _nextRefresh = Time.unscaledTime + refreshSeconds;
