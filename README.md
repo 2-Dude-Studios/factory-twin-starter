@@ -229,6 +229,8 @@ python tools/replay/replay.py --rate 10
 
 2 Dude Studios' own code and content are under the [MIT licence](LICENSE). Third-party content keeps its own licence: see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [docs/LICENSES.md](docs/LICENSES.md).
 
+The 2 Dude Studios name and logo (`Assets/_Project/Art/Brand/`) are not covered by the MIT licence: they identify the studio and stay its own. If you fork the project, take them out or replace them with your own.
+
 - **AI4I 2020 Predictive Maintenance Dataset**: S. Matzka, UCI Machine Learning Repository, 2020, doi:10.24432/C5HS5C, CC BY 4.0. Replayed as the CNC's telemetry.
 - **Arm kinematics and meshes**: ros-industrial/universal_robot (`ur_description`), BSD-3-Clause. Used without vendor branding. This project is not affiliated with or endorsed by Universal Robots.
 - **Other components**: MQTTnet (MIT), Microsoft Rocketbox avatars (MIT), the Quaternius Animated Human (CC0), Freesound CC0 sounds and Unity's URDF Importer (Apache-2.0).
