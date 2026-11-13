@@ -16,6 +16,13 @@
                 <ui:Label name="hub-progress" text="" class="hub__progress" />
             </ui:VisualElement>
         </ui:VisualElement>
+        <!-- The daily challenge and the streak (M28). -->
+        <ui:VisualElement class="hub__daily">
+            <ui:Label text="DAILY CHALLENGE" class="hub__daily-tag" />
+            <ui:Label name="hub-daily" text="" class="hub__daily-text" />
+            <ui:Label name="hub-streak" text="" class="hub__streak" />
+            <ui:Button name="hub-daily-go" text="Play it" class="hub__daily-go" />
+        </ui:VisualElement>
         <ui:VisualElement name="hub-cards" class="hub__cards" />
         <ui:VisualElement class="hub__footer">
             <ui:Label name="hub-note" text="Point and pull the trigger, or touch a button. The tablet (Y) brings you back here." class="hub__note" />

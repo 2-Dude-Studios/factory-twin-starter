@@ -87,7 +87,9 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         private const string HubMenuUxml = "Assets/_Project/UI/Vr/HubMenu.uxml";
-        private const float HubMenuWidthPx = 1800f, HubMenuHeightPx = 1000f, HubMenuWidthMetres = 2.2f;
+        private const float HubMenuWidthPx = 1800f, HubMenuHeightPx = 1100f, HubMenuWidthMetres = 2.5f;
+        private const string ResultsUxml = "Assets/_Project/UI/Vr/ResultsCard.uxml";
+        private const float ResultsWidthPx = 900f, ResultsHeightPx = 640f, ResultsWidthMetres = 1.0f;
         private const float HubMenuAhead = 2.3f, HubMenuHeight = 1.5f;
 
         /// <summary>
@@ -135,7 +137,42 @@ namespace TwoDude.FactoryTwin.UI
             ms.FindProperty("context").objectReferenceValue = context;
             ms.FindProperty("logo").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>(StudioLogoPath);
             ms.ApplyModifiedPropertiesWithoutUndo();
+            ResultsAndFeedback(scene, roots, origin, context, session, log);
             log.Append($"Hub: session on {vrSwitch.name}, menu at {go.transform.position.x:F1}, {go.transform.position.z:F1}. ");
+        }
+
+        // The game layer's results card (comes up in front of the trainee when a run ends) and the step popups and buzz.
+        private static void ResultsAndFeedback(Scene scene, GameObject[] roots, XROrigin origin, CellContext context, HubSession session, StringBuilder log)
+        {
+            GameObject old = roots.SelectMany(g => g.GetComponentsInChildren<ResultsCard>(true)).Select(c => c.gameObject).FirstOrDefault();
+            if (old != null)
+                Object.DestroyImmediate(old);
+            var go = new GameObject("ResultsCard") { layer = LayerMask.NameToLayer("UI") };
+            SceneManager.MoveGameObjectToScene(go, scene);
+            if (context != null)
+                go.transform.SetParent(context.transform, false);
+            UIDocument document = XrSetup.Document(go, XrSetup.WorldPanel(), ResultsUxml, ResultsWidthPx, ResultsHeightPx,
+                ResultsWidthMetres / (ResultsWidthPx / 100f));
+            XrSetup.Pressable(go, ResultsWidthPx, ResultsHeightPx);
+            XrSetup.Backing(go, ResultsWidthPx, ResultsHeightPx, 12f, 0.02f);
+            var audio = go.AddComponent<AudioSource>();
+            audio.playOnAwake = false;
+            audio.spatialBlend = 0f;
+            var card = go.AddComponent<ResultsCard>();
+            var cs = new SerializedObject(card);
+            cs.FindProperty("document").objectReferenceValue = document;
+            cs.FindProperty("hub").objectReferenceValue = session;
+            cs.FindProperty("head").objectReferenceValue = origin != null && origin.Camera != null ? origin.Camera.transform : null;
+            cs.FindProperty("audioSource").objectReferenceValue = audio;
+            cs.ApplyModifiedPropertiesWithoutUndo();
+
+            DrillFeedback feedback = session.GetComponent<DrillFeedback>() ?? session.gameObject.AddComponent<DrillFeedback>();
+            var fs = new SerializedObject(feedback);
+            fs.FindProperty("context").objectReferenceValue = context;
+            fs.FindProperty("popups").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<ScorePopups>(true)).FirstOrDefault();
+            fs.FindProperty("robot").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<RobotCellScorer>(true)).FirstOrDefault();
+            fs.ApplyModifiedPropertiesWithoutUndo();
+            log.Append($"Results card and step feedback (popups {(fs.FindProperty("popups").objectReferenceValue != null ? "found" : "MISSING")}). ");
         }
 
         /// <summary>The 2 Dude Studios logo, when there is one (M28, banners and the hub menu's header).</summary>

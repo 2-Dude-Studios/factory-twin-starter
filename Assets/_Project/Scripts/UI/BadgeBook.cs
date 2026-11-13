@@ -30,6 +30,8 @@ namespace TwoDude.FactoryTwin.UI
         {
             public string trainee;
             public List<Entry> entries = new List<Entry>();
+            // M28: XP, the day streak and the daily challenge (books from before load with none).
+            public ProgressState progress = new ProgressState();
         }
 
         private readonly Data _data;
@@ -67,10 +69,30 @@ namespace TwoDude.FactoryTwin.UI
 
         public int BestScore(TrainingMode mode) => Find(mode)?.best ?? 0;
 
+        /// <summary>The trainee's XP: every point of every run, the daily challenge doubled (M28).</summary>
+        public int Xp => Progress.xp;
+
+        /// <summary>Days in a row trained, counting the last day trained.</summary>
+        public int Streak => Progress.streak;
+
+        public bool DailyDone(DateTime utc) => TraineeProgress.DailyDone(Progress, utc);
+
+        /// <summary>What the last run recorded here earned.</summary>
+        public XpGain LastGain { get; private set; }
+
+        private ProgressState Progress => _data.progress ??= new ProgressState();
+
         public IReadOnlyList<string> Earned(TrainingMode mode) => (IReadOnlyList<string>)Find(mode)?.badges ?? Array.Empty<string>();
 
-        /// <summary>Adds a session's score and badges. Returns the badges that are new to this trainee.</summary>
+        /// <summary>Adds a session's score and badges, and its XP. Returns the badges that are new to this trainee.</summary>
         public List<string> Record(TrainingMode mode, int score, IEnumerable<string> badges)
+        {
+            List<string> fresh = RecordScore(mode, score, badges);
+            LastGain = TraineeProgress.Gain(Progress, TrainingLaunch.AreaFor(mode), 0, score, DateTime.UtcNow);
+            return fresh;
+        }
+
+        private List<string> RecordScore(TrainingMode mode, int score, IEnumerable<string> badges)
         {
             Entry entry = Find(mode);
             if (entry == null)
@@ -117,7 +139,8 @@ namespace TwoDude.FactoryTwin.UI
         /// </summary>
         public List<string> RecordLevel(TrainingMode mode, int level, int stars, int points, IEnumerable<string> badges, DateTime utc)
         {
-            List<string> fresh = Record(mode, points, badges);
+            List<string> fresh = RecordScore(mode, points, badges);
+            LastGain = TraineeProgress.Gain(Progress, TrainingLaunch.AreaFor(mode), level, points, utc);
             if (level < 1 || level > DrillLevels.Count)
                 return fresh;
             Entry entry = Find(mode);

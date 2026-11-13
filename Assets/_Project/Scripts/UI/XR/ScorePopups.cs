@@ -66,7 +66,8 @@ namespace TwoDude.FactoryTwin.UI
                 scorer.Scored -= Show;
         }
 
-        private void Show(ScoreEvent e)
+        /// <summary>Shows one score event (the fire drill's, and since M28 every drill's steps through DrillFeedback).</summary>
+        public void Show(ScoreEvent e)
         {
             if (head == null || !head.gameObject.activeInHierarchy)
                 return;
