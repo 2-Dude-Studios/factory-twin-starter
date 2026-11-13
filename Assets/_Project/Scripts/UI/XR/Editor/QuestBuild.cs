@@ -208,11 +208,11 @@ namespace TwoDude.FactoryTwin.UI
                 Debug.LogError("[QuestBuild] Switch to Android first (Tools > Factory Twin > Quest > 1 Switch to Android).");
                 return;
             }
-            // The headset gets the menu and the Quest variant of the cell (M26), rebuilt from the saved Cell.unity first
-            // so it is never stale (it is derived, and kept out of git).
+            // The headset gets the Quest variant of the cell only (M26), rebuilt from the saved Cell.unity first so it is
+            // never stale (it is derived, and kept out of git): its menu is the hub inside the cell (M28), no Menu.unity.
             QuestVariantSetup.Build();
             string[] scenes = AssetDatabase.LoadAssetAtPath<SceneAsset>(QuestVariantSetup.QuestScene) != null
-                ? new[] { "Assets/_Project/Scenes/Menu.unity", QuestVariantSetup.QuestScene }
+                ? new[] { QuestVariantSetup.QuestScene }
                 : EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
             string apk = release ? ReleaseApkPath : ApkPath;
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(apk) ?? ".");

@@ -32,6 +32,7 @@ namespace TwoDude.FactoryTwin.UI
         private static readonly int Color0 = Shader.PropertyToID("_Color");
         private readonly PpeDressing _dressing = new PpeDressing();
         private IDisposable _subscription;
+        private IDisposable _hubSubscription;
         private MaterialPropertyBlock _block;
 
         private void OnEnable()
@@ -43,12 +44,16 @@ namespace TwoDude.FactoryTwin.UI
                 if (m.Value.AsNumber != 0d)
                     GearUp();
             });
+            // Back at the headset hub (M28): the kit back on the bench and the hands bare for the next trainee.
+            _hubSubscription = context.Bus.Subscribe(CellTopics.TrainingHub.ToString(), _ => GearUp());
         }
 
         private void OnDisable()
         {
             _subscription?.Dispose();
             _subscription = null;
+            _hubSubscription?.Dispose();
+            _hubSubscription = null;
         }
 
         /// <summary>True when a held item at <paramref name="position"/> is where its zone is on the trainee.</summary>

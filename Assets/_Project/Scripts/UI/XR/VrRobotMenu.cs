@@ -60,6 +60,8 @@ namespace TwoDude.FactoryTwin.UI
             {
                 context.Bus.Subscribe(CellTopics.TrainingRobotLevel.ToString(), OnLevel),
                 context.Bus.Subscribe(CellTopics.TrainingRobotStars.ToString(), OnStars),
+                // Back at the headset hub (M28): the tablet's main page again.
+                context.Bus.Subscribe(CellTopics.TrainingHub.ToString(), _ => BackToMain()),
             };
             BadgeBook.Saved += OnBookSaved;
             Show(_shown);
@@ -198,6 +200,15 @@ namespace TwoDude.FactoryTwin.UI
         // The robot page is the only one on the tablet while it is open: the main page and the lockout display, and
         // the fire page, stay hidden whatever else wakes the tablet.
         private void HideOtherPages() => TabletPages.ShowOnly(_root, "robot-options", "robot-hud");
+
+        private void BackToMain()
+        {
+            if (!_shown)
+                return;
+            _shown = false;
+            _resultText = string.Empty;
+            TabletPages.ShowOnly(_root, "main-options", "hud");
+        }
 
         private string TraineeName()
         {

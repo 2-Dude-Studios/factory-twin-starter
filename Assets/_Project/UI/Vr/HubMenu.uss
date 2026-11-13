@@ -1,0 +1,39 @@
+/* The headset hub's menu (HubMenu, M28): 1800 x 1000 px, dark panel, one card per training. */
+.hub { flex-grow: 1; padding: 34px 40px 26px 40px; background-color: rgb(20, 24, 28); border-radius: 22px; }
+
+.hub__header { flex-direction: row; align-items: center; margin-bottom: 26px; }
+.hub__logo { width: 210px; height: 140px; margin-right: 26px; -unity-background-scale-mode: scale-to-fit; }
+.hub__titles { flex-grow: 1; }
+.hub__title { font-size: 54px; -unity-font-style: bold; color: rgb(240, 242, 244); margin: 0; padding: 0; letter-spacing: 3px; }
+.hub__trainee { font-size: 28px; color: rgb(160, 168, 176); margin: 4px 0 0 0; padding: 0; }
+.hub__rank { width: 470px; align-items: flex-end; }
+.hub__rank-name { font-size: 34px; -unity-font-style: bold; color: rgb(255, 196, 70); margin: 0 0 8px 0; padding: 0; letter-spacing: 2px; }
+.hub__bar { width: 460px; height: 18px; border-radius: 9px; background-color: rgb(44, 50, 57); overflow: hidden; }
+.hub__bar-fill { height: 100%; width: 0%; border-radius: 9px; background-color: rgb(255, 174, 13); }
+.hub__progress { font-size: 20px; color: rgb(160, 168, 176); margin: 6px 0 0 0; padding: 0; }
+
+.hub__cards { flex-direction: row; flex-grow: 1; justify-content: space-between; }
+.hubcard { width: 19.3%; flex-direction: column; padding: 18px 16px; border-radius: 16px; border-top-width: 8px; background-color: rgb(30, 35, 40); }
+.hubcard--robot { border-top-color: rgb(54, 168, 108); }
+.hubcard--lockout { border-top-color: rgb(255, 174, 13); }
+.hubcard--fire { border-top-color: rgb(214, 69, 65); }
+.hubcard--electrical { border-top-color: rgb(25, 115, 242); }
+.hubcard--free { border-top-color: rgb(90, 140, 220); }
+.hubcard__tag { font-size: 16px; letter-spacing: 2px; -unity-font-style: bold; color: rgb(160, 168, 176); margin: 0 0 4px 0; padding: 0; }
+.hubcard__title { font-size: 32px; -unity-font-style: bold; color: rgb(240, 242, 244); white-space: normal; margin: 0 0 8px 0; padding: 0; }
+.hubcard__text { font-size: 19px; color: rgb(200, 206, 212); white-space: normal; margin: 0 0 10px 0; padding: 0; }
+.hubcard__stars { font-size: 26px; color: rgb(255, 196, 70); margin: 0 0 2px 0; padding: 0; -unity-font-style: bold; }
+.hubcard__stat { font-size: 19px; color: rgb(170, 178, 186); white-space: normal; margin: 0 0 2px 0; padding: 0; }
+.hubcard__spacer { flex-grow: 1; }
+.hubcard__levels { flex-direction: row; flex-wrap: wrap; justify-content: space-between; margin: 8px 0 4px 0; }
+.hubcard__level { width: 48.5%; height: 54px; margin: 3px 0; font-size: 17px; white-space: normal; border-radius: 10px;
+    background-color: rgb(44, 50, 57); color: rgb(230, 234, 238); border-width: 0; -unity-text-align: middle-center; }
+.hubcard__level:hover { background-color: rgb(60, 68, 76); }
+.hubcard__level:disabled { color: rgb(110, 116, 122); }
+.hubcard__start { height: 64px; margin: 8px 0 0 0; font-size: 26px; -unity-font-style: bold; border-radius: 12px; border-width: 0;
+    background-color: rgb(255, 174, 13); color: rgb(20, 24, 28); }
+.hubcard__start:hover { background-color: rgb(255, 196, 70); }
+
+.hub__footer { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 18px; }
+.hub__note { font-size: 19px; color: rgb(140, 148, 156); margin: 0; padding: 0; }
+.hub__fine { font-size: 19px; color: rgb(140, 148, 156); margin: 0; padding: 0; }

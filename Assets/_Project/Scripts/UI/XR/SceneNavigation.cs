@@ -16,8 +16,21 @@ namespace TwoDude.FactoryTwin.UI
 
         private static bool Busy => _loading != null && !_loading.isDone;
 
+        // The headset hub sits beside the VR switch (CaptureRig) in the Quest variant of the cell.
+        private static bool Hub(VrSwitch vrSwitch, out HubSession hub)
+        {
+            hub = null;
+            return vrSwitch != null && vrSwitch.TryGetComponent(out hub) && hub.isActiveAndEnabled;
+        }
+
         public static void ToCell(VrSwitch vrSwitch, TrainingMode mode)
         {
+            // On the headset the menu is in the cell (M28): the hub starts the training in place, no load.
+            if (Hub(vrSwitch, out HubSession hub))
+            {
+                hub.StartTraining(mode);
+                return;
+            }
             if (Busy)
                 return;
             TrainingLaunch.Request(mode);
@@ -27,6 +40,11 @@ namespace TwoDude.FactoryTwin.UI
 
         public static void ToMenu(VrSwitch vrSwitch)
         {
+            if (Hub(vrSwitch, out HubSession hub))
+            {
+                hub.ReturnToHub();
+                return;
+            }
             if (Busy)
                 return;
             vrSwitch?.CarryVrToNextScene();

@@ -35,6 +35,7 @@ namespace TwoDude.FactoryTwin.UI
         private Label _fireLine, _extLine, _advice, _score;
         private readonly List<(Button button, Action action)> _wired = new List<(Button, Action)>();
         private bool _inDrill;
+        private IDisposable _hubSubscription;
         private float _nextRefresh;
         private System.Random _random;
 
@@ -61,6 +62,14 @@ namespace TwoDude.FactoryTwin.UI
             Wire("fire-alarm", RaiseAlarm);
             Wire("fire-end", EndDrill);
             BuildStartButtons();
+            // Back at the headset hub (M28): the fire put out, the extinguishers back, the main page again.
+            _hubSubscription = context.Bus.Subscribe(CellTopics.TrainingHub.ToString(), _ =>
+            {
+                if (!_inDrill)
+                    return;
+                PutBack();
+                ShowDrill(false);
+            });
             // Only a running fire drill changes the tablet's pages; otherwise the page another drill opened (the
             // robot cell's, M27) stays as it is when the tablet wakes again.
             if (_inDrill)
@@ -73,6 +82,8 @@ namespace TwoDude.FactoryTwin.UI
                 button.clicked -= action;
             _wired.Clear();
             _starts?.Clear();
+            _hubSubscription?.Dispose();
+            _hubSubscription = null;
         }
 
         private void Update()

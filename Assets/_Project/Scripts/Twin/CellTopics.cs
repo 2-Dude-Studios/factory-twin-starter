@@ -143,6 +143,10 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath PressLockCommand = new TopicPath("press", "lock_cmd");
         public static readonly TopicPath TrainingRun = new TopicPath("training", "run");
 
+        // The headset hub (M28, out): 1 when the trainee is back at the hub from a training, the cell put back for the
+        // next; drill pages, the PPE bench and the hub menu reset themselves on it.
+        public static readonly TopicPath TrainingHub = new TopicPath("training", "hub");
+
         // The LockoutAction the trainee just got wrong, published for every refused action, before training/errors
         // goes up (it does not for a repeat of a mistake already made on that step). Subscribers see the count
         // before they see training/action itself (the controller reacts inside that delivery), so the event log
