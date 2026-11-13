@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TwoDude.FactoryTwin.Twin;
@@ -7,6 +8,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation;
 
 namespace TwoDude.FactoryTwin.UI
@@ -112,6 +114,8 @@ namespace TwoDude.FactoryTwin.UI
                 log.Append("No tablet (VrMenu with a UIDocument): robot drill page skipped. ");
             }
 
+            InteractionManagerAtRoot(scene, roots, log);
+
             // One floor over the box that holds every training area, under the areas' own floors: the walkways between
             // them. The teleport ray lands on the first collider it meets, so machines and walls still block it.
             Transform training = context != null ? context.transform.Find("Training") : null;
@@ -132,6 +136,36 @@ namespace TwoDude.FactoryTwin.UI
             box.size = new Vector3(areas.width, 0.02f, areas.height);
             floor.AddComponent<TeleportationArea>();
             log.Append($"Walkway teleport floor {areas.width:F0} x {areas.height:F0} m. ");
+        }
+
+        /// <summary>
+        /// The XR interaction manager came with the rig, which is saved inactive (VrSwitch turns it on when VR
+        /// starts). So when the scene loaded, every interactable found no manager and XRI parked it until the load
+        /// finished; one of them was gone by then, the callback threw, and the interactables after it in the list were
+        /// never registered (the extinguisher could not be picked up). Out of the rig, at the scene's root, the manager
+        /// is active from the start and each interactable registers as it wakes.
+        /// </summary>
+        private static void InteractionManagerAtRoot(Scene scene, GameObject[] roots, StringBuilder log)
+        {
+            List<XRInteractionManager> managers = roots.SelectMany(g => g.GetComponentsInChildren<XRInteractionManager>(true)).ToList();
+            XRInteractionManager manager = managers.FirstOrDefault();
+            if (manager == null)
+            {
+                var go = new GameObject("XR Interaction Manager");
+                SceneManager.MoveGameObjectToScene(go, scene);
+                go.AddComponent<XRInteractionManager>();
+                log.Append("Interaction manager added at the scene root. ");
+                return;
+            }
+            if (manager.transform.parent != null)
+            {
+                if (PrefabUtility.IsPartOfPrefabInstance(manager))
+                    PrefabUtility.UnpackPrefabInstance(PrefabUtility.GetOutermostPrefabInstanceRoot(manager), PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+                manager.transform.SetParent(null, true);
+            }
+            manager.gameObject.SetActive(true);
+            manager.enabled = true;
+            log.Append($"Interaction manager at the scene root, active from load ({managers.Count} in the scene). ");
         }
 
         private static bool IsUrdf(Component c) => c.GetType().Namespace?.StartsWith("Unity.Robotics") == true;
