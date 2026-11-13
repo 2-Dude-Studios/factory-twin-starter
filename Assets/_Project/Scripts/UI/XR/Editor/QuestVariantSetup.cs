@@ -74,6 +74,13 @@ namespace TwoDude.FactoryTwin.UI
         };
         private const float ShellDetailMetres = 1f;
 
+        /// <summary>
+        /// Large, light pieces always stay, whatever their name: a wall section is named after what hangs on it
+        /// (wall_chargers_01 is 9 m of wall in 424 triangles), and leaving it out opens a hole into the fog.
+        /// </summary>
+        private const float PanelMetres = 5f;
+        private const long PanelTriangles = 1000;
+
         [MenuItem("Tools/Factory Twin/Quest/Build Quest Variant")]
         public static void Build()
         {
@@ -258,8 +265,10 @@ namespace TwoDude.FactoryTwin.UI
                     if (!r.TryGetComponent(out MeshFilter filter) || filter.sharedMesh == null)
                         continue;
                     Vector3 size = r.bounds.size;
-                    bool small = Mathf.Max(size.x, Mathf.Max(size.y, size.z)) < ShellDetailMetres;
-                    if (!small && !IsShellDetail(filter.sharedMesh.name))
+                    float largest = Mathf.Max(size.x, Mathf.Max(size.y, size.z));
+                    bool panel = largest >= PanelMetres && Triangles(r) <= PanelTriangles;
+                    bool small = largest < ShellDetailMetres;
+                    if (panel || (!small && !IsShellDetail(filter.sharedMesh.name)))
                     {
                         kept++;
                         trianglesKept += Triangles(r);
