@@ -23,6 +23,32 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private MetaAccount account;
         [SerializeField] private MetaLeaderboards boards;
 
+        [Header("Credits and licences (M29)")]
+        [Tooltip("The first credits page: who made what in the app.")]
+        [SerializeField, TextArea(6, 20)] private string credits = DefaultCredits;
+        [Tooltip("The third-party notices in full, in order (Assets/_Project/Licenses).")]
+        [SerializeField] private TextAsset[] notices = Array.Empty<TextAsset>();
+        [SerializeField, Min(5)] private int creditLines = 24;
+        [SerializeField, Min(20)] private int creditChars = 130;
+
+        public const string DefaultCredits =
+            "Factory VR Safety Training, by 2 Dude Studios (2dudestudios.com).\n\n" +
+            "Made with Unity, the Unity XR Interaction Toolkit, OpenXR and XR Hands, and the Meta XR Platform SDK. " +
+            "The production cell runs on realvirtual.io Digital Twin Starter, included as a compiled component.\n\n" +
+            "Factory hall and props: Factory Training | Industry Sample (Unity Asset Store). Fire and smoke: Unity Particle Pack. Arm IK: Fast IK.\n" +
+            "Workers: Microsoft Rocketbox avatars and animations (MIT); Animated Human by Quaternius (CC0).\n" +
+            "Robot arm: the UR5e description from ros-industrial/universal_robot (BSD 3-Clause), shown without vendor branding; " +
+            "imported with Unity's URDF Importer (Apache 2.0).\n" +
+            "Sounds: Large Warehouse/Factory Ambience by fimrod and Electric Sparks by kev_durr, on Freesound (CC0).\n" +
+            "Icons: Material Icons by Google (Apache 2.0).\n" +
+            "The electrical cabinet, the arc flash PPE kit and the lockout props were made for this app.\n\n" +
+            "A training demo, not certified training. The safety content is guidance, not legal advice, and the arc flash label " +
+            "values come from a made-up study.\n\n" +
+            "Next: each third-party notice and licence in full.";
+
+        private List<string> _creditPages;
+        private int _creditPage;
+
         private sealed class Card
         {
             public TrainingMode Mode;
@@ -63,6 +89,10 @@ namespace TwoDude.FactoryTwin.UI
                 logoBox.style.display = logo != null ? DisplayStyle.Flex : DisplayStyle.None;
             }
             BuildCards();
+            Wire("hub-credits", () => ShowCredits(true));
+            Wire("hub-credits-close", () => ShowCredits(false));
+            Wire("hub-credits-prev", () => CreditPage(_creditPage - 1));
+            Wire("hub-credits-next", () => CreditPage(_creditPage + 1));
             Button daily = _root.Q<Button>("hub-daily-go");
             if (daily != null)
             {
@@ -91,6 +121,48 @@ namespace TwoDude.FactoryTwin.UI
             if (boards != null)
                 boards.Updated -= OnBoard;
             _hubSubscription?.Dispose();
+        }
+
+        private void Wire(string name, Action action)
+        {
+            Button button = _root.Q<Button>(name);
+            if (button == null)
+                return;
+            button.clicked += action;
+            _wired.Add((button, action));
+        }
+
+        // The credits overlay covers the cards; the pages are made the first time it opens.
+        private void ShowCredits(bool show)
+        {
+            VisualElement panel = _root?.Q("hub-credits-panel");
+            if (panel == null)
+                return;
+            panel.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!show)
+                return;
+            if (_creditPages == null)
+            {
+                var texts = new List<string> { credits };
+                foreach (TextAsset notice in notices)
+                {
+                    if (notice != null)
+                        texts.Add(notice.text);
+                }
+                _creditPages = CreditPages.Split(texts, creditLines, creditChars);
+            }
+            CreditPage(0);
+        }
+
+        private void CreditPage(int page)
+        {
+            if (_creditPages == null || _creditPages.Count == 0)
+                return;
+            _creditPage = Mathf.Clamp(page, 0, _creditPages.Count - 1);
+            SetText("hub-credits-text", _creditPages[_creditPage]);
+            SetText("hub-credits-page", $"Page {_creditPage + 1} of {_creditPages.Count}");
+            _root.Q<Button>("hub-credits-prev")?.SetEnabled(_creditPage > 0);
+            _root.Q<Button>("hub-credits-next")?.SetEnabled(_creditPage < _creditPages.Count - 1);
         }
 
         private void OnBookSaved(string trainee) => Refresh();

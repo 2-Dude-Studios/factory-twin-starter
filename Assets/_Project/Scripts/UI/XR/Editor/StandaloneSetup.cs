@@ -87,6 +87,7 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         private const string HubMenuUxml = "Assets/_Project/UI/Vr/HubMenu.uxml";
+        private const string LicensesFolder = "Assets/_Project/Licenses";
         private const float HubMenuWidthPx = 1800f, HubMenuHeightPx = 1100f, HubMenuWidthMetres = 2.5f;
         private const string ResultsUxml = "Assets/_Project/UI/Vr/ResultsCard.uxml";
         private const float ResultsWidthPx = 900f, ResultsHeightPx = 640f, ResultsWidthMetres = 1.0f;
@@ -136,6 +137,16 @@ namespace TwoDude.FactoryTwin.UI
             ms.FindProperty("hub").objectReferenceValue = session;
             ms.FindProperty("context").objectReferenceValue = context;
             ms.FindProperty("logo").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>(StudioLogoPath);
+
+            // Credits and licences in the headset (M29): every notice file, in file-name order.
+            TextAsset[] notices = AssetDatabase.FindAssets("t:TextAsset", new[] { LicensesFolder })
+                .Select(AssetDatabase.GUIDToAssetPath).OrderBy(p => p, System.StringComparer.Ordinal)
+                .Select(AssetDatabase.LoadAssetAtPath<TextAsset>).Where(t => t != null).ToArray();
+            SerializedProperty noticeList = ms.FindProperty("notices");
+            noticeList.arraySize = notices.Length;
+            for (int i = 0; i < notices.Length; i++)
+                noticeList.GetArrayElementAtIndex(i).objectReferenceValue = notices[i];
+            log.Append($"Credits: {notices.Length} notice files. ");
 
             // The Meta account (the trainee's name) and the leaderboards beside the session.
             MetaAccount account = session.GetComponent<MetaAccount>() ?? session.gameObject.AddComponent<MetaAccount>();
