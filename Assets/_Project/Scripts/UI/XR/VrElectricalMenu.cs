@@ -32,6 +32,7 @@ namespace TwoDude.FactoryTwin.UI
         private readonly StringBuilder _text = new StringBuilder(256);
         private IDisposable _subscription;
         private bool _shown;
+        private float _nextRefresh;
 
         private int _scenario;
         private bool _fault, _disconnectOpen, _doorOpen, _upsOpen;
@@ -70,6 +71,21 @@ namespace TwoDude.FactoryTwin.UI
             _subscription = bus.Subscribe(TopicFilter.All, m => Apply(m, true));
             if (_shown)
                 Show();
+        }
+
+        private void Update()
+        {
+            // The tablet's UI was rebuilt (the panel woke again): wire the new one, and keep the page on top.
+            if (document != null && document.rootVisualElement != _root)
+            {
+                OnDisable();
+                OnEnable();
+            }
+            if (_shown && Time.unscaledTime >= _nextRefresh)
+            {
+                _nextRefresh = Time.unscaledTime + 0.5f;
+                TabletPages.ShowOnly(_root, "elec-options", "elec-hud");
+            }
         }
 
         private void OnDisable()
