@@ -485,6 +485,7 @@ namespace TwoDude.FactoryTwin.UI
             p.FindProperty("env").objectReferenceValue = env != null ? env.transform : null;
             p.FindProperty("sun").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<Light>(true)).FirstOrDefault(l => l.type == LightType.Directional);
             p.FindProperty("origin").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<XROrigin>(true)).FirstOrDefault();
+            p.FindProperty("context").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<CellContext>(true)).FirstOrDefault();
             TrainingAreaStart[] starts = roots.SelectMany(g => g.GetComponentsInChildren<TrainingAreaStart>(true)).ToArray();
             SerializedProperty list = p.FindProperty("starts");
             list.arraySize = starts.Length;

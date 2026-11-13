@@ -16,15 +16,22 @@ namespace TwoDude.FactoryTwin.UI
     /// one kind of content at a time (decals, glass, walls, ceiling, shelving and pallets, the whole hall) and tries a
     /// lower render scale, no MSAA, no sun and no foveation, each for a fixed time, logging "[QuestProbe] ..." at every step. Read
     /// against the headset's own once-a-second frame line (logcat VrApi), it shows what each part costs.
+    /// With -probe-fire instead it stands in the fire area and keeps the largest fire (scenario 4, past incipient,
+    /// smoke and all) burning for ten minutes, relighting it when it burns out: the frame rate under the heaviest
+    /// effects and the headset's temperature over a long drill.
     /// </summary>
     public sealed class QuestCostProbe : MonoBehaviour
     {
         public const string CommandLineFlag = "-probe";
+        public const string FireFlag = "-probe-fire";
 
         [SerializeField] private Transform env;
         [SerializeField] private Light sun;
         [SerializeField] private XROrigin origin;
         [SerializeField] private TrainingAreaStart[] starts = Array.Empty<TrainingAreaStart>();
+        [SerializeField] private CellContext context;
+        [SerializeField, Min(1)] private int fireScenario = 4;
+        [SerializeField, Min(10f)] private float fireSeconds = 600f;
         [SerializeField, Min(1f)] private float settleSeconds = 15f;
         [SerializeField, Min(1f)] private float stepSeconds = 10f;
 
@@ -32,14 +39,67 @@ namespace TwoDude.FactoryTwin.UI
 
         private void Awake()
         {
-            if (Array.IndexOf(Environment.GetCommandLineArgs(), CommandLineFlag) < 0)
+            string[] args = Environment.GetCommandLineArgs();
+            _fire = Array.IndexOf(args, FireFlag) >= 0;
+            if (!_fire && Array.IndexOf(args, CommandLineFlag) < 0)
                 enabled = false;
         }
+
+        private bool _fire;
 
         private void Start()
         {
             if (enabled)
-                StartCoroutine(Run());
+                StartCoroutine(_fire ? FireRun() : Run());
+        }
+
+        private IEnumerator FireRun()
+        {
+            Debug.Log($"[QuestProbe] fire run start; settling {settleSeconds:F0} s");
+            yield return new WaitForSeconds(settleSeconds);
+            if (context == null)
+            {
+                Debug.LogError("[QuestProbe] fire run needs the Cell context.");
+                yield break;
+            }
+            foreach (TrainingAreaStart start in starts)
+            {
+                if (start != null && origin != null && start.Area == TrainingArea.Fire)
+                    RigTeleport.GoTo(origin, start.FloorPosition, start.YawDegrees);
+            }
+
+            SignalBus bus = context.Bus;
+            float end = Time.realtimeSinceStartup + fireSeconds;
+            FireStage last = FireStage.None;
+            int lights = 0, minute = -1;
+            while (Time.realtimeSinceStartup < end)
+            {
+                FireStage stage = bus.TryGetLast(CellTopics.FireStage, out SignalMessage m) ? (FireStage)(int)m.Value.AsNumber : FireStage.None;
+                if (stage == FireStage.None || stage == FireStage.Out)
+                {
+                    bus.Publish(CellTopics.FireScenario, SignalValue.FromNumber(0d), CellContext.NowUnixMs);
+                    bus.Publish(CellTopics.FireScenario, SignalValue.FromNumber(fireScenario), CellContext.NowUnixMs);
+                    lights++;
+                    Debug.Log($"[QuestProbe] fire {fireScenario} lit ({lights})");
+                    last = FireStage.None;
+                    yield return new WaitForSeconds(3f);
+                    continue;
+                }
+                if (stage != last)
+                {
+                    Debug.Log($"[QuestProbe] fire stage {stage}");
+                    last = stage;
+                }
+                int now = (int)((fireSeconds - (end - Time.realtimeSinceStartup)) / 60f);
+                if (now != minute)
+                {
+                    minute = now;
+                    Debug.Log($"[QuestProbe] fire minute {minute}");
+                }
+                yield return new WaitForSeconds(1f);
+            }
+            bus.Publish(CellTopics.FireScenario, SignalValue.FromNumber(0d), CellContext.NowUnixMs);
+            Debug.Log("[QuestProbe] done");
         }
 
         private IEnumerator Run()
