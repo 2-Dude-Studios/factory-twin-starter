@@ -13,7 +13,7 @@ Fill the [ ] fields; re-read the drill paragraphs against the build you submit (
 | Publisher | 2 Dude Studios |
 | Short description | see below |
 | Category | Education (genres to pick on the dashboard: Simulation, Educational) |
-| Comfort rating | Comfortable: teleport between areas and over the walkways, standing or room-scale. Check before submitting that smooth movement is off by default; if it is on, rate Moderate |
+| Comfort rating | Comfortable: teleport only and snap turn by default (2026-11-14), standing or room-scale; smooth movement and turning are opt-in with a comfort vignette |
 | Input | Touch controllers and hand tracking |
 | Players | Single player |
 | Languages | English |
@@ -44,9 +44,11 @@ Fill the [ ] fields; re-read the drill paragraphs against the build you submit (
 >
 > **Free roam.** Walk the live cell and the hall at your own pace.
 >
-> **Train, score, improve.** Every run ends with a results card: stars, points, XP and any new badges, and each run is recorded on your headset step by step. Earn XP and climb from Trainee to Safety lead, take on the daily challenge for double XP, keep a day streak going, and compare your best scores on the Meta leaderboards. Your progress stays on your headset.
+> **A trainer in your ear.** Your AI trainer greets you at the hub, briefs you before each drill, cheers the steps you get right and calls out the ones you don't.
 >
-> **Comfortable to use.** Teleport between the training areas, use Touch controllers or your hands, and pick up the extinguisher, the padlocks and the PPE as you would the real thing. Take the headset off and the drill pauses until you are back.
+> **Train, score, improve.** Every run ends with a results card: stars, points, XP, any new badges and what to look at again, and each run is recorded on your headset step by step. Earn XP and climb from Trainee to Safety lead, take on the daily challenge for double XP, keep a day streak going, and compare your best scores on the Meta leaderboards. Your progress stays on your headset.
+>
+> **Comfortable to use.** Teleport only and snap turn by default, with smooth movement as an option; teleport between the training areas, use Touch controllers or your hands, and pick up the extinguisher, the padlocks and the PPE as you would the real thing. Take the headset off and the drill pauses until you are back.
 >
 > **Early access.** More levels and drills are on the way: the full lockout path, the fire hazard hunt and evacuation, and the electrical tester and safe work procedure.
 >
