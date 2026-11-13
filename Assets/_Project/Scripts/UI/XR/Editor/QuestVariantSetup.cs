@@ -116,6 +116,8 @@ namespace TwoDude.FactoryTwin.UI
                 if (env != null)
                     LightMaterials(env, log);
                 Distance(scene, log);
+                StandaloneSetup.Standalone(scene, log);
+                StandaloneSetup.Controls(scene, log);
                 Wire(scene, env, questPipeline, log);
                 EditorSceneManager.SaveScene(scene);
                 QuestSceneCost.Report(scene, ReportPath);
@@ -178,7 +180,7 @@ namespace TwoDude.FactoryTwin.UI
             }
         }
 
-        private static Rect AreasBox()
+        internal static Rect AreasBox()
         {
             var asset = AssetDatabase.LoadAssetAtPath<TrainingAreas>(AreasPath);
             IReadOnlyList<TrainingAreaSettings> areas = asset != null && asset.Areas.Count > 0 ? asset.Areas : TrainingAreaDefaults.All();

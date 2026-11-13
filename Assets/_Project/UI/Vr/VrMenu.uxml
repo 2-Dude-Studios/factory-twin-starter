@@ -30,6 +30,23 @@
                     <ui:Label name="fire-score" text="0 points" class="hud__where" />
                     <ui:Label text="Simulated fire; training demo, not certified training." class="hud__prompt" />
                 </ui:VisualElement>
+                <!-- Robot cell safety drill display (VrRobotMenu, M27): the level running and its steps, or the last result. -->
+                <ui:VisualElement name="robot-hud" class="tablet__display" picking-mode="Ignore" style="display: none;">
+                    <ui:Label text="ROBOT CELL SAFETY" class="hud__label" />
+                    <ui:Label name="robot-live" text="" class="hud__where" style="white-space: normal; font-size: 15px;" />
+                    <ui:Label name="robot-result" text="" class="hud__refusal" style="white-space: normal;" />
+                    <ui:Label text="Simulated safety function; training demo, not certified training." class="hud__prompt" />
+                </ui:VisualElement>
+                <ui:VisualElement name="robot-options" class="tablet__options" style="display: none;">
+                    <ui:Label text="LEVEL" class="menu__group" />
+                    <ui:VisualElement name="robot-levels" class="tablet__row tablet__wrap" />
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="robot-end" text="End level" class="menu__button menu__button--key tablet__half" />
+                        <ui:Button name="robot-reset" text="Safety reset" class="menu__button tablet__half" />
+                    </ui:VisualElement>
+                    <ui:Button name="robot-start" text="Back to the start" class="menu__button" />
+                    <ui:Button name="robot-home" text="End drill: main menu" class="menu__button menu__button--exit" />
+                </ui:VisualElement>
                 <ui:VisualElement name="fire-options" class="tablet__options" style="display: none;">
                     <ui:Label text="START A FIRE" class="menu__group" />
                     <ui:VisualElement name="fire-starts" class="tablet__row tablet__wrap" />
