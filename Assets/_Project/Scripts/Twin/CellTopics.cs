@@ -234,6 +234,10 @@ namespace TwoDude.FactoryTwin.Twin
         public static readonly TopicPath CabinetLockCommand = new TopicPath("cabinet", "lock_cmd");
         public static readonly TopicPath CabinetUpsLockCommand = new TopicPath("cabinet", "ups_lock_cmd");
 
+        // A command the cabinet refused (out, M27): the SwitchResult (2 and up), so the headset's tablet can say why
+        // nothing moved, as a real handle that will not turn does.
+        public static readonly TopicPath CabinetRefused = new TopicPath("cabinet", "refused");
+
         // The person (M19): elec/boundary is an ApproachBoundary, the deepest point of the trainee's head and hands
         // (0 outside, 1 arc flash, 2 limited, 3 restricted); elec/ppe_cat the PPE category worn (0–4, from M20);
         // elec/tester_ok 0/1, the tester as last proved (from M20). The tester's readings are never published: they

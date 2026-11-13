@@ -38,6 +38,8 @@ namespace TwoDude.FactoryTwin.UI
         private bool _fault, _disconnectOpen, _doorOpen, _upsOpen;
         private int _locks, _upsLocks;
         private double _busVolts, _dcBusVolts;
+        private string _refusal = string.Empty;
+        private float _refusalUntil;
 
         private void OnEnable()
         {
@@ -84,7 +86,10 @@ namespace TwoDude.FactoryTwin.UI
             if (_shown && Time.unscaledTime >= _nextRefresh)
             {
                 _nextRefresh = Time.unscaledTime + 0.5f;
-                TabletPages.ShowOnly(_root, "elec-options", "elec-hud");
+                bool refusalShown = !string.IsNullOrEmpty(_refusal);
+                if (refusalShown && Time.unscaledTime >= _refusalUntil)
+                    _refusal = string.Empty;
+                Show();
             }
         }
 
@@ -120,7 +125,14 @@ namespace TwoDude.FactoryTwin.UI
         {
             TopicPath topic = message.Topic;
             double v = message.Value.AsNumber;
-            if (topic == CellTopics.ElecScenario)
+            if (topic == CellTopics.CabinetRefused)
+            {
+                if (!live)
+                    return;
+                _refusal = "Not done: " + ElectricalWords.Refusal((SwitchResult)(int)v) + ".";
+                _refusalUntil = Time.unscaledTime + 5f;
+            }
+            else if (topic == CellTopics.ElecScenario)
             {
                 _scenario = (int)v;
                 if (_scenario > 0 && live)
@@ -162,6 +174,8 @@ namespace TwoDude.FactoryTwin.UI
                 _text.Append(ups).Append('\n');
             _text.Append(ElectricalWords.Door(_doorOpen)).Append('\n');
             _text.Append("HMI main bus ").Append(ElectricalWords.Volts(_busVolts)).Append("   DC bus ").Append(ElectricalWords.Volts(_dcBusVolts, dc: true));
+            if (Time.unscaledTime < _refusalUntil)
+                _text.Append('\n').Append('\n').Append(_refusal);
             _state.text = _text.ToString();
             SetText("elec-q1", _disconnectOpen ? "Q1 on" : "Q1 off");
             SetText("elec-lock", _locks > 0 ? "Remove lock" : "Lock Q1");
