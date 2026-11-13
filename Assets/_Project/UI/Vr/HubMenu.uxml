@@ -5,7 +5,7 @@
         <ui:VisualElement class="hub__header">
             <ui:VisualElement name="hub-logo" class="hub__logo" />
             <ui:VisualElement class="hub__titles">
-                <ui:Label text="FACTORY TWIN TRAINING" class="hub__title" />
+                <ui:Label text="FACTORY VR SAFETY TRAINING" class="hub__title" />
                 <ui:Label name="hub-trainee" text="Trainee" class="hub__trainee" />
             </ui:VisualElement>
             <ui:VisualElement class="hub__rank">

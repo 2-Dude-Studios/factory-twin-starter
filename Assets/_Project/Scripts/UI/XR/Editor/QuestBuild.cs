@@ -28,8 +28,8 @@ namespace TwoDude.FactoryTwin.UI
     {
         static QuestBuild() => KeepDesktopPluginsOffAndroid();
 
-        public const string ApkPath = "Builds/Quest/FactoryTwinTraining.apk";
-        public const string ReleaseApkPath = "Builds/Quest/FactoryTwinTraining-release.apk";
+        public const string ApkPath = "Builds/Quest/FactoryVRSafetyTraining.apk";
+        public const string ReleaseApkPath = "Builds/Quest/FactoryVRSafetyTraining-release.apk";
 
         /// <summary>The spike's own id (M25 to M27), kept here so its old install can be found and removed.</summary>
         public const string SpikePackageId = "com.twodudestudios.factorytwin.spike";
@@ -38,7 +38,7 @@ namespace TwoDude.FactoryTwin.UI
         // first upload to the Meta Horizon Store. The name and company are applied to Android builds only and put back
         // after each build, so the desktop build's name and its data folder stay as they are.
         public const string StorePackageId = "com.twodudestudios.factorytwin";
-        public const string StoreProductName = "Factory Twin Training";
+        public const string StoreProductName = "Factory VR Safety Training";
         public const string StoreCompanyName = "2 Dude Studios";
 
         // The version: bump it before every upload; the code must only ever go up (major*10000 + minor*100 + patch).
@@ -190,7 +190,7 @@ namespace TwoDude.FactoryTwin.UI
 
         /// <summary>
         /// The store build: release-signed with your keystore (path and passwords from FT_KEYSTORE, FT_KEYSTORE_PASS,
-        /// FT_KEY_ALIAS, FT_KEY_PASS), to Builds/Quest/FactoryTwinTraining-release.apk. Nothing about the key is saved.
+        /// FT_KEY_ALIAS, FT_KEY_PASS), to Builds/Quest/FactoryVRSafetyTraining-release.apk. Nothing about the key is saved.
         /// </summary>
         [MenuItem("Tools/Factory Twin/Quest/4 Build Release APK")]
         private static void BuildRelease() => Build(release: true);

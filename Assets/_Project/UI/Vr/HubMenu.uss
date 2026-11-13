@@ -4,7 +4,7 @@
 .hub__header { flex-direction: row; align-items: center; margin-bottom: 26px; }
 .hub__logo { width: 210px; height: 140px; margin-right: 26px; -unity-background-scale-mode: scale-to-fit; }
 .hub__titles { flex-grow: 1; }
-.hub__title { font-size: 54px; -unity-font-style: bold; color: rgb(240, 242, 244); margin: 0; padding: 0; letter-spacing: 3px; }
+.hub__title { font-size: 48px; -unity-font-style: bold; color: rgb(240, 242, 244); margin: 0; padding: 0; letter-spacing: 3px; }
 .hub__trainee { font-size: 28px; color: rgb(160, 168, 176); margin: 4px 0 0 0; padding: 0; }
 .hub__rank { width: 470px; align-items: flex-end; }
 .hub__rank-name { font-size: 34px; -unity-font-style: bold; color: rgb(255, 196, 70); margin: 0 0 8px 0; padding: 0; letter-spacing: 2px; }

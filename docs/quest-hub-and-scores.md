@@ -7,7 +7,7 @@ You asked (2026-11-13), before the store build: a better menu, a better gamified
 1. **Meta XR Platform SDK approved** (`com.meta.xr.sdk.platform`, from Meta's npm registry, version 207.0.0: older than two weeks, and v207 fixes the `await Core.AsyncInitialize()` hang of v203–v205). It brings no Meta core SDK; its dependencies are Unity's own (uGUI, Newtonsoft JSON, Input System). Used for the Meta account (user name), the entitlement check the store asks for, and leaderboards. Our UI stays UI Toolkit.
 2. **Scores: Meta leaderboards only.** One leaderboard per drill; the trainee's stars, badges and best scores stay in the badge book on the device, as now (that is progress, not a leaderboard).
 3. **The menu inside the cell, one scene on the headset.** The app opens at the hub; picking a drill takes the trainee there and starts it; "Main menu" brings them back; no scene loads after start-up. The PC keeps Menu.unity and Cell.unity as they are.
-4. Earlier the same day: name **Factory Twin Training**, package id **com.twodudestudios.factorytwin**, free, Quest 3 and 3S.
+4. Earlier the same day: name **Factory Twin Training** (renamed the same day to **Factory VR Safety Training**), package id **com.twodudestudios.factorytwin**, free, Quest 3 and 3S.
 
 ## What gets built
 
