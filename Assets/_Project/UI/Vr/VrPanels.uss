@@ -126,6 +126,9 @@
 /* The fire drill page (VrFireMenu): more options, so compact buttons */
 #fire-options .menu__button { height: 34px; margin: 2px 0; font-size: 15px; }
 #fire-options .menu__group { margin: 6px 0 2px 0; font-size: 14px; }
+/* The robot cell drill page (VrRobotMenu, M27): level buttons on two lines, name then stars */
+#robot-levels .menu__button { height: 54px; margin: 2px 0; font-size: 15px; white-space: normal; -unity-text-align: middle-center; }
+#robot-options .menu__group { margin: 4px 0 2px 0; font-size: 14px; }
 .tablet__hint { font-size: 12px; color: rgb(120, 128, 136); -unity-text-align: middle-center; margin-top: 8px; }
 
 /* The tablet's option buttons */
