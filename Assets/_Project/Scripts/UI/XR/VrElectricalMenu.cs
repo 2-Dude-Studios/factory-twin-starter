@@ -39,6 +39,8 @@ namespace TwoDude.FactoryTwin.UI
         private int _locks, _upsLocks;
         private double _busVolts, _dcBusVolts;
         private string _refusal = string.Empty;
+        private int _ppeWorn;
+        private int _ppeCategory;
         private float _refusalUntil;
 
         private void OnEnable()
@@ -125,7 +127,28 @@ namespace TwoDude.FactoryTwin.UI
         {
             TopicPath topic = message.Topic;
             double v = message.Value.AsNumber;
-            if (topic == CellTopics.CabinetRefused)
+            if (topic == CellTopics.ElecGearUp)
+            {
+                if (live && v != 0d)
+                {
+                    _ppeWorn = 0;
+                    _ppeCategory = 0;
+                    _shown = true;
+                }
+            }
+            else if (topic == CellTopics.ElecPpeWorn)
+                _ppeWorn = (int)v;
+            else if (topic == CellTopics.ElecPpeCategory)
+                _ppeCategory = (int)v;
+            else if (topic == CellTopics.ElecPpeRefused)
+            {
+                if (!live)
+                    return;
+                PpeKitItem next = _ppeWorn < PpeDressing.Kit.Count ? PpeDressing.Kit[_ppeWorn] : null;
+                _refusal = next != null ? $"Not yet: put on the {next.Name.ToLowerInvariant()} first." : string.Empty;
+                _refusalUntil = Time.unscaledTime + 5f;
+            }
+            else if (topic == CellTopics.CabinetRefused)
             {
                 if (!live)
                     return;
@@ -166,6 +189,15 @@ namespace TwoDude.FactoryTwin.UI
             if (_state == null)
                 return;
             _text.Clear();
+            bool dressed = _ppeCategory >= PpeDressing.Category;
+            if (_scenarios != null)
+                _scenarios.SetEnabled(dressed);
+            if (!dressed)
+            {
+                ShowGearUp();
+                return;
+            }
+            _text.Append("PPE category ").Append(_ppeCategory).Append(" on.").Append('\n');
             _text.Append(_scenario > 0 ? ElectricalWords.Scenario(_scenario) : "No scenario running. Pick one on the right.").Append('\n').Append('\n');
             _text.Append(ElectricalWords.DriveFault(_fault)).Append('\n');
             _text.Append(ElectricalWords.Disconnect(_disconnectOpen)).Append("   ").Append(ElectricalWords.Locks(_locks)).Append('\n');
@@ -182,6 +214,25 @@ namespace TwoDude.FactoryTwin.UI
             SetText("elec-ups", _upsOpen ? "UPS feed on" : "UPS feed off");
             SetText("elec-ups-lock", _upsLocks > 0 ? "Unlock UPS" : "Lock UPS");
             SetText("elec-door", _doorOpen ? "Shut door" : "Open door");
+        }
+
+        // Before the training: the kit on the bench, in order, the next one marked, and how it goes on.
+        private void ShowGearUp()
+        {
+            _text.Append("GEAR UP: arc flash PPE, category ").Append(PpeDressing.Category).Append(" (the label: 6.1 cal/cm2)").Append('\n');
+            _text.Append("Take each item from the bench, one at a time.").Append('\n').Append('\n');
+            for (int i = 0; i < PpeDressing.Kit.Count; i++)
+            {
+                PpeKitItem item = PpeDressing.Kit[i];
+                _text.Append(i < _ppeWorn ? "[x] " : i == _ppeWorn ? "> " : "[ ] ").Append(item.Name);
+                if (i == _ppeWorn)
+                    _text.Append(": ").Append(item.HowTo);
+                _text.Append('\n');
+            }
+            _text.Append('\n').Append("The training starts when the kit is on.");
+            if (Time.unscaledTime < _refusalUntil)
+                _text.Append('\n').Append('\n').Append(_refusal);
+            _state.text = _text.ToString();
         }
 
         private void BackToStart()

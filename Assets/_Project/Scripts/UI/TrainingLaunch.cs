@@ -101,6 +101,6 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         /// <summary>Whether the training needs the headset (the fire drill is worked with two hands).</summary>
-        public static bool NeedsHeadset(TrainingMode mode) => mode == TrainingMode.FireSafety;
+        public static bool NeedsHeadset(TrainingMode mode) => mode == TrainingMode.FireSafety || mode == TrainingMode.Electrical;
     }
 }

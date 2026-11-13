@@ -418,6 +418,7 @@ namespace TwoDude.FactoryTwin.Tests
                 "cell/cabinet/door_cmd", "cell/cabinet/disconnect_cmd", "cell/cabinet/ups_cmd", "cell/cabinet/lock_cmd",
                 "cell/cabinet/ups_lock_cmd", "cell/infeed/drive_fault",
                 "cell/elec/scenario", "cell/elec/boundary", "cell/elec/ppe_cat", "cell/elec/tester_ok",
+                "cell/cabinet/refused", "cell/elec/gear_up", "cell/elec/ppe_worn", "cell/elec/ppe_refused", // M27: refusals, the PPE stage
             };
             CollectionAssert.AreEqual(expected, names);
         }

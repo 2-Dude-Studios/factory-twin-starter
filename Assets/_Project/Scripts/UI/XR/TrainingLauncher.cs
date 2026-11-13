@@ -66,10 +66,11 @@ namespace TwoDude.FactoryTwin.UI
                     StartRobotDrill();
                     break;
                 case TrainingMode.Electrical:
-                    // The bay's first scenario; the tablet's electrical page opens with it (VrElectricalMenu, M27).
+                    // Gear up first: the PPE kit on the bay's bench goes on item by item, then E1 starts
+                    // (PpeKitStation); the tablet's electrical page opens with it (VrElectricalMenu, M27).
                     if (vr)
                         GoTo(start, null);
-                    context.Bus.Publish(CellTopics.ElecScenario, SignalValue.FromNumber(1), CellContext.NowUnixMs);
+                    context.Bus.Publish(CellTopics.ElecGearUp, SignalValue.FromNumber(1), CellContext.NowUnixMs);
                     break;
                 default:
                     if (vr)

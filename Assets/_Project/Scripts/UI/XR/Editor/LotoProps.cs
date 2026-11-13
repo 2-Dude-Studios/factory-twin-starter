@@ -124,6 +124,38 @@ namespace TwoDude.FactoryTwin.UI
             Highlight(point, Red, lockBody, body);
         }
 
+        /// <summary>
+        /// A padlock with its danger tag, as the lockout's (M12), for another drill's hasp (the electrical bay, M27):
+        /// grabbable, keyed "padlock", starting in (and going back to) <paramref name="home"/>.
+        /// </summary>
+        internal static XRGrabInteractable Padlock(Transform parent, string name, KeyedSocket home)
+        {
+            EnsureLoaded();
+            var padlock = new GameObject(name);
+            padlock.transform.SetParent(parent, false);
+            padlock.transform.SetLocalPositionAndRotation(home.transform.localPosition, home.transform.localRotation);
+            Transform shackle = Part(padlock.transform, "Padlock_Shackle", Vector3.zero, PrimitiveType.Cube, new Vector3(0.031f, 0.03f, 0.006f), new Vector3(0f, -0.012f, 0f), Steel);
+            Part(padlock.transform, "Padlock_Body", new Vector3(0f, -0.03f, 0f), PrimitiveType.Cube,
+                new Vector3(0.038f, 0.045f, 0.02f), new Vector3(0f, -0.0225f, 0f), Red);
+            Part(padlock.transform, "Tag_Tie", Vector3.zero, PrimitiveType.Cube, new Vector3(0.002f, 0.07f, 0.002f), new Vector3(0.022f, -0.05f, 0f), White, collider: false);
+            Transform tag = Part(padlock.transform, "Tag", new Vector3(0.024f, -0.08f, 0f), PrimitiveType.Cube, new Vector3(0.002f, 0.145f, 0.075f), new Vector3(0f, -0.0725f, 0f), White);
+            TagText(tag);
+            XRGrabInteractable grab = Grabbable(padlock, "padlock", home, PadlockGrip, new FingerCurls(0.6f, 0.72f, 0.8f, 0.85f, 0.85f));
+            home.startingSelectedInteractable = grab;
+            Set(padlock.AddComponent<PadlockShackle>(), ("grab", grab), ("shackle", shackle));
+            return grab;
+        }
+
+        /// <summary>A socket keyed "padlock" (another drill's hasp or peg, M27), lined up for the padlock's grip.</summary>
+        internal static KeyedSocket PadlockSocket(Transform parent, string name, Vector3 at, Quaternion rotation) =>
+            Socket(parent, name, at, rotation, "padlock", 0.05f, PadlockGrip);
+
+        private static void EnsureLoaded()
+        {
+            _models ??= LoadModels();
+            _materials ??= new Dictionary<Color, Material>();
+        }
+
         // The air-dump valve, low on the CNC's east face: lever up to supply air, a quarter turn south to exhaust it.
         private static void Valve(Transform prop, TrainingPoint point, VrHud hud, CellContext context)
         {
