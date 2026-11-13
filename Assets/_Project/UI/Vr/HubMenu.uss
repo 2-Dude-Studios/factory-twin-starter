@@ -48,3 +48,22 @@
 .hub__footer { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 18px; }
 .hub__note { font-size: 19px; color: rgb(140, 148, 156); margin: 0; padding: 0; }
 .hub__fine { font-size: 19px; color: rgb(140, 148, 156); margin: 0; padding: 0; }
+.hub__credits { height: 44px; padding: 0 18px; margin: 0; font-size: 19px; border-radius: 10px; border-width: 0;
+    background-color: rgb(44, 50, 57); color: rgb(200, 206, 212); }
+.hub__credits:hover { background-color: rgb(60, 68, 76); }
+
+/* The credits overlay: over the cards, inside the hub panel. */
+.hub__creditspanel { position: absolute; left: 0; top: 0; right: 0; bottom: 0; padding: 34px 40px 26px 40px;
+    background-color: rgb(20, 24, 28); border-radius: 22px; }
+.hub__credits-head { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.hub__credits-title { font-size: 36px; -unity-font-style: bold; color: rgb(240, 242, 244); letter-spacing: 3px; margin: 0; padding: 0; }
+.hub__credits-page { font-size: 22px; color: rgb(160, 168, 176); margin: 0; padding: 0; }
+.hub__credits-text { flex-grow: 1; font-size: 21px; color: rgb(220, 224, 228); white-space: normal; margin: 0; padding: 18px 22px;
+    border-radius: 14px; background-color: rgb(30, 35, 40); overflow: hidden; }
+.hub__credits-buttons { flex-direction: row; justify-content: flex-end; margin-top: 16px; }
+.hub__credits-button { width: 220px; height: 60px; margin: 0 0 0 16px; font-size: 24px; -unity-font-style: bold; border-radius: 12px;
+    border-width: 0; background-color: rgb(44, 50, 57); color: rgb(230, 234, 238); }
+.hub__credits-button:hover { background-color: rgb(60, 68, 76); }
+.hub__credits-button:disabled { color: rgb(110, 116, 122); }
+.hub__credits-button--close { background-color: rgb(255, 174, 13); color: rgb(20, 24, 28); }
+.hub__credits-button--close:hover { background-color: rgb(255, 196, 70); }

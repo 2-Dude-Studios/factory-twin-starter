@@ -27,6 +27,20 @@
         <ui:VisualElement class="hub__footer">
             <ui:Label name="hub-note" text="Point and pull the trigger, or touch a button. The tablet (Y) brings you back here." class="hub__note" />
             <ui:Label text="Training demo, not certified training  ·  2 Dude Studios" class="hub__fine" />
+            <ui:Button name="hub-credits" text="Credits and licences" class="hub__credits" />
+        </ui:VisualElement>
+        <!-- Credits and the third-party notices in full, a page at a time (M29). -->
+        <ui:VisualElement name="hub-credits-panel" class="hub__creditspanel" style="display: none;">
+            <ui:VisualElement class="hub__credits-head">
+                <ui:Label text="CREDITS AND LICENCES" class="hub__credits-title" />
+                <ui:Label name="hub-credits-page" text="" class="hub__credits-page" />
+            </ui:VisualElement>
+            <ui:Label name="hub-credits-text" text="" class="hub__credits-text" />
+            <ui:VisualElement class="hub__credits-buttons">
+                <ui:Button name="hub-credits-prev" text="Previous" class="hub__credits-button" />
+                <ui:Button name="hub-credits-next" text="Next" class="hub__credits-button" />
+                <ui:Button name="hub-credits-close" text="Close" class="hub__credits-button hub__credits-button--close" />
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
