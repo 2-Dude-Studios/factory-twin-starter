@@ -136,7 +136,24 @@ namespace TwoDude.FactoryTwin.UI
             ms.FindProperty("hub").objectReferenceValue = session;
             ms.FindProperty("context").objectReferenceValue = context;
             ms.FindProperty("logo").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>(StudioLogoPath);
+
+            // The Meta account (the trainee's name) and the leaderboards beside the session.
+            MetaAccount account = session.GetComponent<MetaAccount>() ?? session.gameObject.AddComponent<MetaAccount>();
+            var acc = new SerializedObject(account);
+            acc.FindProperty("context").objectReferenceValue = context;
+            acc.FindProperty("lockout").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<TrainingController>(true)).FirstOrDefault();
+            acc.FindProperty("robot").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<RobotCellScorer>(true)).FirstOrDefault();
+            acc.FindProperty("fire").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<FireDrillScorer>(true)).FirstOrDefault();
+            acc.ApplyModifiedPropertiesWithoutUndo();
+            MetaLeaderboards boards = session.GetComponent<MetaLeaderboards>() ?? session.gameObject.AddComponent<MetaLeaderboards>();
+            var bs = new SerializedObject(boards);
+            bs.FindProperty("account").objectReferenceValue = account;
+            bs.ApplyModifiedPropertiesWithoutUndo();
+            ms.FindProperty("account").objectReferenceValue = account;
+            ms.FindProperty("boards").objectReferenceValue = boards;
             ms.ApplyModifiedPropertiesWithoutUndo();
+            string appId = context != null && context.Config != null ? context.Config.QuestAppId : string.Empty;
+            log.Append(string.IsNullOrWhiteSpace(appId) ? "Meta account: no App ID in TwinConfig yet (offline). " : "Meta account and leaderboards on (App ID set). ");
             ResultsAndFeedback(scene, roots, origin, context, session, log);
             log.Append($"Hub: session on {vrSwitch.name}, menu at {go.transform.position.x:F1}, {go.transform.position.z:F1}. ");
         }

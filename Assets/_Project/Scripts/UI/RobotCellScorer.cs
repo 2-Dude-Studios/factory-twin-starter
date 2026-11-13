@@ -43,6 +43,14 @@ namespace TwoDude.FactoryTwin.UI
 
         /// <summary>The running level's points so far (the step popups, M28).</summary>
         public int Points => points;
+
+        /// <summary>The trainee from here on (the Meta account's name on the headset, M28); the records and the badge
+        /// book go under it.</summary>
+        public void SetTrainee(string name)
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+                traineeName = name.Trim();
+        }
         public int LiveVersion { get; private set; }
         public string LiveText => _liveText;
 

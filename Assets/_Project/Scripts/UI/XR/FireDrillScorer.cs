@@ -21,6 +21,14 @@ namespace TwoDude.FactoryTwin.UI
         [Tooltip("The drill's fires, to know which are flee-only.")]
         [SerializeField] private FireScenario[] scenarios = Array.Empty<FireScenario>();
         [SerializeField] private string traineeName = "Sam Rivera";
+
+        /// <summary>The trainee from here on (the Meta account's name on the headset, M28); the records and the badge
+        /// book go under it.</summary>
+        public void SetTrainee(string name)
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+                traineeName = name.Trim();
+        }
         [SerializeField] private string trainerName = "Demo trainer";
 
         [Header("Status (play mode, read-only)")]

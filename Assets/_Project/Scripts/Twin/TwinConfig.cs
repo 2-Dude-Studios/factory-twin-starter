@@ -27,6 +27,11 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField, Range(0.1f, 5f)] private float plcWatchdogSeconds = 0.5f;
         [SerializeField, Range(50, 2000)] private int plcIoTimeoutMs = 250;
 
+        [Header("Meta Horizon platform (M28, the Quest app)")]
+        [Tooltip("The app's App ID from the Meta Developer Dashboard (Meta Horizon Store app). Empty: the headset app stays offline (no Meta account, no leaderboards).")]
+        [SerializeField] private string questAppId = string.Empty;
+
+        public string QuestAppId => questAppId;
         public string BrokerHost => brokerHost;
         public int BrokerPort => brokerPort;
         public string ClientId => clientId;
