@@ -89,8 +89,15 @@ namespace TwoDude.FactoryTwin.UI
                 return;
             WriteRecord();
             BadgeBook book = BadgeBook.Load(traineeName);
+            int bestBefore = book.BestScore(TrainingMode.FireSafety), xpBefore = book.Xp;
             List<string> fresh = book.Record(TrainingMode.FireSafety, _score.Total, _score.Badges);
             book.Save();
+            RunResults.Publish(new RunResult
+            {
+                Mode = TrainingMode.FireSafety, Title = TrainingLaunch.Title(TrainingMode.FireSafety), Stars = -1,
+                Points = _score.Total, Passed = _score.Total > 0, NewBest = _score.Total > bestBefore,
+                NewBadges = fresh, Gain = book.LastGain, XpBefore = xpBefore, XpAfter = book.Xp,
+            });
             SessionEnded?.Invoke(fresh);
         }
 

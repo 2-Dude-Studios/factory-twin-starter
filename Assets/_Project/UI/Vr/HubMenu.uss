@@ -12,6 +12,15 @@
 .hub__bar-fill { height: 100%; width: 0%; border-radius: 9px; background-color: rgb(255, 174, 13); }
 .hub__progress { font-size: 20px; color: rgb(160, 168, 176); margin: 6px 0 0 0; padding: 0; }
 
+.hub__daily { flex-direction: row; align-items: center; margin: 0 0 20px 0; padding: 14px 20px; border-radius: 14px;
+    background-color: rgb(44, 38, 20); border-left-width: 8px; border-left-color: rgb(255, 174, 13); }
+.hub__daily-tag { font-size: 20px; letter-spacing: 3px; -unity-font-style: bold; color: rgb(255, 196, 70); margin: 0 20px 0 0; padding: 0; }
+.hub__daily-text { flex-grow: 1; font-size: 26px; color: rgb(240, 242, 244); margin: 0; padding: 0; }
+.hub__streak { font-size: 24px; color: rgb(255, 196, 70); margin: 0 24px 0 0; padding: 0; -unity-font-style: bold; }
+.hub__daily-go { width: 200px; height: 56px; font-size: 24px; -unity-font-style: bold; border-radius: 12px; border-width: 0;
+    background-color: rgb(255, 174, 13); color: rgb(20, 24, 28); }
+.hub__daily-go:hover { background-color: rgb(255, 196, 70); }
+.hub__daily-go:disabled { background-color: rgb(60, 66, 72); color: rgb(140, 148, 156); }
 .hub__cards { flex-direction: row; flex-grow: 1; justify-content: space-between; }
 .hubcard { width: 19.3%; flex-direction: column; padding: 18px 16px; border-radius: 16px; border-top-width: 8px; background-color: rgb(30, 35, 40); }
 .hubcard--robot { border-top-color: rgb(54, 168, 108); }

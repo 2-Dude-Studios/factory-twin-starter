@@ -1,0 +1,24 @@
+/* The results card (ResultsCard, M28): 900 x 640 px. */
+.rc { flex-grow: 1; padding: 30px 36px; border-radius: 22px; background-color: rgb(20, 24, 28); border-top-width: 10px; border-top-color: rgb(255, 174, 13); align-items: center; }
+.rc__title { font-size: 34px; -unity-font-style: bold; color: rgb(240, 242, 244); margin: 0; padding: 0; -unity-text-align: middle-center; white-space: normal; }
+.rc__verdict { font-size: 26px; color: rgb(160, 168, 176); margin: 6px 0 0 0; padding: 0; }
+.rc__stars { flex-direction: row; justify-content: center; margin: 10px 0 6px 0; }
+.rc__star { font-size: 96px; color: rgb(60, 66, 72); margin: 0 10px; padding: 0; -unity-font-style: bold; }
+.rc__star--on { color: rgb(255, 196, 70); }
+.rc__row { flex-direction: row; justify-content: center; }
+.rc__stat { width: 260px; align-items: center; }
+.rc__label { font-size: 18px; letter-spacing: 3px; color: rgb(140, 148, 156); margin: 0; padding: 0; }
+.rc__value { font-size: 52px; -unity-font-style: bold; color: rgb(240, 242, 244); margin: 0; padding: 0; }
+.rc__daily { font-size: 22px; color: rgb(255, 196, 70); margin: 4px 0 0 0; padding: 0; }
+.rc__rank { width: 560px; align-items: center; margin: 12px 0 4px 0; }
+.rc__rank-name { font-size: 24px; -unity-font-style: bold; color: rgb(255, 196, 70); margin: 0 0 6px 0; padding: 0; letter-spacing: 2px; }
+.rc__bar { width: 560px; height: 16px; border-radius: 8px; background-color: rgb(44, 50, 57); overflow: hidden; }
+.rc__bar-fill { height: 100%; width: 0%; border-radius: 8px; background-color: rgb(255, 174, 13); }
+.rc__extra { font-size: 22px; color: rgb(200, 206, 212); margin: 10px 0 0 0; padding: 0; white-space: normal; -unity-text-align: middle-center; }
+.rc__buttons { flex-direction: row; justify-content: center; margin-top: 18px; }
+.rc__button { width: 180px; height: 62px; margin: 0 8px; font-size: 24px; -unity-font-style: bold; border-radius: 12px; border-width: 0;
+    background-color: rgb(44, 50, 57); color: rgb(230, 234, 238); }
+.rc__button:hover { background-color: rgb(60, 68, 76); }
+.rc__button--key { background-color: rgb(255, 174, 13); color: rgb(20, 24, 28); }
+.rc__button--key:hover { background-color: rgb(255, 196, 70); }
+.rc__button--quiet { background-color: rgb(30, 35, 40); color: rgb(160, 168, 176); }

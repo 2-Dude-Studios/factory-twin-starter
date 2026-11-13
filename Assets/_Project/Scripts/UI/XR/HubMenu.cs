@@ -60,6 +60,13 @@ namespace TwoDude.FactoryTwin.UI
                 logoBox.style.display = logo != null ? DisplayStyle.Flex : DisplayStyle.None;
             }
             BuildCards();
+            Button daily = _root.Q<Button>("hub-daily-go");
+            if (daily != null)
+            {
+                Action play = PlayDaily;
+                daily.clicked += play;
+                _wired.Add((daily, play));
+            }
             Refresh();
             BadgeBook.Saved += OnBookSaved;
             if (context != null)
@@ -121,6 +128,12 @@ namespace TwoDude.FactoryTwin.UI
             }
         }
 
+        private void PlayDaily()
+        {
+            (TrainingArea area, int level) = TraineeProgress.Daily(DateTime.UtcNow);
+            Begin(TrainingLaunch.ModeFor(area), level);
+        }
+
         private void Begin(TrainingMode mode, int level)
         {
             if (hub != null)
@@ -135,11 +148,9 @@ namespace TwoDude.FactoryTwin.UI
             string trainee = TraineeName();
             SetText("hub-trainee", trainee);
             BadgeBook book = BadgeBook.Load(trainee);
-            int totalStars = 0;
             foreach (Card card in _cards)
             {
                 IReadOnlyList<int> stars = book.Stars(card.Mode);
-                totalStars += DrillProgress.TotalStars(stars);
                 card.Stars.text = stars.Count > 0 && DrillProgress.TotalStars(stars) > 0 ? LevelStars(stars) : string.Empty;
                 int best = book.BestScore(card.Mode);
                 card.Best.text = best > 0 ? $"Best {best} points" : card.Mode == TrainingMode.FreeRoam ? string.Empty : "Not played yet";
@@ -154,9 +165,21 @@ namespace TwoDude.FactoryTwin.UI
                     card.LevelButtons[i].SetEnabled(open);
                 }
             }
-            (string rank, int nextAt, float progress) = TraineeRank.For(totalStars);
+            int xp = book.Xp;
+            (string rank, int nextAt, float progress) = TraineeRank.For(xp);
             SetText("hub-rank", rank.ToUpperInvariant());
-            SetText("hub-progress", nextAt > 0 ? $"{totalStars} stars  ·  {nextAt - totalStars} to the next rank" : $"{totalStars} stars  ·  top rank");
+            SetText("hub-progress", nextAt > 0 ? $"{xp} XP  ·  {nextAt - xp} to the next rank" : $"{xp} XP  ·  top rank");
+
+            // The day's challenge: which training and level, double XP once today.
+            DateTime now = DateTime.UtcNow;
+            (TrainingArea dailyArea, int dailyLevel) = TraineeProgress.Daily(now);
+            TrainingMode dailyMode = TrainingLaunch.ModeFor(dailyArea);
+            string what = TrainingLaunch.Title(dailyMode) + (dailyLevel > 0 ? $", level {dailyLevel} {DrillLevels.LevelName(dailyLevel)}" : string.Empty);
+            bool done = book.DailyDone(now);
+            SetText("hub-daily", done ? $"{what}: done today. A new one tomorrow." : $"{what}: double XP today.");
+            SetText("hub-streak", book.Streak > 1 ? $"{book.Streak}-day streak" : string.Empty);
+            Button go = _root.Q<Button>("hub-daily-go");
+            go?.SetEnabled(!done);
             VisualElement fill = _root.Q("hub-bar-fill");
             if (fill != null)
                 fill.style.width = Length.Percent(Mathf.Clamp01(progress) * 100f);

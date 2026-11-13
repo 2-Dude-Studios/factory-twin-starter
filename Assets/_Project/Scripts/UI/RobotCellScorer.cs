@@ -40,6 +40,9 @@ namespace TwoDude.FactoryTwin.UI
         private string _liveText = string.Empty;
 
         public bool Running => _drill.Running;
+
+        /// <summary>The running level's points so far (the step popups, M28).</summary>
+        public int Points => points;
         public int LiveVersion { get; private set; }
         public string LiveText => _liveText;
 
@@ -195,8 +198,15 @@ namespace TwoDude.FactoryTwin.UI
                 Debug.LogWarning($"[RobotCellScorer] Could not write the record: {e.Message}", this);
             }
             BadgeBook book = BadgeBook.Load(traineeName);
+            int bestBefore = book.BestScore(TrainingMode.RobotZone), xpBefore = book.Xp;
             List<string> fresh = book.RecordLevel(TrainingMode.RobotZone, score.Level, score.Stars, score.Points, score.Badges, DateTime.UtcNow);
             book.Save();
+            RunResults.Publish(new RunResult
+            {
+                Mode = TrainingMode.RobotZone, Level = score.Level, Title = $"{title}: level {score.Level} {DrillLevels.LevelName(score.Level)}",
+                Stars = score.Stars, Points = score.Points, Passed = score.Stars > 0, NewBest = score.Points > bestBefore,
+                NewBadges = fresh, Gain = book.LastGain, XpBefore = xpBefore, XpAfter = book.Xp,
+            });
             Publish(CellTopics.TrainingRobotStars, score.Stars);
             Debug.Log($"[RobotCellScorer] {DrillRecord.Summary(score, title)}" +
                       $"{(fresh.Count > 0 ? ". New badges: " + string.Join(", ", fresh) : string.Empty)}. Record: {lastRecord}", this);

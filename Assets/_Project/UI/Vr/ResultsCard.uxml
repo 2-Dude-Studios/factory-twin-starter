@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="ResultsCard.uss" />
+    <!-- The results card (ResultsCard, M28): in front of the trainee when a run ends. -->
+    <ui:VisualElement name="card" class="rc">
+        <ui:Label name="rc-title" text="" class="rc__title" />
+        <ui:Label name="rc-verdict" text="" class="rc__verdict" />
+        <ui:VisualElement name="rc-stars" class="rc__stars">
+            <ui:Label name="rc-star-1" text="★" class="rc__star" />
+            <ui:Label name="rc-star-2" text="★" class="rc__star" />
+            <ui:Label name="rc-star-3" text="★" class="rc__star" />
+        </ui:VisualElement>
+        <ui:VisualElement class="rc__row">
+            <ui:VisualElement class="rc__stat">
+                <ui:Label text="POINTS" class="rc__label" />
+                <ui:Label name="rc-points" text="0" class="rc__value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="rc__stat">
+                <ui:Label text="XP" class="rc__label" />
+                <ui:Label name="rc-xp" text="+0" class="rc__value" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="rc-daily" text="" class="rc__daily" />
+        <ui:VisualElement class="rc__rank">
+            <ui:Label name="rc-rank" text="" class="rc__rank-name" />
+            <ui:VisualElement class="rc__bar"><ui:VisualElement name="rc-bar-fill" class="rc__bar-fill" /></ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="rc-extra" text="" class="rc__extra" />
+        <ui:VisualElement class="rc__buttons">
+            <ui:Button name="rc-again" text="Again" class="rc__button" />
+            <ui:Button name="rc-next" text="Next level" class="rc__button rc__button--key" />
+            <ui:Button name="rc-hub" text="Hub" class="rc__button" />
+            <ui:Button name="rc-close" text="Close" class="rc__button rc__button--quiet" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
