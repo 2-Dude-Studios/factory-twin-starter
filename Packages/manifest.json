@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.besty.unity-skills": "https://github.com/Besty0728/Unity-Skills.git?path=/SkillsForUnity#v2.8.4",
+    "com.meta.xr.sdk.platform": "207.0.0",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
     "com.unity.ai.navigation": "2.0.13",
@@ -75,5 +76,14 @@
   },
   "testables": [
     "com.besty.unity-skills"
+  ],
+  "scopedRegistries": [
+    {
+      "name": "Meta XR",
+      "url": "https://npm.developer.oculus.com",
+      "scopes": [
+        "com.meta.xr"
+      ]
+    }
   ]
 }
