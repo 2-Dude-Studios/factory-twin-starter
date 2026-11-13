@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.XR;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace TwoDude.FactoryTwin.UI
 {
@@ -108,6 +110,7 @@ namespace TwoDude.FactoryTwin.UI
             yield return new WaitForSeconds(settleSeconds);
             foreach (Camera cam in Camera.allCameras)
                 Debug.Log($"[QuestProbe] camera {cam.name} enabled, depth {cam.depth}, far {cam.farClipPlane:F0}");
+            LogInteractables();
 
             TrainingAreaStart robot = null;
             foreach (TrainingAreaStart start in starts)
@@ -167,6 +170,32 @@ namespace TwoDude.FactoryTwin.UI
                 d.foveatedRenderingLevel = level;
             }
             Debug.Log("[QuestProbe] done");
+        }
+
+        // Every enabled interactable should be registered with an interaction manager, or nothing can grab or press it.
+        private static void LogInteractables()
+        {
+            var managers = FindObjectsByType<XRInteractionManager>(FindObjectsSortMode.None);
+            var registered = new HashSet<IXRInteractable>();
+            var list = new List<IXRInteractable>();
+            foreach (XRInteractionManager manager in managers)
+            {
+                list.Clear();
+                manager.GetRegisteredInteractables(list);
+                registered.UnionWith(list);
+            }
+            int total = 0;
+            var missing = new List<string>();
+            foreach (XRBaseInteractable interactable in FindObjectsByType<XRBaseInteractable>(FindObjectsSortMode.None))
+            {
+                if (!interactable.isActiveAndEnabled)
+                    continue;
+                total++;
+                if (!registered.Contains(interactable))
+                    missing.Add(interactable.name);
+            }
+            Debug.Log($"[QuestProbe] interactables registered {total - missing.Count} of {total} ({managers.Length} manager(s))" +
+                      (missing.Count > 0 ? "; not registered: " + string.Join(", ", missing.GetRange(0, Math.Min(12, missing.Count))) : string.Empty));
         }
 
         private IEnumerator Hide(string label, List<Renderer> renderers)
