@@ -12,7 +12,7 @@ namespace TwoDude.FactoryTwin.UI
         RobotZone = 3,
         FireSafety = 4,
 
-        /// <summary>Electrical safety and arc flash (Rev 7); its menu card comes with M22.</summary>
+        /// <summary>Electrical safety and arc flash (Rev 7): the cabinet scenarios from the menu card (M27); scoring comes with M22.</summary>
         Electrical = 5,
     }
 

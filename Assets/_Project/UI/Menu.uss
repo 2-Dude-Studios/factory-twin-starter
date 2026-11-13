@@ -17,11 +17,11 @@
 
 .menu__cards { flex-direction: row; flex-grow: 1; justify-content: space-between; }
 .card {
-    width: 24%;
+    width: 19.4%;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    padding: 22px 20px;
+    padding: 18px 14px;
     margin: 0;
     border-radius: 14px;
     border-width: 0;
@@ -35,9 +35,10 @@
 .card--lockout { border-top-color: rgb(255, 174, 13); }
 .card--zone { border-top-color: rgb(54, 168, 108); }
 .card--free { border-top-color: rgb(90, 140, 220); }
+.card--electrical { border-top-color: rgb(140, 110, 220); }
 .card__tag { font-size: 15px; letter-spacing: 2px; color: rgb(160, 168, 176); -unity-font-style: bold; margin: 0 0 6px 0; padding: 0; }
-.card__title { font-size: 36px; color: rgb(240, 242, 244); -unity-font-style: bold; margin: 0 0 12px 0; padding: 0; white-space: normal; }
-.card__text { font-size: 23px; color: rgb(200, 206, 212); white-space: normal; margin: 0 0 12px 0; padding: 0; flex-grow: 1; }
+.card__title { font-size: 30px; color: rgb(240, 242, 244); -unity-font-style: bold; margin: 0 0 12px 0; padding: 0; white-space: normal; }
+.card__text { font-size: 20px; color: rgb(200, 206, 212); white-space: normal; margin: 0 0 12px 0; padding: 0; flex-grow: 1; }
 .card__ref { font-size: 16px; color: rgb(140, 148, 156); white-space: normal; margin: 0; padding: 0; }
 .card__badges { font-size: 20px; color: rgb(255, 196, 70); white-space: normal; margin: 10px 0 0 0; padding: 0; }
 

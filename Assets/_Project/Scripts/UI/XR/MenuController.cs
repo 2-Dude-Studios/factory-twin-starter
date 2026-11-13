@@ -59,6 +59,7 @@ namespace TwoDude.FactoryTwin.UI
             WireButton(root, "train-fire", () => Launch(TrainingMode.FireSafety, root));
             WireButton(root, "train-lockout", () => Launch(TrainingMode.Lockout, root));
             WireButton(root, "train-zone", () => Launch(TrainingMode.RobotZone, root));
+            WireButton(root, "train-electrical", () => Launch(TrainingMode.Electrical, root));
             WireButton(root, "train-free", () => Launch(TrainingMode.FreeRoam, root));
             WireButton(root, "menu-quit", Quit);
             Label trainee = root.Q<Label>("trainee");

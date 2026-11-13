@@ -47,6 +47,31 @@
                     <ui:Button name="robot-start" text="Back to the start" class="menu__button" />
                     <ui:Button name="robot-home" text="End drill: main menu" class="menu__button menu__button--exit" />
                 </ui:VisualElement>
+                <!-- Electrical safety drill display (VrElectricalMenu, M27): the cabinet as the dashboard's panel shows it. -->
+                <ui:VisualElement name="elec-hud" class="tablet__display" picking-mode="Ignore" style="display: none;">
+                    <ui:Label text="ELECTRICAL SAFETY" class="hud__label" />
+                    <ui:Label name="elec-state" text="" class="hud__where" style="white-space: normal; font-size: 15px;" />
+                    <ui:Label text="The HMI shows the main bus, not the control circuit: test before touch. Simulated cabinet; training demo, not certified training." class="hud__prompt" style="white-space: normal;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="elec-options" class="tablet__options" style="display: none;">
+                    <ui:Label text="SCENARIO" class="menu__group" />
+                    <ui:VisualElement name="elec-scenarios" class="tablet__row tablet__wrap" />
+                    <ui:Label text="CABINET" class="menu__group" />
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="elec-q1" text="Q1 off" class="menu__button tablet__third" />
+                        <ui:Button name="elec-lock" text="Lock Q1" class="menu__button tablet__third" />
+                        <ui:Button name="elec-door" text="Open door" class="menu__button tablet__third" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="elec-ups" text="UPS feed off" class="menu__button tablet__half" />
+                        <ui:Button name="elec-ups-lock" text="Lock UPS" class="menu__button tablet__half" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="elec-end" text="End scenario" class="menu__button menu__button--key tablet__half" />
+                        <ui:Button name="elec-start" text="Back to the start" class="menu__button tablet__half" />
+                    </ui:VisualElement>
+                    <ui:Button name="elec-home" text="End drill: main menu" class="menu__button menu__button--exit" />
+                </ui:VisualElement>
                 <ui:VisualElement name="fire-options" class="tablet__options" style="display: none;">
                     <ui:Label text="START A FIRE" class="menu__group" />
                     <ui:VisualElement name="fire-starts" class="tablet__row tablet__wrap" />
