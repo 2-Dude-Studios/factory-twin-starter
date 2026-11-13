@@ -163,7 +163,7 @@ namespace TwoDude.FactoryTwin.UI
 
         private void PlayDaily()
         {
-            (TrainingArea area, int level) = TraineeProgress.Daily(DateTime.UtcNow);
+            (TrainingArea area, int level) = BadgeBook.Load(TraineeName()).Daily(DateTime.UtcNow);
             Begin(TrainingLaunch.ModeFor(area), level);
         }
 
@@ -206,7 +206,7 @@ namespace TwoDude.FactoryTwin.UI
 
             // The day's challenge: which training and level, double XP once today.
             DateTime now = DateTime.UtcNow;
-            (TrainingArea dailyArea, int dailyLevel) = TraineeProgress.Daily(now);
+            (TrainingArea dailyArea, int dailyLevel) = book.Daily(now);
             TrainingMode dailyMode = TrainingLaunch.ModeFor(dailyArea);
             string what = TrainingLaunch.Title(dailyMode) + (dailyLevel > 0 ? $", level {dailyLevel} {DrillLevels.LevelName(dailyLevel)}" : string.Empty);
             bool done = book.DailyDone(now);

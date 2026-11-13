@@ -77,6 +77,11 @@ namespace TwoDude.FactoryTwin.UI
 
         public bool DailyDone(DateTime utc) => TraineeProgress.DailyDone(Progress, utc);
 
+        /// <summary>The day's challenge for this trainee: never a level they have not unlocked.</summary>
+        public (TrainingArea Area, int Level) Daily(DateTime utc) => TraineeProgress.DailyFor(utc, Unlocked);
+
+        private bool Unlocked(TrainingArea area, int level) => DrillProgress.Unlocked(Stars(TrainingLaunch.ModeFor(area)), level);
+
         /// <summary>What the last run recorded here earned.</summary>
         public XpGain LastGain { get; private set; }
 
@@ -140,7 +145,7 @@ namespace TwoDude.FactoryTwin.UI
         public List<string> RecordLevel(TrainingMode mode, int level, int stars, int points, IEnumerable<string> badges, DateTime utc)
         {
             List<string> fresh = RecordScore(mode, points, badges);
-            LastGain = TraineeProgress.Gain(Progress, TrainingLaunch.AreaFor(mode), level, points, utc);
+            LastGain = TraineeProgress.Gain(Progress, TrainingLaunch.AreaFor(mode), level, points, utc, Unlocked);
             if (level < 1 || level > DrillLevels.Count)
                 return fresh;
             Entry entry = Find(mode);

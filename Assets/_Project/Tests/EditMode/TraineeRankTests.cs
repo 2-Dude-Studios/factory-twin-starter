@@ -61,6 +61,26 @@ namespace TwoDude.FactoryTwin.Tests
         }
 
         [Test]
+        public void DailyNeverOffersALockedLevel()
+        {
+            // 2026-11-13 is robot cell level 3 (seen on the headset offered to a trainee with no stars).
+            var day = new DateTime(2026, 11, 13, 10, 0, 0, DateTimeKind.Utc);
+            Assert.AreEqual((TrainingArea.RobotCell, 3), TraineeProgress.Daily(day));
+
+            Func<TrainingArea, int, bool> nothingYet = (area, level) => level <= 1;
+            Assert.AreEqual((TrainingArea.RobotCell, 1), TraineeProgress.DailyFor(day, nothingYet), "steps down to what is open");
+            Func<TrainingArea, int, bool> upToTwo = (area, level) => level <= 2;
+            Assert.AreEqual((TrainingArea.RobotCell, 2), TraineeProgress.DailyFor(day, upToTwo));
+            Func<TrainingArea, int, bool> all = (area, level) => true;
+            Assert.AreEqual((TrainingArea.RobotCell, 3), TraineeProgress.DailyFor(day, all));
+            Assert.AreEqual((TrainingArea.RobotCell, 3), TraineeProgress.DailyFor(day, null), "no locks known: the day's own level");
+
+            XpGain gain = TraineeProgress.Gain(new ProgressState(), TrainingArea.RobotCell, 1, 200, day, nothingYet);
+            Assert.IsTrue(gain.Daily, "the level the hub offered pays double");
+            Assert.AreEqual(400, gain.Xp);
+        }
+
+        [Test]
         public void StreakCountsConsecutiveDays()
         {
             var state = new ProgressState();
