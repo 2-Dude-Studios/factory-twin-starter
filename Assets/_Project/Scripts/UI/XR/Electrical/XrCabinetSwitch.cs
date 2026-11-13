@@ -1,4 +1,3 @@
-using System;
 using TwoDude.FactoryTwin.Twin;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -10,41 +9,47 @@ namespace TwoDude.FactoryTwin.UI
     /// <summary>Electrical safety (M27, ahead of M20/M21): which of the cabinet's controls a hand works.</summary>
     public enum CabinetControl
     {
-        /// <summary>Q1's through-door handle: grip and twist, ON up, OFF to the side.</summary>
+        /// <summary>Q1's through-door handle: grip and twist the wrist, ON up, OFF to the side.</summary>
         Q1 = 0,
 
-        /// <summary>The UPS feed breaker CB-U1's lever: a grip flips it, ON (up) to OFF (down) and back.</summary>
+        /// <summary>The UPS feed breaker CB-U1's lever: grip it and move the hand down to OFF, up to ON.</summary>
         UpsBreaker = 1,
 
-        /// <summary>The door's latch: grip it to open the door, again to shut it.</summary>
+        /// <summary>The door: grip its latch and swing it open on the hinge, or push it shut.</summary>
         Door = 2,
     }
 
     /// <summary>
     /// Electrical safety (M27, ahead of M20/M21): one of the drive cabinet's controls in the hand, sending the same
     /// commands as the dashboard's electrical panel and the tablet (cell/cabinet/disconnect_cmd, ups_cmd, door_cmd).
-    /// A handle or lever follows the hand while gripped and, let go, settles where the cabinet's own state says,
-    /// so a move the rules refuse (Q1 on with a lock in its hasp, the door open with Q1 on) springs back and the
-    /// tablet says why. A lock in its hasp stops the handle turning at all, as the real one does.
+    /// While gripped the part follows the hand (a HandGrip anchor keeps the hand on it): Q1's handle by the wrist's
+    /// twist, the breaker's lever and the door by where the hand goes round their hinge. Let go, the move is sent if
+    /// it ended nearer the other state, and the part settles where the cabinet's own state says, so a move the rules
+    /// refuse (Q1 on with a lock in its hasp, the door open with Q1 on) swings back and the tablet says why. A lock in
+    /// its hasp stops the handle or lever moving at all, as the real one does.
     /// </summary>
     public sealed class XrCabinetSwitch : MonoBehaviour
     {
         [SerializeField] private CellContext context;
         [SerializeField] private XRSimpleInteractable interactable;
         [SerializeField] private CabinetControl control;
-        [Tooltip("The part that turns (Q1's handle, the breaker's lever); empty for the door's latch.")]
+        [Tooltip("The part that moves: Q1's handle, the breaker's lever, the door (pivot on its hinge).")]
         [SerializeField] private Transform part;
+        [Tooltip("The part's hinge axis, in its parent's space.")]
         [SerializeField] private Vector3 axis = Vector3.forward;
         [Tooltip("Angle in the ON (or shut) state, about the axis.")]
         [SerializeField] private float onAngle;
-        [Tooltip("Angle in the OFF state, about the axis.")]
+        [Tooltip("Angle in the OFF (or open) state, about the axis.")]
         [SerializeField] private float offAngle = -90f;
-        [SerializeField] private float returnDegreesPerSecond = 360f;
+        [Tooltip("For the door: the share of the way open past which a let-go opens it.")]
+        [SerializeField, Range(0.05f, 0.95f)] private float openAt = 0.3f;
+        [SerializeField] private float returnDegreesPerSecond = 240f;
 
         private Quaternion _rest;
         private float _angle;
         private float _grabStartAngle;
         private Vector3 _startUp;
+        private Vector3 _startArm;
         private IXRSelectInteractor _hand;
 
         private void Awake()
@@ -79,7 +84,10 @@ namespace TwoDude.FactoryTwin.UI
             {
                 Transform attach = _hand.GetAttachTransform(interactable);
                 Vector3 worldAxis = part.parent.TransformDirection(axis);
-                _angle = TurnMath.Clamp(_grabStartAngle + TurnMath.Twist(worldAxis, _startUp, attach.up), onAngle, offAngle);
+                float moved = control == CabinetControl.Q1
+                    ? TurnMath.Twist(worldAxis, _startUp, attach.up)
+                    : Vector3.SignedAngle(Arm(attach.position, worldAxis), _startArm, -worldAxis);
+                _angle = TurnMath.Clamp(_grabStartAngle + moved, onAngle, offAngle);
             }
             else
             {
@@ -88,37 +96,38 @@ namespace TwoDude.FactoryTwin.UI
             part.localRotation = Quaternion.AngleAxis(_angle, axis) * _rest;
         }
 
+        // From the hinge to the hand, flat in the plane the part turns in.
+        private Vector3 Arm(Vector3 hand, Vector3 worldAxis) => Vector3.ProjectOnPlane(hand - part.position, worldAxis);
+
         private void OnGripped(SelectEnterEventArgs args)
         {
-            if (control == CabinetControl.Door)
-            {
-                // The latch: a grip opens a shut door and shuts an open one.
-                Send(CellTopics.CabinetDoorCommand, Number(CellTopics.CabinetDoorOpen) != 0d ? 0 : 1);
-                return;
-            }
-            if (control == CabinetControl.UpsBreaker)
-            {
-                // The breaker's lever flips with a grip; it then settles where the cabinet's state says.
-                Send(CellTopics.CabinetUpsCommand, Off() ? 0 : 1);
-                return;
-            }
             _hand = args.interactorObject;
-            _startUp = _hand.GetAttachTransform(interactable).up;
+            Transform attach = _hand.GetAttachTransform(interactable);
+            _startUp = attach.up;
+            _startArm = part != null ? Arm(attach.position, part.parent.TransformDirection(axis)) : Vector3.zero;
             _grabStartAngle = _angle;
         }
 
         private void OnReleased(SelectExitEventArgs args)
         {
-            if (control != CabinetControl.Q1 || args.interactorObject != _hand)
+            if (args.interactorObject != _hand)
                 return;
             _hand = null;
-            bool off = TurnMath.NearerTurned(_angle, onAngle, offAngle);
+            bool off = control == CabinetControl.Door
+                ? Mathf.Abs(_angle - onAngle) >= openAt * Mathf.Abs(offAngle - onAngle)
+                : TurnMath.NearerTurned(_angle, onAngle, offAngle);
             if (off == Off())
                 return;
-            Send(control == CabinetControl.Q1 ? CellTopics.CabinetDisconnectCommand : CellTopics.CabinetUpsCommand, off ? 1 : 0);
+            TopicPath command = control == CabinetControl.Q1 ? CellTopics.CabinetDisconnectCommand
+                : control == CabinetControl.UpsBreaker ? CellTopics.CabinetUpsCommand
+                : CellTopics.CabinetDoorCommand;
+            Send(command, off ? 1 : 0);
         }
 
-        private bool Off() => Number(control == CabinetControl.Q1 ? CellTopics.CabinetDisconnect : CellTopics.CabinetUpsFeed) != 0d;
+        // OFF for Q1 and the breaker (cell/cabinet/disconnect and ups_feed are 1 when open), open for the door.
+        private bool Off() => Number(control == CabinetControl.Q1 ? CellTopics.CabinetDisconnect
+            : control == CabinetControl.UpsBreaker ? CellTopics.CabinetUpsFeed
+            : CellTopics.CabinetDoorOpen) != 0d;
 
         private double Number(TopicPath topic) =>
             context.Bus.TryGetLast(topic, out SignalMessage m) ? m.Value.AsNumber : 0d;

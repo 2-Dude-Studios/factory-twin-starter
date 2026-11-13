@@ -39,17 +39,26 @@ namespace TwoDude.FactoryTwin.UI
 
         // On the gear bench (the electrical bay's KitStation; the trainee stands at -Z facing +Z, the back board at
         // +Z, the top at 0.9 m): each PPE item's place, in PpeDressing's order, and the two padlock pegs.
+        private static readonly Vector3 CoatStand = new Vector3(1.05f, 0f, 0.15f);
+
         private static readonly (string Mesh, Vector3 At)[] KitSpots =
         {
             ("PPE_Balaclava", new Vector3(-0.62f, 1.025f, -0.05f)),
             ("PPE_SafetyGlasses", new Vector3(-0.38f, 0.92f, -0.12f)),
             ("PPE_HearingProtection", new Vector3(-0.15f, 1.035f, -0.05f)),
             ("PPE_HardHatShield", new Vector3(0.12f, 1.14f, -0.02f)),
-            ("PPE_ArcJacket", new Vector3(0.45f, 1.75f, 0.24f)),
-            ("PPE_Gloves", new Vector3(0.70f, 1.035f, -0.05f)),
+            ("PPE_ArcJacket", CoatStand + new Vector3(0f, 1.745f, -0.13f)),
+            ("PPE_Gloves", new Vector3(0.45f, 1.035f, -0.05f)),
         };
-        private static readonly Vector3 PegQ1 = new Vector3(-0.62f, 1.55f, 0.29f);
-        private static readonly Vector3 PegUps = new Vector3(-0.42f, 1.55f, 0.29f);
+        // A right-hand grip on a part facing +Z (the cabinet's door, the UPS panel): thumb up the bar, the hand in
+        // front of it, where the trainee stands.
+        private static readonly Quaternion Facing = Quaternion.LookRotation(Vector3.up, Vector3.right);
+
+        private static readonly Vector3 PegQ1 = new Vector3(-0.62f, 1.13f, 0.29f);
+        private static readonly Vector3 PegUps = new Vector3(-0.42f, 1.13f, 0.29f);
+        // The PPE board (the kit's order) on the back board, and the jacket's coat stand beside the bench.
+        private static readonly Vector3 Board = new Vector3(-0.1f, 1.42f, 0.305f);
+        private const float BoardScale = 0.75f;
 
         [MenuItem("Tools/Factory Twin/Build Electrical Hands-On")]
         public static void BuildMenu()
@@ -88,13 +97,14 @@ namespace TwoDude.FactoryTwin.UI
             Transform old = electrical.Find(RootName);
             if (old != null)
                 Object.DestroyImmediate(old.gameObject);
-            foreach (string name in new[] { "Latch", "Q1_HaspSocket" })
+            foreach (Transform t in new[] { door.Find("Latch"), door.Find("Q1_HaspSocket"), handle.Find("Hand_Anchor") })
             {
-                Transform t = door.Find(name);
                 if (t != null)
                     Object.DestroyImmediate(t.gameObject);
             }
-            foreach (Component c in handle.GetComponents<Component>().Where(c => c is XrCabinetSwitch || c is XRBaseInteractable).ToList())
+            foreach (Component c in handle.GetComponents<Component>().Where(c => c is XrCabinetSwitch || c is HandGrip).ToList())
+                Object.DestroyImmediate(c);
+            foreach (Component c in handle.GetComponents<XRBaseInteractable>().ToList())
                 Object.DestroyImmediate(c);
             foreach (Transform t in kit.Cast<Transform>().Where(t => t.name.StartsWith("PPE_") || t.name.StartsWith("Peg_") || t.name.StartsWith("Padlock_")).ToList())
                 Object.DestroyImmediate(t.gameObject);
@@ -102,20 +112,23 @@ namespace TwoDude.FactoryTwin.UI
             var root = new GameObject(RootName).transform;
             root.SetParent(electrical, false);
 
-            // Q1: the handle turns in the hand from here on, not by the animator.
+            // Q1's handle and the door move in the hand from here on, not by the animator (it keeps the DC bus LEDs).
             var animator = cabinet.GetComponent<CabinetAnimator>();
             if (animator != null)
-                Set(animator, ("handle", null));
+                Set(animator, ("handle", null), ("door", null));
             ColliderOn(handle);
             Switch(handle.gameObject, context, CabinetControl.Q1, handle, Vector3.forward, 0f, -90f);
+            LotoProps.HandAnchor(handle, new Vector3(0f, 0.06f, 0.04f), Facing, FingerCurls.Handle);
 
-            // The door's latch: a small grip box on the door, moving with it.
+            // The door's latch: a grip on the door, moving with it; the door swings on its hinge with the hand
+            // (CabinetAnimator's 105 degrees open, about the hinge's Y).
             var latch = new GameObject("Latch").transform;
             latch.SetParent(door, false);
             latch.position = cabinet.TransformPoint(Latch);
             latch.rotation = cabinet.rotation;
-            latch.gameObject.AddComponent<BoxCollider>().size = new Vector3(0.07f, 0.09f, 0.05f);
-            Switch(latch.gameObject, context, CabinetControl.Door, null, Vector3.forward, 0f, 0f);
+            latch.gameObject.AddComponent<BoxCollider>().size = new Vector3(0.08f, 0.12f, 0.06f);
+            Switch(latch.gameObject, context, CabinetControl.Door, door, Vector3.up, 0f, 105f);
+            LotoProps.HandAnchor(latch, new Vector3(0f, 0f, 0.03f), Facing, FingerCurls.Handle);
 
             KeyedSocket q1Hasp = LotoProps.PadlockSocket(door, "Q1_HaspSocket", door.InverseTransformPoint(cabinet.TransformPoint(Q1Hasp)),
                 Quaternion.Inverse(door.rotation) * cabinet.rotation);
@@ -128,6 +141,7 @@ namespace TwoDude.FactoryTwin.UI
             Transform lever = Mesh(panel, "Breaker", models, "UPS_Breaker", UpsBreaker, true);
             Mesh(panel, "HaspTab", models, "UPS_HaspTab", UpsHasp, false);
             Switch(lever.gameObject, context, CabinetControl.UpsBreaker, lever, Vector3.right, 0f, 150f);
+            LotoProps.HandAnchor(lever, new Vector3(0f, 0.05f, 0.05f), Facing, FingerCurls.Handle);
             KeyedSocket upsHasp = LotoProps.PadlockSocket(panel, "UPS_HaspSocket", UpsHasp + new Vector3(0f, -0.006f, 0.004f), Quaternion.identity);
 
             // Two padlocks with tags on the gear bench's back board.
@@ -137,6 +151,12 @@ namespace TwoDude.FactoryTwin.UI
             var lockUps = LotoProps.Padlock(kit, "Padlock_UPS", pegUps);
             LockSocket(root, "Q1_Lock", context, CabinetControl.Q1, q1Hasp, pegQ1, lockQ1);
             LockSocket(root, "UPS_Lock", context, CabinetControl.UpsBreaker, upsHasp, pegUps, lockUps);
+
+            // The board with the kit's order, and the coat stand the jacket hangs on.
+            Transform board = Mesh(kit, "PPE_Board", models, "PPE_Board", Board, false);
+            board.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            board.localScale = Vector3.one * BoardScale;
+            Mesh(kit, "PPE_CoatStand", models, "PPE_CoatStand", CoatStand, true);
 
             // The PPE kit on the bench, and the station that puts it on.
             var station = root.gameObject.AddComponent<PpeKitStation>();

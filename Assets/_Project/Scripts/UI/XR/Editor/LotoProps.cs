@@ -150,6 +150,20 @@ namespace TwoDude.FactoryTwin.UI
         internal static KeyedSocket PadlockSocket(Transform parent, string name, Vector3 at, Quaternion rotation) =>
             Socket(parent, name, at, rotation, "padlock", 0.05f, PadlockGrip);
 
+        /// <summary>
+        /// A hand anchor on a fixed part of another drill (the electrical cabinet's handle, latch and breaker, M27):
+        /// while the part is held the hand leaves the controller and stays here, fingers closed on it.
+        /// <paramref name="rotation"/> is a right-hand grip frame: +Z along the bar towards the thumb, +X from the part
+        /// towards the hand.
+        /// </summary>
+        internal static void HandAnchor(Transform part, Vector3 at, Quaternion rotation, FingerCurls curls)
+        {
+            var anchor = new GameObject("Hand_Anchor");
+            anchor.transform.SetParent(part, false);
+            anchor.transform.SetLocalPositionAndRotation(at, rotation);
+            SetCurls(part.gameObject.AddComponent<HandGrip>(), curls, anchor.transform);
+        }
+
         private static void EnsureLoaded()
         {
             _models ??= LoadModels();
