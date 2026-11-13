@@ -25,7 +25,7 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private TrainingAreaStart start;
         [SerializeField, Min(0.05f)] private float refreshSeconds = 0.25f;
 
-        private VisualElement _root, _mainOptions, _hud, _robotOptions, _robotHud, _levels;
+        private VisualElement _root, _mainOptions, _hud, _fireOptions, _fireHud, _robotOptions, _robotHud, _levels;
         private Label _live, _result;
         private readonly List<(Button button, Action action)> _wired = new List<(Button, Action)>();
         private readonly Button[] _levelButtons = new Button[DrillLevels.Count];
@@ -42,6 +42,8 @@ namespace TwoDude.FactoryTwin.UI
                 return;
             _mainOptions = _root.Q("main-options");
             _hud = _root.Q("hud");
+            _fireOptions = _root.Q("fire-options");
+            _fireHud = _root.Q("fire-hud");
             _robotOptions = _root.Q("robot-options");
             _robotHud = _root.Q("robot-hud");
             _levels = _root.Q("robot-levels");
@@ -80,6 +82,7 @@ namespace TwoDude.FactoryTwin.UI
             if (!_shown || Time.unscaledTime < _nextRefresh)
                 return;
             _nextRefresh = Time.unscaledTime + refreshSeconds;
+            HideOtherPages();
             RefreshLive();
         }
 
@@ -115,7 +118,7 @@ namespace TwoDude.FactoryTwin.UI
                 int level = i + 1;
                 bool open = DrillProgress.Unlocked(stars, level);
                 int best = i < stars.Count ? stars[i] : 0;
-                button.text = $"L{level} {DrillLevels.LevelName(level)}  {(open ? DrillStars.Text(best) : "locked")}";
+                button.text = $"{level} {DrillLevels.LevelName(level)}\n{(open ? DrillStars.Text(best) : "locked")}";
                 button.SetEnabled(open);
             }
         }
@@ -179,11 +182,21 @@ namespace TwoDude.FactoryTwin.UI
             Toggle(_robotHud, on);
             if (on)
             {
-                Toggle(_mainOptions, false);
-                Toggle(_hud, false);
+                HideOtherPages();
                 RefreshLevels();
                 _liveVersion = -1;
                 RefreshLive();
+            }
+        }
+
+        // The robot page is the only one on the tablet while it is open: the main page and the lockout display, and
+        // the fire page, stay hidden whatever else wakes the tablet.
+        private void HideOtherPages()
+        {
+            foreach (VisualElement page in new[] { _mainOptions, _hud, _fireOptions, _fireHud })
+            {
+                if (page != null && page.style.display != DisplayStyle.None)
+                    Toggle(page, false);
             }
         }
 

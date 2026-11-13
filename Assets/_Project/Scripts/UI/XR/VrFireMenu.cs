@@ -61,7 +61,10 @@ namespace TwoDude.FactoryTwin.UI
             Wire("fire-alarm", RaiseAlarm);
             Wire("fire-end", EndDrill);
             BuildStartButtons();
-            ShowDrill(_inDrill);
+            // Only a running fire drill changes the tablet's pages; otherwise the page another drill opened (the
+            // robot cell's, M27) stays as it is when the tablet wakes again.
+            if (_inDrill)
+                ShowDrill(true);
         }
 
         private void OnDisable()
