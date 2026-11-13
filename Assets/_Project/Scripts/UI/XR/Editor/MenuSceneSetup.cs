@@ -58,6 +58,8 @@ namespace TwoDude.FactoryTwin.UI
             controllerSo.FindProperty("badgeIcons").objectReferenceValue = FireXrSetup.BadgeIconsAsset();
             controllerSo.ApplyModifiedProperties();
             rig.SetActive(false);
+            // Out of the rig, so the menu's interactables register as they wake (see StandaloneSetup).
+            StandaloneSetup.InteractionManagerAtRoot(scene, new System.Text.StringBuilder());
 
             EditorSceneManager.SaveScene(scene, MenuScenePath);
             EditorBuildSettings.scenes = new[]

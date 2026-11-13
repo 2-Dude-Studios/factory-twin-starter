@@ -114,7 +114,7 @@ namespace TwoDude.FactoryTwin.UI
                 log.Append("No tablet (VrMenu with a UIDocument): robot drill page skipped. ");
             }
 
-            InteractionManagerAtRoot(scene, roots, log);
+            InteractionManagerAtRoot(scene, log);
 
             // One floor over the box that holds every training area, under the areas' own floors: the walkways between
             // them. The teleport ray lands on the first collider it meets, so machines and walls still block it.
@@ -145,8 +145,9 @@ namespace TwoDude.FactoryTwin.UI
         /// never registered (the extinguisher could not be picked up). Out of the rig, at the scene's root, the manager
         /// is active from the start and each interactable registers as it wakes.
         /// </summary>
-        private static void InteractionManagerAtRoot(Scene scene, GameObject[] roots, StringBuilder log)
+        internal static void InteractionManagerAtRoot(Scene scene, StringBuilder log)
         {
+            GameObject[] roots = scene.GetRootGameObjects();
             List<XRInteractionManager> managers = roots.SelectMany(g => g.GetComponentsInChildren<XRInteractionManager>(true)).ToList();
             XRInteractionManager manager = managers.FirstOrDefault();
             if (manager == null)
@@ -166,6 +167,28 @@ namespace TwoDude.FactoryTwin.UI
             manager.gameObject.SetActive(true);
             manager.enabled = true;
             log.Append($"Interaction manager at the scene root, active from load ({managers.Count} in the scene). ");
+        }
+
+        /// <summary>
+        /// The start menu had the same gap: its interactables were parked for a manager that never came, and when the
+        /// cell loaded XRI tripped over them, gone by then. Menu.unity gets its own manager at the root, saved.
+        /// </summary>
+        public static void MenuManager(StringBuilder log)
+        {
+            const string path = "Assets/_Project/Scenes/Menu.unity";
+            Scene menu = SceneManager.GetSceneByPath(path);
+            bool wasOpen = menu.isLoaded;
+            if (!wasOpen)
+                menu = EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+            bool had = menu.GetRootGameObjects().Any(g => g.GetComponent<XRInteractionManager>() != null);
+            if (!had)
+            {
+                log.Append("Menu: ");
+                InteractionManagerAtRoot(menu, log);
+                EditorSceneManager.SaveScene(menu);
+            }
+            if (!wasOpen)
+                EditorSceneManager.CloseScene(menu, true);
         }
 
         private static bool IsUrdf(Component c) => c.GetType().Namespace?.StartsWith("Unity.Robotics") == true;

@@ -92,6 +92,7 @@ namespace TwoDude.FactoryTwin.UI
         {
             var log = new StringBuilder("[QuestVariant] ");
             RenderPipelineAsset questPipeline = QuestPipeline(log);
+            StandaloneSetup.MenuManager(log);
             SetAndroidQuality(questPipeline, log);
 
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(QuestScene) != null)

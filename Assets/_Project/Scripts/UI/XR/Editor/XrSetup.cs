@@ -209,6 +209,8 @@ namespace TwoDude.FactoryTwin.UI
             OnePointer(rig);
             Hands(rig, origin);
             rig.SetActive(false);
+            // An interaction manager at the scene root, active from load (see StandaloneSetup).
+            StandaloneSetup.InteractionManagerAtRoot(cell.scene, new System.Text.StringBuilder());
             Undo.CollapseUndoOperations(undoGroup);
             EditorSceneManager.MarkSceneDirty(cell.scene);
             Debug.Log($"[XrSetup] VR rig built (inactive until F11 or -vr); {points} training points usable by controller; desktop camera '{(desktopCamera != null ? desktopCamera.name : "none")}'.", rig);
