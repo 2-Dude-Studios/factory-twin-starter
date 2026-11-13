@@ -33,6 +33,8 @@
 .hubcard__text { font-size: 19px; color: rgb(200, 206, 212); white-space: normal; margin: 0 0 10px 0; padding: 0; }
 .hubcard__stars { font-size: 26px; color: rgb(255, 196, 70); margin: 0 0 2px 0; padding: 0; -unity-font-style: bold; }
 .hubcard__stat { font-size: 19px; color: rgb(170, 178, 186); white-space: normal; margin: 0 0 2px 0; padding: 0; }
+.hubcard__board { font-size: 18px; color: rgb(200, 206, 212); white-space: normal; margin: 8px 0 0 0; padding: 8px 0 0 0;
+    border-top-width: 1px; border-top-color: rgb(60, 66, 72); }
 .hubcard__spacer { flex-grow: 1; }
 .hubcard__levels { flex-direction: row; flex-wrap: wrap; justify-content: space-between; margin: 8px 0 4px 0; }
 .hubcard__level { width: 48.5%; height: 54px; margin: 3px 0; font-size: 17px; white-space: normal; border-radius: 10px;

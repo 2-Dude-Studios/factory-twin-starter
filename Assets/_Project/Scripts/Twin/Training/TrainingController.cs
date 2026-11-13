@@ -34,6 +34,14 @@ namespace TwoDude.FactoryTwin.Twin
 
         public LockoutProcedure Run => _run;
         public string TraineeName => traineeName;
+
+        /// <summary>The trainee from here on (the Meta account's name on the headset, M28); the records and the badge
+        /// book go under it.</summary>
+        public void SetTrainee(string name)
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+                traineeName = name.Trim();
+        }
         public string TrainerName => trainerName;
 
         /// <summary>Raised with the record's path when a run completes.</summary>

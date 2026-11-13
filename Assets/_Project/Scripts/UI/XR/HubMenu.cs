@@ -19,13 +19,16 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private CellContext context;
         [Tooltip("The studio's logo for the header (optional).")]
         [SerializeField] private Texture2D logo;
+        [Tooltip("The Meta account and leaderboards (optional; offline without them).")]
+        [SerializeField] private MetaAccount account;
+        [SerializeField] private MetaLeaderboards boards;
 
         private sealed class Card
         {
             public TrainingMode Mode;
             public string Css, Tag, Title, Text;
             public bool Levels;
-            public Label Stars, Best, Badges;
+            public Label Stars, Best, Badges, Board;
             public Button[] LevelButtons = Array.Empty<Button>();
         }
 
@@ -69,6 +72,10 @@ namespace TwoDude.FactoryTwin.UI
             }
             Refresh();
             BadgeBook.Saved += OnBookSaved;
+            if (account != null)
+                account.SignedIn += OnSignedIn;
+            if (boards != null)
+                boards.Updated += OnBoard;
             if (context != null)
                 _hubSubscription = context.Bus.Subscribe(CellTopics.TrainingHub.ToString(), _ => Refresh());
         }
@@ -79,10 +86,34 @@ namespace TwoDude.FactoryTwin.UI
                 button.clicked -= action;
             _wired.Clear();
             BadgeBook.Saved -= OnBookSaved;
+            if (account != null)
+                account.SignedIn -= OnSignedIn;
+            if (boards != null)
+                boards.Updated -= OnBoard;
             _hubSubscription?.Dispose();
         }
 
         private void OnBookSaved(string trainee) => Refresh();
+
+        private void OnSignedIn(string name) => Refresh();
+
+        private void OnBoard(TrainingMode mode) => Refresh();
+
+        // A card's leaderboard: the top lines once the Meta account is up.
+        private string BoardText(TrainingMode mode)
+        {
+            if (MetaLeaderboards.BoardFor(mode) == null)
+                return string.Empty;
+            if (account == null || !account.Ready)
+                return "Leaderboard: with your Meta account in the store app";
+            IReadOnlyList<MetaLeaderboards.Line> top = boards != null ? boards.Top(mode) : null;
+            if (top == null || top.Count == 0)
+                return "Leaderboard: no scores yet. Be first!";
+            var lines = new List<string> { "LEADERBOARD" };
+            foreach (MetaLeaderboards.Line line in top)
+                lines.Add($"{line.Rank}. {line.Name}  {line.Score}");
+            return string.Join("\n", lines);
+        }
 
         private void BuildCards()
         {
@@ -104,6 +135,8 @@ namespace TwoDude.FactoryTwin.UI
                 box.Add(card.Stars);
                 box.Add(card.Best);
                 box.Add(card.Badges);
+                card.Board = Text(string.Empty, "hubcard__board");
+                box.Add(card.Board);
                 var spacer = new VisualElement();
                 spacer.AddToClassList("hubcard__spacer");
                 box.Add(spacer);
@@ -155,6 +188,7 @@ namespace TwoDude.FactoryTwin.UI
                 int best = book.BestScore(card.Mode);
                 card.Best.text = best > 0 ? $"Best {best} points" : card.Mode == TrainingMode.FreeRoam ? string.Empty : "Not played yet";
                 IReadOnlyList<string> badges = book.Earned(card.Mode);
+                card.Board.text = BoardText(card.Mode);
                 card.Badges.text = badges.Count > 0 ? $"{badges.Count} badge{(badges.Count == 1 ? "" : "s")}: {string.Join(", ", badges)}" : string.Empty;
                 for (int i = 0; i < card.LevelButtons.Length; i++)
                 {
