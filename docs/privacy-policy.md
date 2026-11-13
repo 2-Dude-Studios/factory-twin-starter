@@ -1,4 +1,4 @@
-# Factory Twin Training: privacy policy (draft for 2 Dude Studios to review and host)
+# Factory VR Safety Training: privacy policy (draft for 2 Dude Studios to review and host)
 
 *Draft written 2026-11-13 for the Meta Horizon Store and SideQuest listings (M29). It describes what the app does as
 built; 2 Dude Studios reviews it, adds the contact details marked [ ], and hosts it at a public URL (for example on
@@ -6,7 +6,7 @@ built; 2 Dude Studios reviews it, adds the contact details marked [ ], and hosts
 
 **Last updated:** [date of publishing]
 
-Factory Twin Training ("the app") is a virtual reality training demo for Meta Quest 3 and 3S made by 2 Dude Studios
+Factory VR Safety Training ("the app") is a virtual reality training demo for Meta Quest 3 and 3S made by 2 Dude Studios
 ([company address]). This policy says what information the app uses and why.
 
 ## What the app uses
@@ -50,4 +50,4 @@ settings, or contact us below.
 
 If the app's use of information changes, this policy will be updated and the date above changed.
 
-*Factory Twin Training is a training demo, not certified training. The safety content is guidance, not legal advice.*
+*Factory VR Safety Training is a training demo, not certified training. The safety content is guidance, not legal advice.*
