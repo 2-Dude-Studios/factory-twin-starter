@@ -67,6 +67,10 @@ namespace TwoDude.FactoryTwin.UI
             Wire("menu-reset", SafetyReset, true);
             Wire("menu-exit", ExitVr, true);
             Wire("menu-home", BackToMenu, true);
+            // On the headset itself (the standalone Quest build) there is no desktop to go back to.
+            Button exit = _root.Q<Button>("menu-exit");
+            if (exit != null && Application.platform == RuntimePlatform.Android)
+                exit.style.display = DisplayStyle.None;
             _goTo = new Action[spots.Length];
             for (int i = 0; i < spots.Length; i++)
             {

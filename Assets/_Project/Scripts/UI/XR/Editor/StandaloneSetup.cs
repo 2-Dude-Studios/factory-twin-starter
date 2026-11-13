@@ -126,6 +126,7 @@ namespace TwoDude.FactoryTwin.UI
             }
 
             InteractionManagerAtRoot(scene, log);
+            AreaSpots(roots, tablet, log);
 
             // One floor over the box that holds every training area, under the areas' own floors: the walkways between
             // them. The teleport ray lands on the first collider it meets, so machines and walls still block it.
@@ -147,6 +148,43 @@ namespace TwoDude.FactoryTwin.UI
             box.size = new Vector3(areas.width, 0.02f, areas.height);
             floor.AddComponent<TeleportationArea>();
             log.Append($"Walkway teleport floor {areas.width:F0} x {areas.height:F0} m. ");
+        }
+
+        // The tablet main page's Areas row (VrMenu.uxml, menu-area-*): each training area's start spot, added to the
+        // tablet's Go to spots (any from an earlier run replaced).
+        private static readonly (string Button, TrainingArea Area)[] AreaButtons =
+        {
+            ("menu-area-hub", TrainingArea.Hub), ("menu-area-robot", TrainingArea.RobotCell), ("menu-area-lockout", TrainingArea.Lockout),
+            ("menu-area-fire", TrainingArea.Fire), ("menu-area-electrical", TrainingArea.Electrical),
+        };
+
+        private static void AreaSpots(GameObject[] roots, VrMenu tablet, StringBuilder log)
+        {
+            if (tablet == null)
+                return;
+            TrainingAreaStart[] starts = roots.SelectMany(g => g.GetComponentsInChildren<TrainingAreaStart>(true)).ToArray();
+            var so = new SerializedObject(tablet);
+            SerializedProperty spots = so.FindProperty("spots");
+            for (int i = spots.arraySize - 1; i >= 0; i--)
+            {
+                if (spots.GetArrayElementAtIndex(i).FindPropertyRelative("button").stringValue.StartsWith("menu-area-"))
+                    spots.DeleteArrayElementAtIndex(i);
+            }
+            int added = 0;
+            foreach ((string button, TrainingArea area) in AreaButtons)
+            {
+                TrainingAreaStart start = starts.FirstOrDefault(s => s.Area == area);
+                if (start == null)
+                    continue;
+                spots.arraySize++;
+                SerializedProperty entry = spots.GetArrayElementAtIndex(spots.arraySize - 1);
+                entry.FindPropertyRelative("button").stringValue = button;
+                entry.FindPropertyRelative("floorPosition").vector3Value = start.FloorPosition;
+                entry.FindPropertyRelative("yawDegrees").floatValue = start.YawDegrees;
+                added++;
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+            log.Append($"Tablet: {added} area spots. ");
         }
 
         /// <summary>
