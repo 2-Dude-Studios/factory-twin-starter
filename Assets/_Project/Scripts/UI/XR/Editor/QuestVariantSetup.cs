@@ -51,6 +51,12 @@ namespace TwoDude.FactoryTwin.UI
         /// <summary>Textures on Android drop this many mip levels: 1 is half the width and height.</summary>
         private const int AndroidTextureMipLimit = 1;
 
+        /// <summary>
+        /// MSAA on the headset: off (your call, 2026-11-13). In the robot cell 2x MSAA cost about 4 ms, the difference
+        /// between 57 and 72 fps; Link keeps 2x in VR_RPAsset.
+        /// </summary>
+        private const int QuestMsaaSamples = 1;
+
         /// <summary>The headset camera's reach, with fog fading the far hall out before it is cut off.</summary>
         private const float FarClipMetres = 30f;
         private const float FogStartMetres = 18f;
@@ -139,9 +145,13 @@ namespace TwoDude.FactoryTwin.UI
             SerializedProperty list = so.FindProperty("m_RendererDataList");
             if (list != null && list.arraySize > 0)
                 list.GetArrayElementAtIndex(0).objectReferenceValue = renderer;
+            SerializedProperty msaa = so.FindProperty("m_MSAA");
+            if (msaa != null)
+                msaa.intValue = QuestMsaaSamples;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(pipeline);
-            log.Append(created ? "Created " : "Kept ").Append(QuestPipelinePath).Append(" (renderer ").Append(QuestRendererPath).Append("). ");
+            log.Append(created ? "Created " : "Kept ").Append(QuestPipelinePath).Append(" (renderer ").Append(QuestRendererPath)
+               .Append($", MSAA {(QuestMsaaSamples > 1 ? QuestMsaaSamples + "x" : "off")}). ");
             return pipeline;
         }
 
