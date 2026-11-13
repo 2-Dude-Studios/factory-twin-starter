@@ -99,6 +99,35 @@ namespace TwoDude.FactoryTwin.UI
             foreach (var m in meshes.OrderByDescending(m => m.Value.Count * m.Value.Each).Take(40))
                 text.Append($"  {m.Value.Count} x {m.Value.Each} = {m.Value.Count * m.Value.Each / 1000} k  {m.Key}  ({m.Value.Part})\n");
 
+            // Every piece of the hall's shell (walls, ceiling), with its largest side: what the Quest variant's detail cut is chosen from.
+            var shell = new Dictionary<string, (int Count, long Each, float Size, string Part)>();
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                if (root.name != "env")
+                    continue;
+                foreach (string partName in new[] { "walls", "ceiling" })
+                {
+                    Transform part = root.transform.Find(partName);
+                    if (part == null)
+                        continue;
+                    foreach (MeshFilter f in part.GetComponentsInChildren<MeshFilter>(false))
+                    {
+                        if (f.sharedMesh == null || !f.TryGetComponent(out MeshRenderer mr) || !mr.enabled)
+                            continue;
+                        long each = 0;
+                        for (int i = 0; i < f.sharedMesh.subMeshCount; i++)
+                            each += f.sharedMesh.GetIndexCount(i) / 3;
+                        Vector3 b = mr.bounds.size;
+                        float size = Mathf.Max(b.x, Mathf.Max(b.y, b.z));
+                        string key = partName + "/" + f.sharedMesh.name;
+                        shell[key] = shell.TryGetValue(key, out var s) ? (s.Count + 1, each, Mathf.Max(s.Size, size), partName) : (1, each, size, partName);
+                    }
+                }
+            }
+            text.Append("Shell pieces (walls, ceiling) by triangles in all: count x each = all, largest side, part/mesh\n");
+            foreach (var s in shell.OrderByDescending(s => s.Value.Count * s.Value.Each))
+                text.Append($"  {s.Value.Count} x {s.Value.Each} = {s.Value.Count * s.Value.Each / 1000} k  {s.Value.Size:F1} m  {s.Key}\n");
+
             var lights = Active<Light>(scene).ToList();
             text.Append($"Lights: {lights.Count} active; ");
             foreach (IGrouping<string, Light> g in lights.GroupBy(l => $"{l.type} {l.lightmapBakeType}{(l.shadows != LightShadows.None ? " shadowed" : "")}"))
