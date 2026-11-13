@@ -56,8 +56,23 @@ namespace TwoDude.FactoryTwin.UI
         private const float FogStartMetres = 18f;
         private static readonly Color HallFog = new Color(0.72f, 0.74f, 0.76f);
 
-        /// <summary>The hall's shell: kept whole, so no area looks out through a hole. What it costs is measured first.</summary>
+        /// <summary>The hall's shell: never trimmed by distance, so no area looks out through a hole.</summary>
         private static readonly string[] Shell = { "walls", "ceiling", "floor", "wallTopSpacer" };
+
+        /// <summary>
+        /// The shell's detail, left out on the headset (cost report's shell list, 2026-11-13: walls and ceiling still
+        /// cost about 6 and 5 ms of GPU each). The ceiling keeps its roof panels and lights and loses the trusses,
+        /// rings, hangers, ducts, pipes and railings; the walls keep their panels, doors and barriers and lose the pipe
+        /// holders, the charging station, clips, wiring and pipes, and every piece smaller than <see cref="ShellDetailMetres"/>.
+        /// </summary>
+        private static readonly string[] ShellParts = { "walls", "ceiling" };
+        private static readonly string[] ShellDetail =
+        {
+            "rings_", "scaffolding", "hangers_A", "hangers_B", "ventilation", "pipes_", "railing_A", "railing_B",
+            "pipe_holder", "wall_chargers", "wiring_case", "water_pipes", "gate_rollers", "window_locks", "small_wire_box",
+            "clip", "greyDarkMetal", "greyMetal",
+        };
+        private const float ShellDetailMetres = 1f;
 
         [MenuItem("Tools/Factory Twin/Quest/Build Quest Variant")]
         public static void Build()
@@ -80,7 +95,10 @@ namespace TwoDude.FactoryTwin.UI
             {
                 GameObject env = scene.GetRootGameObjects().FirstOrDefault(g => g.name == "env");
                 if (env != null)
+                {
                     Trim(env, AreasBox(), log);
+                    StripShellDetail(env, log);
+                }
                 Lights(scene, log);
                 if (env != null)
                     LightMaterials(env, log);
@@ -223,7 +241,56 @@ namespace TwoDude.FactoryTwin.UI
                     Object.DestroyImmediate(part.gameObject);
             }
             log.Append($"Hall trimmed to the areas + {KeepMarginMetres:F0} m, racks, boxes, pallets and trailer left out: " +
-                       $"{removed} props removed ({trianglesRemoved / 1000} k triangles), {kept} kept; shell kept whole. ");
+                       $"{removed} props removed ({trianglesRemoved / 1000} k triangles), {kept} kept. ");
+        }
+
+        private static void StripShellDetail(GameObject env, StringBuilder log)
+        {
+            int removed = 0, kept = 0;
+            long trianglesRemoved = 0, trianglesKept = 0;
+            foreach (string partName in ShellParts)
+            {
+                Transform part = env.transform.Find(partName);
+                if (part == null)
+                    continue;
+                foreach (MeshRenderer r in part.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    if (!r.TryGetComponent(out MeshFilter filter) || filter.sharedMesh == null)
+                        continue;
+                    Vector3 size = r.bounds.size;
+                    bool small = Mathf.Max(size.x, Mathf.Max(size.y, size.z)) < ShellDetailMetres;
+                    if (!small && !IsShellDetail(filter.sharedMesh.name))
+                    {
+                        kept++;
+                        trianglesKept += Triangles(r);
+                        continue;
+                    }
+                    removed++;
+                    trianglesRemoved += Triangles(r);
+                    GameObject go = r.gameObject;
+                    if (go.transform.childCount == 0 && go.GetComponents<Component>().Length <= 3)
+                    {
+                        Object.DestroyImmediate(go);
+                    }
+                    else
+                    {
+                        Object.DestroyImmediate(r);
+                        Object.DestroyImmediate(filter);
+                    }
+                }
+            }
+            log.Append($"Shell detail left out: {removed} pieces ({trianglesRemoved / 1000} k triangles); " +
+                       $"{kept} kept ({trianglesKept / 1000} k): panels, doors, roof and lights. ");
+        }
+
+        private static bool IsShellDetail(string mesh)
+        {
+            foreach (string word in ShellDetail)
+            {
+                if (mesh.IndexOf(word, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>Gives the hall's renderers Baked Lit copies of their materials (decals and glass keep their own).</summary>
