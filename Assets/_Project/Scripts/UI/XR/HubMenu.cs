@@ -49,6 +49,11 @@ namespace TwoDude.FactoryTwin.UI
         private List<string> _creditPages;
         private int _creditPage;
 
+        [Header("First-run guide and comfort (M29)")]
+        [SerializeField] private ComfortSettings comfort;
+        private const string GuideSeenKey = "ft.guide.seen";
+        private int _guidePage;
+
         private sealed class Card
         {
             public TrainingMode Mode;
@@ -93,6 +98,22 @@ namespace TwoDude.FactoryTwin.UI
             Wire("hub-credits-close", () => ShowCredits(false));
             Wire("hub-credits-prev", () => CreditPage(_creditPage - 1));
             Wire("hub-credits-next", () => CreditPage(_creditPage + 1));
+            Wire("hub-guide", () => ShowGuide(0));
+            Wire("hub-comfort", () => ShowGuide(1));
+            Wire("hub-guide-back", () => GuidePage(_guidePage - 1));
+            Wire("hub-guide-next", () => GuidePage(_guidePage + 1));
+            if (comfort != null)
+            {
+                Wire("hub-comfort-move", comfort.ToggleSmoothMove);
+                Wire("hub-comfort-turn", comfort.ToggleSmoothTurn);
+                Wire("hub-comfort-vignette", comfort.ToggleVignette);
+                Wire("hub-comfort-voice", comfort.ToggleVoice);
+                comfort.Changed += ComfortText;
+            }
+            ComfortText();
+            // The first time the app opens: the guide, before anything else.
+            if (!PlayerPrefs.HasKey(GuideSeenKey))
+                ShowGuide(0);
             Button daily = _root.Q<Button>("hub-daily-go");
             if (daily != null)
             {
@@ -116,6 +137,8 @@ namespace TwoDude.FactoryTwin.UI
                 button.clicked -= action;
             _wired.Clear();
             BadgeBook.Saved -= OnBookSaved;
+            if (comfort != null)
+                comfort.Changed -= ComfortText;
             if (account != null)
                 account.SignedIn -= OnSignedIn;
             if (boards != null)
@@ -141,6 +164,7 @@ namespace TwoDude.FactoryTwin.UI
             panel.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
             if (!show)
                 return;
+            Show("hub-guide-panel", false);
             if (_creditPages == null)
             {
                 var texts = new List<string> { credits };
@@ -163,6 +187,65 @@ namespace TwoDude.FactoryTwin.UI
             SetText("hub-credits-page", $"Page {_creditPage + 1} of {_creditPages.Count}");
             _root.Q<Button>("hub-credits-prev")?.SetEnabled(_creditPage > 0);
             _root.Q<Button>("hub-credits-next")?.SetEnabled(_creditPage < _creditPages.Count - 1);
+        }
+
+        // The guide: page 0 how to play, page 1 comfort. Next on the last page closes it (and the first-run flag is set).
+        private void ShowGuide(int page)
+        {
+            ShowCredits(false);
+            VisualElement panel = _root?.Q("hub-guide-panel");
+            if (panel == null)
+                return;
+            panel.style.display = DisplayStyle.Flex;
+            GuidePage(page);
+        }
+
+        private void GuidePage(int page)
+        {
+            VisualElement panel = _root?.Q("hub-guide-panel");
+            if (panel == null)
+                return;
+            if (page > 1)
+            {
+                panel.style.display = DisplayStyle.None;
+                PlayerPrefs.SetInt(GuideSeenKey, 1);
+                PlayerPrefs.Save();
+                return;
+            }
+            _guidePage = Mathf.Max(0, page);
+            bool how = _guidePage == 0;
+            Show("hub-guide-how", how);
+            Show("hub-guide-comfort", !how);
+            SetText("hub-guide-title", how ? "HOW TO PLAY" : "COMFORT");
+            SetText("hub-guide-page", $"{_guidePage + 1} of 2");
+            _root.Q<Button>("hub-guide-back")?.SetEnabled(!how);
+            Button next = _root.Q<Button>("hub-guide-next");
+            if (next != null)
+                next.text = how ? "Next" : "Done";
+        }
+
+        private void ComfortText()
+        {
+            if (_root == null || comfort == null)
+                return;
+            SetButton("hub-comfort-move", comfort.SmoothMove ? "Movement: smooth and teleport  (tap to change)" : "Movement: teleport only, most comfortable  (tap to change)");
+            SetButton("hub-comfort-turn", comfort.SmoothTurn ? "Turning: smooth  (tap to change)" : "Turning: snap 45°, most comfortable  (tap to change)");
+            SetButton("hub-comfort-vignette", comfort.Vignette ? "Comfort vignette: on while moving smoothly  (tap to change)" : "Comfort vignette: off  (tap to change)");
+            SetButton("hub-comfort-voice", ComfortSettings.VoiceOn ? "Trainer voice: on  (tap to change)" : "Trainer voice: off  (tap to change)");
+        }
+
+        private void Show(string name, bool show)
+        {
+            VisualElement e = _root?.Q(name);
+            if (e != null)
+                e.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private void SetButton(string name, string text)
+        {
+            Button button = _root?.Q<Button>(name);
+            if (button != null)
+                button.text = text;
         }
 
         private void OnBookSaved(string trainee) => Refresh();

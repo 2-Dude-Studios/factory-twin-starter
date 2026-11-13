@@ -25,6 +25,11 @@
             <ui:VisualElement class="rc__bar"><ui:VisualElement name="rc-bar-fill" class="rc__bar-fill" /></ui:VisualElement>
         </ui:VisualElement>
         <ui:Label name="rc-extra" text="" class="rc__extra" />
+        <!-- What to look at again (M29): critical mistakes, missed steps, mistakes. Hidden on a clean run. -->
+        <ui:VisualElement name="rc-debrief" class="rc__debrief">
+            <ui:Label text="LOOK AT AGAIN" class="rc__debrief-tag" />
+            <ui:Label name="rc-debrief-text" text="" class="rc__debrief-text" />
+        </ui:VisualElement>
         <ui:VisualElement class="rc__buttons">
             <ui:Button name="rc-again" text="Again" class="rc__button" />
             <ui:Button name="rc-next" text="Next level" class="rc__button rc__button--key" />
