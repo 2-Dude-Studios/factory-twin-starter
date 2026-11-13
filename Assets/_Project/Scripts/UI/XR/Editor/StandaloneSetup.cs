@@ -90,7 +90,7 @@ namespace TwoDude.FactoryTwin.UI
         private const string LicensesFolder = "Assets/_Project/Licenses";
         private const float HubMenuWidthPx = 1800f, HubMenuHeightPx = 1100f, HubMenuWidthMetres = 2.5f;
         private const string ResultsUxml = "Assets/_Project/UI/Vr/ResultsCard.uxml";
-        private const float ResultsWidthPx = 900f, ResultsHeightPx = 640f, ResultsWidthMetres = 1.0f;
+        private const float ResultsWidthPx = 900f, ResultsHeightPx = 820f, ResultsWidthMetres = 1.0f;
         private const float HubMenuAhead = 2.3f, HubMenuHeight = 1.5f;
 
         /// <summary>
@@ -166,6 +166,7 @@ namespace TwoDude.FactoryTwin.UI
             string appId = context != null && context.Config != null ? context.Config.QuestAppId : string.Empty;
             log.Append(string.IsNullOrWhiteSpace(appId) ? "Meta account: no App ID in TwinConfig yet (offline). " : "Meta account and leaderboards on (App ID set). ");
             ResultsAndFeedback(scene, roots, origin, context, session, log);
+            VoiceAndComfort(origin, context, session, menu, log);
             log.Append($"Hub: session on {vrSwitch.name}, menu at {go.transform.position.x:F1}, {go.transform.position.z:F1}. ");
         }
 
@@ -201,6 +202,91 @@ namespace TwoDude.FactoryTwin.UI
             fs.FindProperty("robot").objectReferenceValue = roots.SelectMany(g => g.GetComponentsInChildren<RobotCellScorer>(true)).FirstOrDefault();
             fs.ApplyModifiedPropertiesWithoutUndo();
             log.Append($"Results card and step feedback (popups {(fs.FindProperty("popups").objectReferenceValue != null ? "found" : "MISSING")}). ");
+        }
+
+        private const string TrainerAudioFolder = "Assets/_Project/Audio/Trainer";
+        private const string VignettePrefabPath = "Assets/Samples/XR Interaction Toolkit/3.6.1/Starter Assets/TunnelingVignette/TunnelingVignette.prefab";
+
+        // The AI trainer's voice (M29): every clip in Audio/Trainer, grouped by cue (cue_1, cue_2… are takes of one cue).
+        // Comfort (M29): the rig's two controller managers and a tunnelling vignette under the headset camera for
+        // smooth movement and turning; the hub menu's comfort page drives them.
+        private static void VoiceAndComfort(XROrigin origin, CellContext context, HubSession session, HubMenu menu, StringBuilder log)
+        {
+            Transform old = session.transform.Find("TrainerVoice");
+            if (old != null)
+                Object.DestroyImmediate(old.gameObject);
+            var go = new GameObject("TrainerVoice");
+            go.transform.SetParent(session.transform, false);
+            var audio = go.AddComponent<AudioSource>();
+            audio.playOnAwake = false;
+            audio.spatialBlend = 0f;
+            audio.priority = 0;
+            var voice = go.AddComponent<TrainerVoice>();
+            var takes = AssetDatabase.FindAssets("t:AudioClip", new[] { TrainerAudioFolder })
+                .Select(AssetDatabase.GUIDToAssetPath).OrderBy(p => p, System.StringComparer.Ordinal)
+                .Select(AssetDatabase.LoadAssetAtPath<AudioClip>).Where(c => c != null)
+                .GroupBy(c => System.Text.RegularExpressions.Regex.Replace(c.name, @"_\d+$", string.Empty)).ToArray();
+            var vs = new SerializedObject(voice);
+            vs.FindProperty("context").objectReferenceValue = context;
+            vs.FindProperty("hub").objectReferenceValue = session;
+            vs.FindProperty("source").objectReferenceValue = audio;
+            SerializedProperty cues = vs.FindProperty("cues");
+            cues.arraySize = takes.Length;
+            for (int i = 0; i < takes.Length; i++)
+            {
+                SerializedProperty cue = cues.GetArrayElementAtIndex(i);
+                cue.FindPropertyRelative("id").stringValue = takes[i].Key;
+                SerializedProperty clips = cue.FindPropertyRelative("clips");
+                AudioClip[] list = takes[i].ToArray();
+                clips.arraySize = list.Length;
+                for (int k = 0; k < list.Length; k++)
+                    clips.GetArrayElementAtIndex(k).objectReferenceValue = list[k];
+            }
+            vs.ApplyModifiedPropertiesWithoutUndo();
+            log.Append($"Trainer voice: {takes.Length} cues, {takes.Sum(g => g.Count())} clips. ");
+
+            var managers = origin != null
+                ? origin.GetComponentsInChildren<UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets.ControllerInputActionManager>(true)
+                : new UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets.ControllerInputActionManager[0];
+            GameObject vignette = null;
+            Camera head = origin != null ? origin.Camera : null;
+            if (head != null)
+            {
+                Transform existing = head.transform.Find("TunnelingVignette");
+                if (existing != null)
+                    Object.DestroyImmediate(existing.gameObject);
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VignettePrefabPath);
+                if (prefab != null)
+                {
+                    vignette = (GameObject)PrefabUtility.InstantiatePrefab(prefab, head.transform);
+                    vignette.name = "TunnelingVignette";
+                    var controller = vignette.GetComponent<UnityEngine.XR.Interaction.Toolkit.Locomotion.Comfort.TunnelingVignetteController>();
+                    if (controller != null)
+                    {
+                        var providers = new List<UnityEngine.XR.Interaction.Toolkit.Locomotion.Comfort.LocomotionVignetteProvider>();
+                        foreach (var p in origin.GetComponentsInChildren<UnityEngine.XR.Interaction.Toolkit.Locomotion.LocomotionProvider>(true))
+                        {
+                            if (p is UnityEngine.XR.Interaction.Toolkit.Locomotion.Movement.ContinuousMoveProvider ||
+                                p is UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning.ContinuousTurnProvider)
+                                providers.Add(new UnityEngine.XR.Interaction.Toolkit.Locomotion.Comfort.LocomotionVignetteProvider { locomotionProvider = p, enabled = true });
+                        }
+                        controller.locomotionVignetteProviders = providers;
+                        EditorUtility.SetDirty(controller);
+                        log.Append($"Comfort vignette on {providers.Count} smooth providers. ");
+                    }
+                    vignette.SetActive(false);
+                }
+            }
+            ComfortSettings comfort = session.GetComponent<ComfortSettings>() ?? session.gameObject.AddComponent<ComfortSettings>();
+            var cs = new SerializedObject(comfort);
+            cs.FindProperty("leftController").objectReferenceValue = managers.FirstOrDefault(m => m.name.Contains("Left"));
+            cs.FindProperty("rightController").objectReferenceValue = managers.FirstOrDefault(m => m.name.Contains("Right"));
+            cs.FindProperty("vignette").objectReferenceValue = vignette;
+            cs.ApplyModifiedPropertiesWithoutUndo();
+            var ms = new SerializedObject(menu);
+            ms.FindProperty("comfort").objectReferenceValue = comfort;
+            ms.ApplyModifiedPropertiesWithoutUndo();
+            log.Append($"Comfort: {managers.Length} controller managers, teleport only and snap turn by default. ");
         }
 
         /// <summary>The 2 Dude Studios logo, when there is one (M28, banners and the hub menu's header).</summary>

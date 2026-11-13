@@ -29,6 +29,12 @@ namespace TwoDude.FactoryTwin.UI
 
         public TrainingMode Current => current;
 
+        /// <summary>A training was started from the hub (mode, and the level picked or 0).</summary>
+        public event System.Action<TrainingMode, int> TrainingStarted;
+
+        /// <summary>The trainee was brought back to the hub.</summary>
+        public event System.Action ReturnedToHub;
+
         // At start-up the trainee begins at the hub, once the headset is up (the Quest build opens on the cell).
         private IEnumerator Start()
         {
@@ -54,6 +60,7 @@ namespace TwoDude.FactoryTwin.UI
             launcher.Launch(mode);
             if (level > 0 && mode == TrainingMode.RobotZone)
                 StartCoroutine(RobotLevel(level));
+            TrainingStarted?.Invoke(mode, level);
         }
 
         /// <summary>Ends whatever runs and brings the trainee back to the hub.</summary>
@@ -62,6 +69,7 @@ namespace TwoDude.FactoryTwin.UI
             PutCellBack();
             current = TrainingMode.None;
             StandAtHub();
+            ReturnedToHub?.Invoke();
         }
 
         // The launcher starts the robot drill's first level without a star; a level picked on the menu replaces it.

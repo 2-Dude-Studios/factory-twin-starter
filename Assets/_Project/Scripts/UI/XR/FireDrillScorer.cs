@@ -104,7 +104,7 @@ namespace TwoDude.FactoryTwin.UI
             {
                 Mode = TrainingMode.FireSafety, Title = TrainingLaunch.Title(TrainingMode.FireSafety), Stars = -1,
                 Points = _score.Total, Passed = _score.Total > 0, NewBest = _score.Total > bestBefore,
-                NewBadges = fresh, Gain = book.LastGain, XpBefore = xpBefore, XpAfter = book.Xp,
+                NewBadges = fresh, Gain = book.LastGain, XpBefore = xpBefore, XpAfter = book.Xp, Debrief = FireDebrief(),
             });
             SessionEnded?.Invoke(fresh);
         }
@@ -185,6 +185,19 @@ namespace TwoDude.FactoryTwin.UI
                     return s.FleeOnly;
             }
             return false;
+        }
+
+        // The fire drill's mistakes (the alarm late, the wrong extinguisher, too close, fighting past incipient), for the
+        // results card. Its steps are not a required list, so there is no "missed" part.
+        private List<string> FireDebrief()
+        {
+            var mistakes = new List<string>();
+            foreach (ScoreEvent e in _score.Events)
+            {
+                if (e.Mistake)
+                    mistakes.Add(e.Text);
+            }
+            return RunDebrief.Build(null, null, mistakes);
         }
 
         private void WriteRecord()

@@ -45,7 +45,7 @@ namespace TwoDude.FactoryTwin.UI
             {
                 Mode = TrainingMode.Lockout, Level = score.Level, Title = $"{TrainingLaunch.Title(TrainingMode.Lockout)}: level {score.Level} {DrillLevels.LevelName(score.Level)}",
                 Stars = score.Stars, Points = score.Points, Passed = score.Stars > 0, NewBest = score.Points > bestBefore,
-                NewBadges = fresh, Gain = book.LastGain, XpBefore = xpBefore, XpAfter = book.Xp,
+                NewBadges = fresh, Gain = book.LastGain, XpBefore = xpBefore, XpAfter = book.Xp, Debrief = RunDebrief.For(score),
             });
             Debug.Log($"[LockoutScorer] {summary}{(fresh.Count > 0 ? ". New badges: " + string.Join(", ", fresh) : string.Empty)}", this);
         }

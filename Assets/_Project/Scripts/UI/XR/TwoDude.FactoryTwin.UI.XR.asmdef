@@ -11,7 +11,8 @@
         "Unity.XR.Hands",
         "Unity.TextMeshPro",
         "Unity.RenderPipelines.Universal.Runtime",
-        "Oculus.Platform"
+        "Oculus.Platform",
+        "Unity.XR.Interaction.Toolkit.Samples.StarterAssets"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

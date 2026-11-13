@@ -21,6 +21,8 @@ namespace TwoDude.FactoryTwin.UI
         public XpGain Gain;
         public int XpBefore;
         public int XpAfter;
+        /// <summary>What to look at again: critical mistakes, missed steps, mistakes (<see cref="RunDebrief"/>).</summary>
+        public IReadOnlyList<string> Debrief = Array.Empty<string>();
     }
 
     /// <summary>

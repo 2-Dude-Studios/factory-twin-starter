@@ -1,4 +1,8 @@
-/* The results card (ResultsCard, M28): 900 x 640 px. */
+/* The results card (ResultsCard, M28): 900 x 820 px (taller for the debrief, M29). */
+.rc__debrief { width: 820px; margin: 12px 0 0 0; padding: 12px 18px; border-radius: 12px; background-color: rgb(44, 30, 30);
+    border-left-width: 6px; border-left-color: rgb(214, 69, 65); }
+.rc__debrief-tag { font-size: 16px; letter-spacing: 3px; -unity-font-style: bold; color: rgb(240, 130, 120); margin: 0 0 4px 0; padding: 0; }
+.rc__debrief-text { font-size: 21px; color: rgb(230, 232, 234); margin: 0; padding: 0; white-space: normal; }
 .rc { flex-grow: 1; padding: 30px 36px; border-radius: 22px; background-color: rgb(20, 24, 28); border-top-width: 10px; border-top-color: rgb(255, 174, 13); align-items: center; }
 .rc__title { font-size: 34px; -unity-font-style: bold; color: rgb(240, 242, 244); margin: 0; padding: 0; -unity-text-align: middle-center; white-space: normal; }
 .rc__verdict { font-size: 26px; color: rgb(160, 168, 176); margin: 6px 0 0 0; padding: 0; }

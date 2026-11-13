@@ -27,7 +27,8 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField, Min(0.1f)] private float starSeconds = 0.45f;
 
         private VisualElement _root;
-        private Label _title, _verdict, _points, _xp, _daily, _rank, _extra;
+        private Label _title, _verdict, _points, _xp, _daily, _rank, _extra, _debriefText;
+        private VisualElement _debrief;
         private VisualElement _starsRow, _fill;
         private readonly Label[] _stars = new Label[DrillStars.Max];
         private Button _again, _next, _hub, _close;
@@ -68,6 +69,8 @@ namespace TwoDude.FactoryTwin.UI
             _daily = _root.Q<Label>("rc-daily");
             _rank = _root.Q<Label>("rc-rank");
             _extra = _root.Q<Label>("rc-extra");
+            _debrief = _root.Q("rc-debrief");
+            _debriefText = _root.Q<Label>("rc-debrief-text");
             _starsRow = _root.Q("rc-stars");
             _fill = _root.Q("rc-bar-fill");
             for (int i = 0; i < _stars.Length; i++)
@@ -107,6 +110,11 @@ namespace TwoDude.FactoryTwin.UI
             _points.text = "0";
             _xp.text = "+0";
             _daily.text = result.Gain.Daily ? $"Daily challenge: XP x{TraineeProgress.DailyMultiplier}" : string.Empty;
+            bool debrief = result.Debrief != null && result.Debrief.Count > 0;
+            if (_debrief != null)
+                _debrief.style.display = debrief ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_debriefText != null)
+                _debriefText.text = debrief ? string.Join("\n", result.Debrief) : string.Empty;
             var extras = new List<string>();
             if (result.NewBest && result.Points > 0)
                 extras.Add("New best!");

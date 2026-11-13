@@ -213,7 +213,7 @@ namespace TwoDude.FactoryTwin.UI
             {
                 Mode = TrainingMode.RobotZone, Level = score.Level, Title = $"{title}: level {score.Level} {DrillLevels.LevelName(score.Level)}",
                 Stars = score.Stars, Points = score.Points, Passed = score.Stars > 0, NewBest = score.Points > bestBefore,
-                NewBadges = fresh, Gain = book.LastGain, XpBefore = xpBefore, XpAfter = book.Xp,
+                NewBadges = fresh, Gain = book.LastGain, XpBefore = xpBefore, XpAfter = book.Xp, Debrief = RunDebrief.For(score),
             });
             Publish(CellTopics.TrainingRobotStars, score.Stars);
             Debug.Log($"[RobotCellScorer] {DrillRecord.Summary(score, title)}" +

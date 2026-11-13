@@ -25,9 +25,41 @@
         </ui:VisualElement>
         <ui:VisualElement name="hub-cards" class="hub__cards" />
         <ui:VisualElement class="hub__footer">
-            <ui:Label name="hub-note" text="Point and pull the trigger, or touch a button. The tablet (Y) brings you back here." class="hub__note" />
-            <ui:Label text="Training demo, not certified training  ·  2 Dude Studios" class="hub__fine" />
+            <ui:VisualElement class="hub__footer-text">
+                <ui:Label name="hub-note" text="Point and pull the trigger, or touch a button. The tablet (Y) brings you back here." class="hub__note" />
+                <ui:Label text="Training demo, not certified training  ·  2 Dude Studios" class="hub__fine" />
+            </ui:VisualElement>
+            <ui:Button name="hub-guide" text="How to play" class="hub__credits" />
+            <ui:Button name="hub-comfort" text="Comfort" class="hub__credits" />
             <ui:Button name="hub-credits" text="Credits and licences" class="hub__credits" />
+        </ui:VisualElement>
+        <!-- The first-run guide (M29): how to use the headset, then the comfort options. Shown once, then from the footer. -->
+        <ui:VisualElement name="hub-guide-panel" class="hub__creditspanel" style="display: none;">
+            <ui:VisualElement class="hub__credits-head">
+                <ui:Label name="hub-guide-title" text="HOW TO PLAY" class="hub__credits-title" />
+                <ui:Label name="hub-guide-page" text="" class="hub__credits-page" />
+            </ui:VisualElement>
+            <ui:VisualElement name="hub-guide-how" class="hub__guide-body">
+                <ui:Label text="Press: point at a button and pull the trigger, or touch it with your finger." class="hub__guide-line" />
+                <ui:Label text="Pick up: grip to hold the extinguisher, a padlock or a piece of PPE." class="hub__guide-line" />
+                <ui:Label text="Move: push a thumbstick forward, aim at the floor, let go to teleport." class="hub__guide-line" />
+                <ui:Label text="Turn: right thumbstick left or right." class="hub__guide-line" />
+                <ui:Label text="Tablet: press Y on the left controller for the drill's steps and the way back here." class="hub__guide-line" />
+                <ui:Label text="Hands work too: pinch to press and to pick things up." class="hub__guide-line" />
+                <ui:Label text="Take the headset off and the drill pauses until you are back." class="hub__guide-line" />
+                <ui:Label text="Your trainer talks you through each drill. Pick one on the board, follow the steps, beat your best." class="hub__guide-line hub__guide-line--key" />
+            </ui:VisualElement>
+            <ui:VisualElement name="hub-guide-comfort" class="hub__guide-body" style="display: none;">
+                <ui:Label text="Pick what feels right. You can change these any time from Comfort on this board." class="hub__guide-line" />
+                <ui:Button name="hub-comfort-move" text="" class="hub__toggle" />
+                <ui:Button name="hub-comfort-turn" text="" class="hub__toggle" />
+                <ui:Button name="hub-comfort-vignette" text="" class="hub__toggle" />
+                <ui:Button name="hub-comfort-voice" text="" class="hub__toggle" />
+            </ui:VisualElement>
+            <ui:VisualElement class="hub__credits-buttons">
+                <ui:Button name="hub-guide-back" text="Back" class="hub__credits-button" />
+                <ui:Button name="hub-guide-next" text="Next" class="hub__credits-button hub__credits-button--close" />
+            </ui:VisualElement>
         </ui:VisualElement>
         <!-- Credits and the third-party notices in full, a page at a time (M29). -->
         <ui:VisualElement name="hub-credits-panel" class="hub__creditspanel" style="display: none;">
