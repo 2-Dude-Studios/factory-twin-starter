@@ -156,6 +156,7 @@ namespace TwoDude.FactoryTwin.Twin
                 return;
             refused++;
             Debug.Log($"[CabinetStation] Could not {what}: {ElectricalWords.Refusal(result)}.", this);
+            _bus.Publish(CellTopics.CabinetRefused, SignalValue.FromNumber((int)result), CellContext.NowUnixMs);
         }
 
         private void PublishAll()
