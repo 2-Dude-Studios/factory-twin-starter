@@ -58,7 +58,7 @@ namespace TwoDude.FactoryTwin.UI
         private const string DesktopOnlyNatives = "/UnityMeshImporter/Plugins/AssimpNet/Native/";
 
         private const string OpenXRLoaderType = "UnityEngine.XR.OpenXR.OpenXRLoader";
-        private const int MinSdk = 32;
+        private const int MinSdk = 32, TargetSdk = 34;
 
         // By type name, so this file needs no reference to the feature assemblies (some exist only with the Android module).
         private static readonly string[] Features =
@@ -139,6 +139,10 @@ namespace TwoDude.FactoryTwin.UI
             PlayerSettings.SetScriptingBackend(android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.Android.minSdkVersion = (AndroidSdkVersions)MinSdk;
+            // Meta's release manifest rules: immersive apps target 34 exactly (32–34 allowed, 34 for apps made since
+            // March 2026; "highest installed" gave 37), and install location auto (the project had prefer-external).
+            PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)TargetSdk;
+            PlayerSettings.Android.preferredInstallLocation = AndroidPreferredInstallLocation.Auto;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.Vulkan });
             PlayerSettings.SetApplicationIdentifier(android, StorePackageId);
@@ -148,7 +152,7 @@ namespace TwoDude.FactoryTwin.UI
 
             string missing = string.Join(", ", Features.Except(enabled));
             Debug.Log($"[QuestBuild] Configured for Quest: OpenXR on Android with {string.Join(", ", enabled)}" +
-                      $"{(missing.Length > 0 ? " (NOT FOUND: " + missing + ")" : string.Empty)}; IL2CPP, ARM64, Vulkan, ASTC, min SDK {MinSdk}, id {StorePackageId} {VersionName} ({VersionCode}), Quest 3 and 3S, no internet permission.");
+                      $"{(missing.Length > 0 ? " (NOT FOUND: " + missing + ")" : string.Empty)}; IL2CPP, ARM64, Vulkan, ASTC, min SDK {MinSdk}, target SDK {TargetSdk}, install location auto, id {StorePackageId} {VersionName} ({VersionCode}), Quest 3 and 3S, no internet permission.");
         }
 
         // The Meta Quest feature's store settings: only the headsets decided on, and no internet permission (the
