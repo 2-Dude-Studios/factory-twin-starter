@@ -249,7 +249,7 @@ Approved by you on 2026-11-12, with M26 started the same day. Approving the plan
 
 You asked for a VR-specific version to host on SideQuest and the Meta app store. Plan in `docs/quest-standalone.md`: one Android app for Quest 3 and 3S with the menu, the hub and the drills, running on the headset alone (no PC, broker, PLC or dashboard). It needs a Quest variant of the scene (the hall is over Meta's budget as it stands), a standalone mode with in-headset controls, and the stores' packaging, performance and listing requirements. This moves "standalone Quest 3" out of Later.
 
-**M25 Quest spike (≈2 days)** · **M26 Quest scene variant (≈4)** · **M27 Standalone mode (≈2.5)** · **M28 Store readiness (≈2.5)** · **M29 Listings and release (≈2, plus one to two weeks of review).** About 13 days. Exits and the seven open decisions are in the plan.
+**M25 Quest spike (≈2 days)** · **M26 Quest scene variant (≈4)** · **M27 Standalone mode (≈2.5)** · **M28 Hub, Meta account and leaderboards (≈2.5, added 2026-11-13, `docs/quest-hub-and-scores.md`)** · **M29 Store readiness (≈2.5)** · **M30 Listings and release (≈2, plus one to two weeks of review).** About 15.5 days. Exits, the decisions (all but the first release's contents taken on 2026-11-13) and the road to release, step by step, are in the plan. The app is **Factory VR Safety Training** (`com.twodudestudios.factorytwin`), free, for Quest 3 and 3S.
 
 ## Later (not scheduled)
 

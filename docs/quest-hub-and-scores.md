@@ -32,7 +32,7 @@ You asked (2026-11-13), before the store build: a better menu, a better gamified
 - Create the app on the Developer Dashboard (Meta Horizon Store) and send me its **App ID**; add your account (and testers) to the organisation.
 - Create the four leaderboards above.
 - The 2 Dude Studios logo as a large PNG (about 2048 px wide, transparent background).
-- The **Data Use Checkup** for User ID, User Profile and Leaderboards; the privacy policy must say the app shows the Meta user name and posts scores to Meta leaderboards.
+- The **Data Use Checkup** for User ID and User Profile (Meta's table: global leaderboards need these two; leaderboards are not a DUC feature of their own); the privacy policy must say the app shows the Meta user name and posts scores to Meta leaderboards (done, `docs/privacy-policy.md`). Steps: `docs/quest-standalone.md`, 6 Road to release, step 3.
 
 ## Exit (M28)
 
