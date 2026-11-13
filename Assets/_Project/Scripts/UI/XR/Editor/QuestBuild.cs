@@ -66,6 +66,10 @@ namespace TwoDude.FactoryTwin.UI
         // reads them from these environment variables, set by you before starting Unity.
         private const string KeystoreVar = "FT_KEYSTORE", KeystorePassVar = "FT_KEYSTORE_PASS", KeyAliasVar = "FT_KEY_ALIAS", KeyPassVar = "FT_KEY_PASS";
 
+        // The Meta App ID, likewise from the environment (not secret, but kept out of the public repo; see Build).
+        private const string AppIdVar = "FT_QUEST_APP_ID";
+        private const string TwinConfigPath = "Assets/_Project/Data/TwinConfig.asset";
+
         // URDF Importer's Assimp natives are Windows, Linux and macOS libraries marked "any platform" in the package, so an
         // Android build tries to pack both Windows assimp.dll files and fails. Only the Editor's URDF import uses them.
         private const string DesktopOnlyNatives = "/UnityMeshImporter/Plugins/AssimpNet/Native/";
@@ -220,11 +224,53 @@ namespace TwoDude.FactoryTwin.UI
                 Debug.LogError($"[QuestBuild] Release build: set {KeystoreVar} (the keystore file, outside the repo), {KeystorePassVar}, {KeyAliasVar} and {KeyPassVar} before starting Unity.");
                 return;
             }
+            string appId = (System.Environment.GetEnvironmentVariable(AppIdVar) ?? string.Empty).Trim();
+            if (release && appId.Length == 0)
+            {
+                Debug.LogError($"[QuestBuild] Release build: set {AppIdVar} (the Meta App ID from the Developer Dashboard) before starting Unity.");
+                return;
+            }
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
             {
                 Debug.LogError("[QuestBuild] Switch to Android first (Tools > Factory Twin > Quest > 1 Switch to Android).");
                 return;
             }
+            // The Meta App ID goes into this build only, from the environment: the public repo never holds it, so a
+            // fork builds an app that stays offline instead of one pointing at our Meta app and leaderboards.
+            SetAppId(appId);
+            try
+            {
+                BuildWithAppId(release, keystore, appId);
+            }
+            finally
+            {
+                SetAppId(string.Empty);
+            }
+        }
+
+        private static void SetAppId(string appId)
+        {
+            var config = AssetDatabase.LoadAssetAtPath<TwoDude.FactoryTwin.Twin.TwinConfig>(TwinConfigPath);
+            if (config == null)
+            {
+                Debug.LogError($"[QuestBuild] No TwinConfig at {TwinConfigPath}: the App ID was not set.");
+                return;
+            }
+            var so = new SerializedObject(config);
+            SerializedProperty id = so.FindProperty("questAppId");
+            if (id == null || id.stringValue == appId)
+                return;
+            id.stringValue = appId;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(config);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void BuildWithAppId(bool release, string keystore, string appId)
+        {
+            Debug.Log(appId.Length > 0
+                ? $"[QuestBuild] Meta App ID from {AppIdVar}: in this build only (the Meta account and leaderboards on)."
+                : $"[QuestBuild] No {AppIdVar}: this build stays offline (no Meta account, no leaderboards).");
             // The headset gets the Quest variant of the cell only (M26), rebuilt from the saved Cell.unity first so it is
             // never stale (it is derived, and kept out of git): its menu is the hub inside the cell (M28), no Menu.unity.
             QuestVariantSetup.Build();

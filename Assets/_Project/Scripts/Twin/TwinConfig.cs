@@ -28,7 +28,7 @@ namespace TwoDude.FactoryTwin.Twin
         [SerializeField, Range(50, 2000)] private int plcIoTimeoutMs = 250;
 
         [Header("Meta Horizon platform (M28, the Quest app)")]
-        [Tooltip("The app's App ID from the Meta Developer Dashboard (Meta Horizon Store app). Empty: the headset app stays offline (no Meta account, no leaderboards).")]
+        [Tooltip("The app's App ID from the Meta Developer Dashboard (Meta Horizon Store app). Leave empty in the repo: the Quest build fills it from the FT_QUEST_APP_ID environment variable for that build only and empties it again. Empty: the headset app stays offline (no Meta account, no leaderboards).")]
         [SerializeField] private string questAppId = string.Empty;
 
         public string QuestAppId => questAppId;
