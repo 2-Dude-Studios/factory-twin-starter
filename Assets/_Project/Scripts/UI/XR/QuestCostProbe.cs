@@ -26,6 +26,7 @@ namespace TwoDude.FactoryTwin.UI
     {
         public const string CommandLineFlag = "-probe";
         public const string FireFlag = "-probe-fire";
+        public const string RecordsFlag = "-probe-records";
 
         [SerializeField] private Transform env;
         [SerializeField] private Light sun;
@@ -43,16 +44,45 @@ namespace TwoDude.FactoryTwin.UI
         {
             string[] args = Environment.GetCommandLineArgs();
             _fire = Array.IndexOf(args, FireFlag) >= 0;
-            if (!_fire && Array.IndexOf(args, CommandLineFlag) < 0)
+            _records = Array.IndexOf(args, RecordsFlag) >= 0;
+            if (!_fire && !_records && Array.IndexOf(args, CommandLineFlag) < 0)
                 enabled = false;
         }
 
         private bool _fire;
+        private bool _records;
 
         private void Start()
         {
             if (enabled)
-                StartCoroutine(_fire ? FireRun() : Run());
+                StartCoroutine(_records ? RecordsRun() : _fire ? FireRun() : Run());
+        }
+
+        // -probe-records: what the app's storage holds now (so a second launch shows what survived the restart), then
+        // a robot cell level started and ended, and the storage again: the record and the badge book on the headset.
+        private IEnumerator RecordsRun()
+        {
+            yield return new WaitForSeconds(settleSeconds);
+            LogStorage("before");
+            if (context == null)
+                yield break;
+            context.Bus.Publish(CellTopics.TrainingRobotLevel, SignalValue.FromNumber(1), CellContext.NowUnixMs);
+            Debug.Log("[QuestProbe] robot level 1 started");
+            yield return new WaitForSeconds(5f);
+            context.Bus.Publish(CellTopics.TrainingRobotLevel, SignalValue.FromNumber(0), CellContext.NowUnixMs);
+            yield return new WaitForSeconds(2f);
+            LogStorage("after");
+            Debug.Log("[QuestProbe] done");
+        }
+
+        private static void LogStorage(string when)
+        {
+            string folder = BadgeBook.Folder();
+            string[] files = System.IO.Directory.Exists(folder) ? System.IO.Directory.GetFiles(folder) : Array.Empty<string>();
+            Debug.Log($"[QuestProbe] storage {when}: {folder}, {files.Length} file(s): " +
+                      string.Join(", ", Array.ConvertAll(files, System.IO.Path.GetFileName)));
+            BadgeBook book = BadgeBook.Load("Sam Rivera");
+            Debug.Log($"[QuestProbe] badge book {when}: robot stars {string.Join("/", book.Stars(TrainingMode.RobotZone))}");
         }
 
         private IEnumerator FireRun()
