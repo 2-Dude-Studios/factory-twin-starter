@@ -23,6 +23,9 @@ namespace TwoDude.FactoryTwin.UI
     {
         private const string PpeModelPath = "Assets/_Project/Art/Electrical/Electrical_PPE.fbx";
         private const string RootName = "HandsOn";
+        // As ElectricalSetup (Twin.Editor, internal there): the cabinet under the cell, and the layout asset.
+        private const string CabinetUnderCell = "Electrical/DriveCabinet";
+        private const string AreasPath = "Assets/_Project/Data/Training/TrainingAreas.asset";
 
         // In the cabinet's space (Drive_Cabinet.fbx, it faces +Z): Q1's hasp ring under the handle, the door's latch,
         // and where the UPS feed panel stands, to your right as you face the cabinet (-X).
@@ -63,8 +66,8 @@ namespace TwoDude.FactoryTwin.UI
             GameObject[] roots = scene.GetRootGameObjects();
             CellContext context = roots.SelectMany(g => g.GetComponentsInChildren<CellContext>(true)).FirstOrDefault();
             XROrigin origin = roots.SelectMany(g => g.GetComponentsInChildren<XROrigin>(true)).FirstOrDefault();
-            Transform cabinet = context != null ? context.transform.root.Find(ElectricalSetup.CabinetPath.Substring(ElectricalSetup.CabinetPath.IndexOf('/') + 1)) : null;
-            cabinet ??= roots.Select(g => g.transform.Find(ElectricalSetup.CabinetPath.Substring(ElectricalSetup.CabinetPath.IndexOf('/') + 1))).FirstOrDefault(t => t != null);
+            Transform cabinet = context != null ? context.transform.root.Find(CabinetUnderCell) : null;
+            cabinet ??= roots.Select(g => g.transform.Find(CabinetUnderCell)).FirstOrDefault(t => t != null);
             if (context == null || cabinet == null)
             {
                 log.Append("No cell context or no drive cabinet (run Build Electrical Cabinet first). ");
@@ -185,7 +188,7 @@ namespace TwoDude.FactoryTwin.UI
         // The electrical bay's gear bench (TrainingAreasSetup): the KitStation nearest the layout's kit spot.
         private static Transform Kit(Transform cell)
         {
-            var layout = AssetDatabase.LoadAssetAtPath<TrainingAreas>(ElectricalSetup.AreasPath);
+            var layout = AssetDatabase.LoadAssetAtPath<TrainingAreas>(AreasPath);
             TrainingAreaSettings bay = layout != null ? layout.Find(TrainingArea.Electrical) : null;
             bay ??= TrainingAreaDefaults.For(TrainingArea.Electrical);
             var spot = new Vector3(bay.Kit.X, 0f, bay.Kit.Z);
