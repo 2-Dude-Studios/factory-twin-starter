@@ -106,6 +106,26 @@ namespace TwoDude.FactoryTwin.UI
             Debug.Log($"[HeadsetPause] {(pause ? "Paused" : "Resumed")} (focus {_focused}, presence {_present}, app paused {_appPaused}).", this);
         }
 
-        private void OnRecentred(XRInputSubsystem input) => Debug.Log("[HeadsetPause] View recentred from the system menu.", this);
+        // The headset raises this every frame for a second or so at start-up (373 lines on 2026-11-13) and in bursts
+        // round a recentre: one line per burst, with how many it covered.
+        private void OnRecentred(XRInputSubsystem input)
+        {
+            float now = Time.unscaledTime;
+            bool burst = now - _lastRecentre < RecentreQuietSeconds;
+            _lastRecentre = now;
+            if (burst)
+            {
+                _recentres++;
+                return;
+            }
+            Debug.Log(_recentres > 0
+                ? $"[HeadsetPause] View recentred (the last burst had {_recentres + 1} updates)."
+                : "[HeadsetPause] View recentred.", this);
+            _recentres = 0;
+        }
+
+        private const float RecentreQuietSeconds = 2f;
+        private float _lastRecentre = -10f;
+        private int _recentres;
     }
 }

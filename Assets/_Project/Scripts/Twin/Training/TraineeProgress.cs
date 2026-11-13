@@ -55,13 +55,27 @@ namespace TwoDude.FactoryTwin.Twin
             return Challenges[index];
         }
 
+        /// <summary>
+        /// The day's challenge for one trainee: a level they have not unlocked yet becomes the highest level they have
+        /// in the same training (level 1 is always open), so the hub never offers a locked level.
+        /// </summary>
+        public static (TrainingArea Area, int Level) DailyFor(DateTime utc, Func<TrainingArea, int, bool> unlocked)
+        {
+            (TrainingArea area, int level) = Daily(utc);
+            while (unlocked != null && level > 1 && !unlocked(area, level))
+                level--;
+            return (area, level);
+        }
+
         public static bool DailyDone(ProgressState state, DateTime utc) => state != null && state.dailyDoneDay == Day(utc);
 
         /// <summary>
         /// Adds a run of <paramref name="points"/> on <paramref name="area"/> (level 0 for trainings without levels):
         /// doubled if it is the day's challenge, not yet done today and scored; the streak counts consecutive days.
+        /// <paramref name="unlocked"/> is the trainee's level locks before this run (see <see cref="DailyFor"/>).
         /// </summary>
-        public static XpGain Gain(ProgressState state, TrainingArea area, int level, int points, DateTime utc)
+        public static XpGain Gain(ProgressState state, TrainingArea area, int level, int points, DateTime utc,
+            Func<TrainingArea, int, bool> unlocked = null)
         {
             string today = Day(utc);
             if (state.lastDay != today)
@@ -69,7 +83,7 @@ namespace TwoDude.FactoryTwin.Twin
             state.lastDay = today;
 
             int xp = Math.Max(points, 0);
-            (TrainingArea dailyArea, int dailyLevel) = Daily(utc);
+            (TrainingArea dailyArea, int dailyLevel) = DailyFor(utc, unlocked);
             bool daily = xp > 0 && state.dailyDoneDay != today && area == dailyArea && level == dailyLevel;
             if (daily)
             {
