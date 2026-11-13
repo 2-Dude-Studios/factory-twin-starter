@@ -41,6 +41,19 @@ namespace TwoDude.FactoryTwin.UI
         public const string StoreProductName = "Factory VR Safety Training";
         public const string StoreCompanyName = "2 Dude Studios";
 
+        // The desktop build's names: its data folder (records, badge book) is under these, so they never change.
+        public const string DesktopProductName = "factory-twin-starter";
+        public const string DesktopCompanyName = "DefaultCompany";
+
+        [MenuItem("Tools/Factory Twin/Quest/Restore Desktop Name")]
+        private static void RestoreDesktopName()
+        {
+            PlayerSettings.productName = DesktopProductName;
+            PlayerSettings.companyName = DesktopCompanyName;
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[QuestBuild] Desktop name restored: {DesktopCompanyName} / {DesktopProductName}.");
+        }
+
         // The version: bump it before every upload; the code must only ever go up (major*10000 + minor*100 + patch).
         public const int VersionMajor = 0, VersionMinor = 1, VersionPatch = 0;
         public static string VersionName => $"{VersionMajor}.{VersionMinor}.{VersionPatch}";
@@ -231,7 +244,6 @@ namespace TwoDude.FactoryTwin.UI
             int filtered = KeepDesktopPluginsOffAndroid();
             Debug.Log($"[QuestBuild] Keeping {filtered} desktop-only native plugins out of the Android build.");
             // The store name and version for this build only; the desktop's name, company and signing come back after.
-            string productName = PlayerSettings.productName, companyName = PlayerSettings.companyName;
             bool customKeystore = PlayerSettings.Android.useCustomKeystore;
             string keystoreName = PlayerSettings.Android.keystoreName, aliasName = PlayerSettings.Android.keyaliasName;
             BuildReport report;
@@ -254,13 +266,18 @@ namespace TwoDude.FactoryTwin.UI
             }
             finally
             {
-                PlayerSettings.productName = productName;
-                PlayerSettings.companyName = companyName;
+                // Always back to the desktop's own names (not whatever was set before: that could be a store name left
+                // on disk by an earlier build), so the desktop build and its data folder never move.
+                PlayerSettings.productName = DesktopProductName;
+                PlayerSettings.companyName = DesktopCompanyName;
                 PlayerSettings.Android.useCustomKeystore = customKeystore;
                 PlayerSettings.Android.keystoreName = keystoreName;
                 PlayerSettings.Android.keyaliasName = aliasName;
                 PlayerSettings.Android.keystorePass = string.Empty;
                 PlayerSettings.Android.keyaliasPass = string.Empty;
+                // The build writes ProjectSettings to disk with the store names; save the restored ones too, or an
+                // Editor restart brings the store names back as the "desktop" ones (seen 2026-11-13).
+                AssetDatabase.SaveAssets();
             }
             BuildSummary summary = report.summary;
             var text = new System.Text.StringBuilder();
