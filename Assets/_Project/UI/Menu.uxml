@@ -33,6 +33,12 @@
                 <ui:Label text="ISO 10218 · simulated, not safety-rated" class="card__ref" />
                 <ui:Label name="badges-zone" text="" class="card__badges" />
             </ui:Button>
+            <ui:Button name="train-electrical" class="card card--electrical">
+                <ui:Label text="ELECTRICAL SAFETY" class="card__tag" />
+                <ui:Label text="Electrical safety" class="card__title" />
+                <ui:Label text="A drive trips. Switch off, lock out, then test before touch: the screen says 0 V, but is the cabinet dead? Early version: the cabinet scenarios, no score yet." class="card__text" />
+                <ui:Label text="OSHA 1910.333 · NFPA 70E · headset" class="card__ref" />
+            </ui:Button>
             <ui:Button name="train-free" class="card card--free">
                 <ui:Label text="EXPLORE" class="card__tag" />
                 <ui:Label text="Free roam" class="card__title" />

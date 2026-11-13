@@ -108,6 +108,17 @@ namespace TwoDude.FactoryTwin.UI
                 so.FindProperty("start").objectReferenceValue = start;
                 so.ApplyModifiedPropertiesWithoutUndo();
                 log.Append($"Robot drill page on the tablet (scorer {(scorer != null ? "found" : "MISSING")}, start {(start != null ? "found" : "MISSING")}). ");
+
+                TrainingAreaStart bay = roots.SelectMany(g => g.GetComponentsInChildren<TrainingAreaStart>(true)).FirstOrDefault(s => s.Area == TrainingArea.Electrical);
+                VrElectricalMenu elec = tablet.GetComponent<VrElectricalMenu>() ?? tablet.gameObject.AddComponent<VrElectricalMenu>();
+                var es = new SerializedObject(elec);
+                es.FindProperty("document").objectReferenceValue = document;
+                es.FindProperty("context").objectReferenceValue = context;
+                es.FindProperty("vrSwitch").objectReferenceValue = vrSwitch;
+                es.FindProperty("origin").objectReferenceValue = origin;
+                es.FindProperty("start").objectReferenceValue = bay;
+                es.ApplyModifiedPropertiesWithoutUndo();
+                log.Append($"Electrical drill page on the tablet (start {(bay != null ? "found" : "MISSING")}). ");
             }
             else
             {

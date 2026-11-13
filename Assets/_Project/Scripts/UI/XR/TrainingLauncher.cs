@@ -65,6 +65,12 @@ namespace TwoDude.FactoryTwin.UI
                         GoTo(start, "menu-go-cell");
                     StartRobotDrill();
                     break;
+                case TrainingMode.Electrical:
+                    // The bay's first scenario; the tablet's electrical page opens with it (VrElectricalMenu, M27).
+                    if (vr)
+                        GoTo(start, null);
+                    context.Bus.Publish(CellTopics.ElecScenario, SignalValue.FromNumber(1), CellContext.NowUnixMs);
+                    break;
                 default:
                     if (vr)
                         GoTo(start, null);

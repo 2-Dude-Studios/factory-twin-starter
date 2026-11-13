@@ -191,14 +191,7 @@ namespace TwoDude.FactoryTwin.UI
 
         // The robot page is the only one on the tablet while it is open: the main page and the lockout display, and
         // the fire page, stay hidden whatever else wakes the tablet.
-        private void HideOtherPages()
-        {
-            foreach (VisualElement page in new[] { _mainOptions, _hud, _fireOptions, _fireHud })
-            {
-                if (page != null && page.style.display != DisplayStyle.None)
-                    Toggle(page, false);
-            }
-        }
+        private void HideOtherPages() => TabletPages.ShowOnly(_root, "robot-options", "robot-hud");
 
         private string TraineeName()
         {
