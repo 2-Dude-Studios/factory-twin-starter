@@ -13,6 +13,9 @@ namespace TwoDude.FactoryTwin.UI
     /// </summary>
     public sealed class HeadsetPause : MonoBehaviour
     {
+        [Tooltip("How long the presence sensor must read 'off' before the cell pauses: the headset's session blinks it during a scene load.")]
+        [SerializeField, Min(0f)] private float absentSeconds = 0.5f;
+
         [Header("Status (play mode, read-only)")]
         [SerializeField] private bool paused;
 
@@ -22,6 +25,7 @@ namespace TwoDude.FactoryTwin.UI
         private bool _appPaused;
         private bool _present = true;
         private float _timeScale = 1f;
+        private float _absentSince = -1f;
 
         private void OnEnable()
         {
@@ -63,9 +67,21 @@ namespace TwoDude.FactoryTwin.UI
                     break;
                 }
             }
-            if (present != _present)
+            if (present)
             {
-                _present = present;
+                _absentSince = -1f;
+                if (!_present)
+                {
+                    _present = true;
+                    Decide();
+                }
+                return;
+            }
+            if (_absentSince < 0f)
+                _absentSince = Time.unscaledTime;
+            if (_present && Time.unscaledTime - _absentSince >= absentSeconds)
+            {
+                _present = false;
                 Decide();
             }
         }

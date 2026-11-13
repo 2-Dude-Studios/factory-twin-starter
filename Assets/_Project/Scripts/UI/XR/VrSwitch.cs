@@ -34,8 +34,10 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private string lastError;
 
         private bool _switching;
-        private int _frameRateBefore;
-        private RenderPipelineAsset _pipelineBefore;
+
+        // What VR replaced, kept across scene loads so the last switch to stop VR puts the desktop's back.
+        private static int _frameRateBefore;
+        private static RenderPipelineAsset _pipelineBefore;
 
         // VR running when a scene unloads (the menu loading the cell, or back): the next scene's switch starts it
         // again, whether it came from -vr or F11. Reset by the domain reload on entering Play.
@@ -77,8 +79,18 @@ namespace TwoDude.FactoryTwin.UI
 
         private void OnDisable()
         {
-            if (vrRunning)
-                StopVr();
+            if (!vrRunning)
+                return;
+            // Going to another scene with VR on: leave OpenXR running for the next scene's switch to take over.
+            // Stopping and starting it again on every load restarted the headset's session several times (M27).
+            if (_vrAcrossSceneLoad)
+            {
+                if (xrRig != null)
+                    xrRig.SetActive(false);
+                vrRunning = false;
+                return;
+            }
+            StopVr();
         }
 
         public void StartVr()
@@ -97,21 +109,23 @@ namespace TwoDude.FactoryTwin.UI
                 yield break;
             }
 
-            yield return manager.InitializeLoader();
-            if (manager.activeLoader == null)
+            // Still running from the scene before (carried across the load): take it over as it is.
+            bool takeOver = manager.isInitializationComplete && manager.activeLoader != null;
+            if (!takeOver)
             {
-                Fail("OpenXR did not start: is the Quest connected over Link and Meta Horizon Link set as the OpenXR runtime?");
-                yield break;
+                yield return manager.InitializeLoader();
+                if (manager.activeLoader == null)
+                {
+                    Fail("OpenXR did not start: is the Quest connected over Link and Meta Horizon Link set as the OpenXR runtime?");
+                    yield break;
+                }
+                manager.StartSubsystems();
+                _frameRateBefore = Application.targetFrameRate;
+                _pipelineBefore = QualitySettings.renderPipeline;
             }
-
-            manager.StartSubsystems();
-            _frameRateBefore = Application.targetFrameRate;
             Application.targetFrameRate = -1;
             if (vrPipeline != null)
-            {
-                _pipelineBefore = QualitySettings.renderPipeline;
                 QualitySettings.renderPipeline = vrPipeline;
-            }
             SetDesktop(false);
             if (xrRig != null)
             {
@@ -128,7 +142,7 @@ namespace TwoDude.FactoryTwin.UI
             vrRunning = true;
             lastError = string.Empty;
             _switching = false;
-            Debug.Log($"[VrSwitch] VR on ({manager.activeLoader.name}).", this);
+            Debug.Log($"[VrSwitch] VR on ({manager.activeLoader.name}{(takeOver ? ", carried from the scene before" : string.Empty)}).", this);
         }
 
         public void StopVr()
@@ -142,7 +156,7 @@ namespace TwoDude.FactoryTwin.UI
                 manager.DeinitializeLoader();
             }
             Application.targetFrameRate = _frameRateBefore;
-            if (vrPipeline != null)
+            if (vrPipeline != null && _pipelineBefore != null)
                 QualitySettings.renderPipeline = _pipelineBefore;
             SetDesktop(true);
             vrRunning = false;
