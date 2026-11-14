@@ -17,3 +17,12 @@ Licence: BSD-3-Clause (see `LICENSE`); repository Apache-2.0. Credit is owed in 
 
 Geometry and kinematics are otherwise unmodified, so joint limits and link lengths stay true to a UR5e
 (0.85 m reach), which is what the cell layout was sized against.
+
+## Since M29 (2026-11-14): our cobot on these kinematics
+The app no longer shows these meshes. `Tools > Factory Twin > Robot > Use Our Cobot on the Arm` (CobotSetup) removes
+each link's UR visual and collision meshes from the imported arm and puts our own cobot model in their place
+(`Assets/_Project/Art/Robot/Cobot.fbx`, built by `tools/blender/cobot.py`), each link's mesh in that link's frame
+and its convex hull as the collider (none on the fixed base). What still comes from here is the URDF's joint
+layout and limits, kept by the arm's ArticulationBodies, so the BSD-3 notice stays in the Credits. The meshes in
+`meshes/` stay in the repo for reference; no scene references them, so they are not in any build.
+Re-importing the arm (`Import Cell Arm (UR5e)`) brings the UR meshes back: run the cobot menu after it.

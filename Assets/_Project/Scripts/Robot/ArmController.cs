@@ -4,7 +4,7 @@ using UnityEngine;
 namespace TwoDude.FactoryTwin.Robot
 {
     /// <summary>
-    /// Pick station: drives the six UR5e ArticulationBody joints through the baked program and reports the
+    /// Pick station: drives the six ArticulationBody joints (UR5e kinematics, our cobot's look) through the baked program and reports the
     /// arm's state. Knows nothing about signals or MQTT — ArmSignalBridge does that, so this stays testable
     /// and the arm can be swapped without touching the data spine.
     /// </summary>

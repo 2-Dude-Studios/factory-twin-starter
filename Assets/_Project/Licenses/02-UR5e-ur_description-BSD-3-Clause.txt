@@ -2,8 +2,9 @@ UR5e robot description
 
 Source: ros-industrial/universal_robot, package ur_description, commit 39ad110d8f2e8f66856a201cca88aa7a7025e3eb
         https://github.com/ros-industrial/universal_robot
-Used: the UR5e URDF (expanded from xacro) and its visual and collision meshes. The brand-colour material is
-renamed and recoloured; no logos are shown.
+Used: the UR5e URDF (expanded from xacro) for the arm's joint layout and limits (its kinematics). Its meshes are
+not used: the arm you see is our own cobot model, made for this app. Not affiliated with or endorsed by
+Universal Robots.
 Licence: BSD 3-Clause, as published in ur_description/LICENSE and reproduced below.
 
 Copyright (c) the ros-industrial universal_robot contributors.

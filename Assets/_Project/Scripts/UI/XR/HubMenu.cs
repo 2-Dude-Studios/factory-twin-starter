@@ -37,11 +37,11 @@ namespace TwoDude.FactoryTwin.UI
             "The production cell runs on realvirtual.io Digital Twin Starter, included as a compiled component.\n\n" +
             "Factory hall and props: Factory Training | Industry Sample (Unity Asset Store). Fire and smoke: Unity Particle Pack. Arm IK: Fast IK.\n" +
             "Workers: Microsoft Rocketbox avatars and animations (MIT); Animated Human by Quaternius (CC0).\n" +
-            "Robot arm: the UR5e description from ros-industrial/universal_robot (BSD 3-Clause), shown without vendor branding; " +
-            "imported with Unity's URDF Importer (Apache 2.0).\n" +
+            "Robot arm: our own cobot model; its joint layout comes from the UR5e description in ros-industrial/universal_robot " +
+            "(BSD 3-Clause), imported with Unity's URDF Importer (Apache 2.0). Not affiliated with Universal Robots.\n" +
             "Sounds: Large Warehouse/Factory Ambience by fimrod and Electric Sparks by kev_durr, on Freesound (CC0).\n" +
             "Icons: Material Icons by Google (Apache 2.0).\n" +
-            "The electrical cabinet, the arc flash PPE kit and the lockout props were made for this app.\n\n" +
+            "The cobot, the electrical cabinet, the arc flash PPE kit and the lockout props were made for this app.\n\n" +
             "A training demo, not certified training. The safety content is guidance, not legal advice, and the arc flash label " +
             "values come from a made-up study.\n\n" +
             "Next: each third-party notice and licence in full.";
