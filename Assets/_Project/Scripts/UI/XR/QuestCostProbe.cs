@@ -27,6 +27,7 @@ namespace TwoDude.FactoryTwin.UI
         public const string CommandLineFlag = "-probe";
         public const string FireFlag = "-probe-fire";
         public const string RecordsFlag = "-probe-records";
+        public const string CoachFlag = "-probe-coach";
 
         [SerializeField] private Transform env;
         [SerializeField] private Light sun;
@@ -45,21 +46,43 @@ namespace TwoDude.FactoryTwin.UI
             string[] args = Environment.GetCommandLineArgs();
             _fire = Array.IndexOf(args, FireFlag) >= 0;
             _records = Array.IndexOf(args, RecordsFlag) >= 0;
-            if (!_fire && !_records && Array.IndexOf(args, CommandLineFlag) < 0)
+            _coachRun = Array.IndexOf(args, CoachFlag) >= 0;
+            if (!_fire && !_records && !_coachRun && Array.IndexOf(args, CommandLineFlag) < 0)
                 enabled = false;
         }
 
         private bool _fire;
         private bool _records;
+        private bool _coachRun;
 
         private void Start()
         {
             if (enabled)
-                StartCoroutine(_records ? RecordsRun() : _fire ? FireRun() : Run());
+                StartCoroutine(_coachRun ? CoachRun() : _records ? RecordsRun() : _fire ? FireRun() : Run());
         }
 
         // -probe-records: what the app's storage holds now (so a second launch shows what survived the restart), then
         // a robot cell level started and ended, and the storage again: the record and the badge book on the headset.
+        // -probe-coach (M29): the trainer's step-by-step coaching without a trainee. Robot cell level 1 runs for 20 s
+        // (its intro, then the first step's prompt), then the electrical gear-up for 12 s (the first PPE item's
+        // prompt); the [TrainerVoice] log lines say what was spoken.
+        private IEnumerator CoachRun()
+        {
+            yield return new WaitForSeconds(settleSeconds);
+            if (context == null)
+                yield break;
+            Debug.Log("[QuestProbe] coach: robot level 1");
+            context.Bus.Publish(CellTopics.TrainingRobotLevel, SignalValue.FromNumber(1), CellContext.NowUnixMs);
+            yield return new WaitForSeconds(20f);
+            context.Bus.Publish(CellTopics.TrainingRobotLevel, SignalValue.FromNumber(0), CellContext.NowUnixMs);
+            yield return new WaitForSeconds(8f);
+            Debug.Log("[QuestProbe] coach: electrical gear-up");
+            context.Bus.Publish(CellTopics.ElecGearUp, SignalValue.FromNumber(1), CellContext.NowUnixMs);
+            yield return new WaitForSeconds(12f);
+            context.Bus.Publish(CellTopics.ElecGearUp, SignalValue.FromNumber(0), CellContext.NowUnixMs);
+            Debug.Log("[QuestProbe] coach: done");
+        }
+
         private IEnumerator RecordsRun()
         {
             yield return new WaitForSeconds(settleSeconds);
