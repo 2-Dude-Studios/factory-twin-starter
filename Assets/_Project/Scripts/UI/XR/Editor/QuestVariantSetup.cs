@@ -57,9 +57,8 @@ namespace TwoDude.FactoryTwin.UI
         /// </summary>
         private const int QuestMsaaSamples = 1;
 
-        /// <summary>The headset camera's reach, with fog fading the far hall out before it is cut off.</summary>
-        private const float FarClipMetres = 30f;
-        private const float FogStartMetres = 18f;
+        /// <summary>The headset camera's reach: the whole trimmed hall (no fog since 2026-11-14).</summary>
+        private const float FarClipMetres = 60f;
         private static readonly Color HallFog = new Color(0.72f, 0.74f, 0.76f);
 
         /// <summary>The hall's shell: never trimmed by distance, so no area looks out through a hole.</summary>
@@ -82,7 +81,7 @@ namespace TwoDude.FactoryTwin.UI
 
         /// <summary>
         /// Large, light pieces always stay, whatever their name: a wall section is named after what hangs on it
-        /// (wall_chargers_01 is 9 m of wall in 424 triangles), and leaving it out opens a hole into the fog.
+        /// (wall_chargers_01 is 9 m of wall in 424 triangles), and leaving it out opens a hole in the wall.
         /// </summary>
         private const float PanelMetres = 5f;
         private const long PanelTriangles = 1000;
@@ -409,16 +408,24 @@ namespace TwoDude.FactoryTwin.UI
             return name.Length > 60 ? name.Substring(0, 60) : name;
         }
 
-        /// <summary>The headset camera draws to FarClipMetres; linear fog in the hall's grey hides the edge.</summary>
+        /// <summary>
+        /// The headset camera draws to FarClipMetres, far enough for the whole trimmed hall (the areas plus 8 m), with no
+        /// fog: an industrial hall reads clear (you, 2026-11-14). It had 30 m with fog from 18 m to hide the cut-off.
+        /// </summary>
+        /// <summary>Fog off in the open scene too (Cell.unity for the PC and Link; you, 2026-11-14). Save the scene to keep it.</summary>
+        [MenuItem("Tools/Factory Twin/Fog Off in Open Scene")]
+        private static void FogOffInOpenScene()
+        {
+            RenderSettings.fog = false;
+            EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+            Debug.Log($"[QuestVariant] Fog off in {SceneManager.GetActiveScene().name}; save the scene to keep it.");
+        }
+
         private static void Distance(Scene scene, StringBuilder log)
         {
             Scene before = SceneManager.GetActiveScene();
             SceneManager.SetActiveScene(scene);
-            RenderSettings.fog = true;
-            RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogColor = HallFog;
-            RenderSettings.fogStartDistance = FogStartMetres;
-            RenderSettings.fogEndDistance = FarClipMetres;
+            RenderSettings.fog = false;
             SceneManager.SetActiveScene(before);
 
             int cameras = 0;
@@ -432,7 +439,7 @@ namespace TwoDude.FactoryTwin.UI
                 eye.backgroundColor = HallFog;
                 cameras++;
             }
-            log.Append($"Headset camera draws to {FarClipMetres:F0} m with fog from {FogStartMetres:F0} m ({cameras} camera). ");
+            log.Append($"Headset camera draws to {FarClipMetres:F0} m, no fog ({cameras} camera). ");
         }
 
         private static long Triangles(Renderer r)
