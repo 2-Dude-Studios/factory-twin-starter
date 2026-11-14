@@ -343,7 +343,9 @@ namespace TwoDude.FactoryTwin.UI
             foreach (Renderer r in env.GetComponentsInChildren<Renderer>(true))
             {
                 // A renderer without a lightmap gets Simple Lit copies (shaded by the sun), the rest Baked Lit.
-                bool mapped = r.lightmapIndex >= 0 && r.lightmapIndex < 0xFFFE;
+                // (Its lightmap index is not readable in the variant opened beside Cell.unity: the static flag is.)
+                bool mapped = GameObjectUtility.GetStaticEditorFlags(r.gameObject).HasFlag(StaticEditorFlags.ContributeGI)
+                    && r is MeshRenderer mesh && mesh.receiveGI == ReceiveGI.Lightmaps;
                 Dictionary<Material, Material> table = mapped ? copies : litCopies;
                 Material[] materials = r.sharedMaterials;
                 bool changed = false;
