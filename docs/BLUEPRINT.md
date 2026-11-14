@@ -461,7 +461,7 @@ All project code is under `Assets/_Project/`: about 7,800 lines of runtime and e
 | `Licenses/` | Six notice files shown under Credits and copied next to the build |
 | `Audio/` | Factory ambience and spark crackle (CC0, Freesound) |
 | `Materials/` | `StackLightLamp.mat` |
-| `Robots/ur/` | De-branded UR5e URDF and meshes, BSD-3 licence, provenance README |
+| `Robots/ur/` | De-branded UR5e URDF and meshes, BSD-3 licence, provenance README. Since M29 only its joint layout is used; the arm wears our cobot (`Art/Robot/Cobot.fbx`, `tools/blender/cobot.py`) |
 | `Settings/` | Stock URP assets, unused fallback; the live pipeline is the sample's `PC_RPAsset_DC` |
 | `Prefabs/` | Empty |
 
