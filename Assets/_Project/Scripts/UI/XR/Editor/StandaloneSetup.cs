@@ -230,6 +230,9 @@ namespace TwoDude.FactoryTwin.UI
             vs.FindProperty("context").objectReferenceValue = context;
             vs.FindProperty("hub").objectReferenceValue = session;
             vs.FindProperty("source").objectReferenceValue = audio;
+            GameObject[] sceneRoots = session.gameObject.scene.GetRootGameObjects();
+            vs.FindProperty("robot").objectReferenceValue = sceneRoots.SelectMany(g => g.GetComponentsInChildren<RobotCellScorer>(true)).FirstOrDefault();
+            vs.FindProperty("fire").objectReferenceValue = sceneRoots.SelectMany(g => g.GetComponentsInChildren<FireDrillScorer>(true)).FirstOrDefault();
             SerializedProperty cues = vs.FindProperty("cues");
             cues.arraySize = takes.Length;
             for (int i = 0; i < takes.Length; i++)
@@ -243,7 +246,7 @@ namespace TwoDude.FactoryTwin.UI
                     clips.GetArrayElementAtIndex(k).objectReferenceValue = list[k];
             }
             vs.ApplyModifiedPropertiesWithoutUndo();
-            log.Append($"Trainer voice: {takes.Length} cues, {takes.Sum(g => g.Count())} clips. ");
+            log.Append($"Trainer voice: {takes.Length} cues, {takes.Sum(g => g.Count())} clips, coaching the robot cell {(vs.FindProperty("robot").objectReferenceValue != null ? "on" : "MISSING")}, fire {(vs.FindProperty("fire").objectReferenceValue != null ? "on" : "MISSING")}. ");
 
             var managers = origin != null
                 ? origin.GetComponentsInChildren<UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets.ControllerInputActionManager>(true)
@@ -286,6 +289,24 @@ namespace TwoDude.FactoryTwin.UI
             var ms = new SerializedObject(menu);
             ms.FindProperty("comfort").objectReferenceValue = comfort;
             ms.ApplyModifiedPropertiesWithoutUndo();
+
+            // The same options on the tablet (M29), beside the robot page that already drives the tablet's document.
+            VrRobotMenu robotPage = sceneRoots.SelectMany(g => g.GetComponentsInChildren<VrRobotMenu>(true)).FirstOrDefault();
+            Object tablet = robotPage != null ? new SerializedObject(robotPage).FindProperty("document").objectReferenceValue : null;
+            if (robotPage != null && tablet != null)
+            {
+                VrComfortMenu page = robotPage.GetComponent<VrComfortMenu>() ?? robotPage.gameObject.AddComponent<VrComfortMenu>();
+                var ps = new SerializedObject(page);
+                ps.FindProperty("document").objectReferenceValue = tablet;
+                ps.FindProperty("comfort").objectReferenceValue = comfort;
+                ps.FindProperty("context").objectReferenceValue = context;
+                ps.ApplyModifiedPropertiesWithoutUndo();
+                log.Append("Comfort page on the tablet. ");
+            }
+            else
+            {
+                log.Append("Comfort page on the tablet: NO tablet found. ");
+            }
             log.Append($"Comfort: {managers.Length} controller managers, teleport only and snap turn by default. ");
         }
 

@@ -45,7 +45,10 @@
                         <ui:Button name="robot-reset" text="Safety reset" class="menu__button tablet__half" />
                     </ui:VisualElement>
                     <ui:Button name="robot-start" text="Back to the start" class="menu__button" />
-                    <ui:Button name="robot-home" text="End drill: main menu" class="menu__button menu__button--exit" />
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="robot-comfort" text="Comfort" class="menu__button tablet__half" />
+                        <ui:Button name="robot-home" text="End drill: main menu" class="menu__button menu__button--exit tablet__half" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <!-- Electrical safety drill display (VrElectricalMenu, M27): the cabinet as the dashboard's panel shows it. -->
                 <ui:VisualElement name="elec-hud" class="tablet__display" picking-mode="Ignore" style="display: none;">
@@ -70,7 +73,10 @@
                         <ui:Button name="elec-end" text="End scenario" class="menu__button menu__button--key tablet__half" />
                         <ui:Button name="elec-start" text="Back to the start" class="menu__button tablet__half" />
                     </ui:VisualElement>
-                    <ui:Button name="elec-home" text="End drill: main menu" class="menu__button menu__button--exit" />
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="elec-comfort" text="Comfort" class="menu__button tablet__half" />
+                        <ui:Button name="elec-home" text="End drill: main menu" class="menu__button menu__button--exit tablet__half" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="fire-options" class="tablet__options" style="display: none;">
                     <ui:Label text="START A FIRE" class="menu__group" />
@@ -86,7 +92,10 @@
                         <ui:Button name="fire-station" text="Back to station" class="menu__button tablet__half" />
                         <ui:Button name="ext-none" text="Put it back" class="menu__button tablet__half" />
                     </ui:VisualElement>
-                    <ui:Button name="fire-end" text="End drill: main menu" class="menu__button menu__button--exit" />
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="fire-comfort" text="Comfort" class="menu__button tablet__half" />
+                        <ui:Button name="fire-end" text="End drill: main menu" class="menu__button menu__button--exit tablet__half" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="main-options" class="tablet__options">
                     <ui:Label text="TRAINING" class="menu__group" />
@@ -110,7 +119,19 @@
                         <ui:Button name="menu-area-fire" text="Fire" class="menu__button" />
                         <ui:Button name="menu-area-electrical" text="Electrical" class="menu__button" />
                     </ui:VisualElement>
-                    <ui:Button name="menu-exit" text="Exit VR" class="menu__button menu__button--exit" />
+                    <ui:VisualElement class="tablet__row">
+                        <ui:Button name="main-comfort" text="Comfort" class="menu__button tablet__half" />
+                        <ui:Button name="menu-exit" text="Exit VR" class="menu__button menu__button--exit tablet__half" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <!-- M29: comfort options from any page, mid-drill too (VrComfortMenu); Back returns to the page it came from. -->
+                <ui:VisualElement name="comfort-options" class="tablet__options" style="display: none;">
+                    <ui:Label text="COMFORT" class="menu__group" />
+                    <ui:Button name="tablet-comfort-move" text="" class="menu__button" />
+                    <ui:Button name="tablet-comfort-turn" text="" class="menu__button" />
+                    <ui:Button name="tablet-comfort-vignette" text="" class="menu__button" />
+                    <ui:Button name="tablet-comfort-voice" text="" class="menu__button" />
+                    <ui:Button name="tablet-comfort-back" text="Back" class="menu__button menu__button--key" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:Label text="Menu button or Y: show or hide the tablet" class="tablet__hint" />
