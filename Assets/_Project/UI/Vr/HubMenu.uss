@@ -50,7 +50,7 @@
 .hub__fine { font-size: 19px; color: rgb(140, 148, 156); margin: 0; padding: 0; }
 .hub__footer-text { flex-grow: 1; flex-shrink: 1; }
 .hub__guide-body { flex-grow: 1; padding: 18px 26px; border-radius: 14px; background-color: rgb(30, 35, 40); }
-.hub__guide-line { font-size: 30px; color: rgb(225, 229, 233); white-space: normal; margin: 0 0 16px 0; padding: 0; }
+.hub__guide-line { font-size: 38px; color: rgb(225, 229, 233); white-space: normal; margin: 0 0 22px 0; padding: 0; }
 .hub__guide-line--key { color: rgb(255, 196, 70); -unity-font-style: bold; margin-top: 8px; }
 .hub__toggle { height: 92px; margin: 0 0 16px 0; padding: 0 26px; font-size: 30px; -unity-text-align: middle-left; border-radius: 14px;
     border-width: 0; background-color: rgb(44, 50, 57); color: rgb(240, 242, 244); }

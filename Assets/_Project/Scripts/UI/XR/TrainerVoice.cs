@@ -219,6 +219,7 @@ namespace TwoDude.FactoryTwin.UI
             source.clip = clip;
             source.Play();
             _playing = weight;
+            Debug.Log($"[TrainerVoice] {clip.name}", this);
             return true;
         }
     }
