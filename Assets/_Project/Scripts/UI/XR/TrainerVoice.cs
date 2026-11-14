@@ -9,7 +9,8 @@ namespace TwoDude.FactoryTwin.UI
     /// <summary>
     /// The headset hub (M29): the AI trainer's voice. Recorded lines (ElevenLabs, the Tech Narrator voice; the script is
     /// tools/voice/trainer_lines.json) greet the trainee at the hub, introduce each drill, praise steps, warn on mistakes,
-    /// call the fire and the PPE, and read out the end of a run (<see cref="TrainerLines"/> picks which). Important lines
+    /// call the fire and the PPE, coach every drill step by step (the next step's prompt, <see cref="DrillCoach"/>), and
+    /// read out the end of a run (<see cref="TrainerLines"/> picks which). Important lines
     /// cut in over minor ones; praise is spaced out so it never talks over every step. Muted from the comfort panel.
     /// It reads the signal bus, the hub session and the run results only, and pauses with the cell (HeadsetPause stops
     /// the audio listener).
@@ -29,7 +30,13 @@ namespace TwoDude.FactoryTwin.UI
         [SerializeField] private CellContext context;
         [SerializeField] private HubSession hub;
         [SerializeField] private AudioSource source;
+        [Tooltip("For the robot cell's next step (step-by-step coaching).")]
+        [SerializeField] private RobotCellScorer robot;
+        [Tooltip("For the fire drill's PASS sequence (step-by-step coaching).")]
+        [SerializeField] private FireDrillScorer fire;
         [SerializeField] private Cue[] cues = Array.Empty<Cue>();
+        [Tooltip("A coaching prompt waits for whatever the trainer is saying, then this long.")]
+        [SerializeField, Min(0f)] private float coachPause = 0.6f;
         [Tooltip("Seconds after start-up before the greeting (the headset settles first).")]
         [SerializeField, Min(0f)] private float greetDelay = 3f;
         [Tooltip("At least this many seconds between two lines of praise.")]
@@ -46,6 +53,9 @@ namespace TwoDude.FactoryTwin.UI
         private Coroutine _sequence, _robotIntro;
         private int _robotSteps, _lockoutStep = -1, _ppeWorn;
         private int _fireStage;
+        private string _lastCoach;
+        private Coroutine _coach;
+        private readonly Bay _bay = new Bay();
 
         private void Awake()
         {
@@ -77,7 +87,37 @@ namespace TwoDude.FactoryTwin.UI
                 context.Bus.Subscribe(CellTopics.ElecPpeRefused.ToString(), _ => Say(TrainerLines.Refused, Weight.Normal)),
                 context.Bus.Subscribe(CellTopics.CabinetRefused.ToString(), _ => Say(TrainerLines.Refused, Weight.Normal)),
                 context.Bus.Subscribe(CellTopics.FireStage.ToString(), OnFireStage),
+                context.Bus.Subscribe(CellTopics.FireAlarm.ToString(), _ => CoachFire()),
+                context.Bus.Subscribe(CellTopics.FireDischarge.ToString(), _ => CoachFire()),
+                context.Bus.Subscribe(CellTopics.FireExtinguished.ToString(), OnExtinguished),
+                Cabinet(CellTopics.ElecGearUp, v => _bay.State.GearingUp = v > 0d),
+                Cabinet(CellTopics.ElecScenario, v => _bay.State.ScenarioRunning = v > 0d),
+                Cabinet(CellTopics.ElecPpeWorn, v => _bay.State.PpeWorn = (int)v),
+                Cabinet(CellTopics.CabinetDisconnect, v => _bay.State.Q1Open = v > 0d),
+                Cabinet(CellTopics.CabinetLocked, v => _bay.State.Q1Locks = (int)v),
+                Cabinet(CellTopics.CabinetUpsFeed, v => _bay.State.UpsOpen = v > 0d),
+                Cabinet(CellTopics.CabinetUpsLocked, v => _bay.State.UpsLocks = (int)v),
+                Cabinet(CellTopics.CabinetDoorOpen, v => _bay.State.DoorOpen = v > 0d),
+                Cabinet(CellTopics.CabinetControlVolts, v => _bay.State.ControlVolts = v),
+                Cabinet(CellTopics.CabinetDcBusVolts, v => _bay.State.DcBusVolts = v),
             };
+            if (fire != null)
+                fire.Scored += OnFireScored;
+        }
+
+        // One electrical topic into the bay's state, then the coaching looks again.
+        private IDisposable Cabinet(TopicPath topic, Action<double> set) =>
+            context.Bus.Subscribe(topic.ToString(), m =>
+            {
+                set(m.Value.AsNumber);
+                string cue = DrillCoach.Electrical(_bay.State);
+                Coach(cue, cue == "coach_elec_backfeed" ? Weight.Urgent : Weight.Normal);
+            });
+
+        // The electrical bay as the coaching sees it (a class, so the per-topic setters change one copy).
+        private sealed class Bay
+        {
+            public CabinetState State;
         }
 
         private void OnDisable()
@@ -91,6 +131,8 @@ namespace TwoDude.FactoryTwin.UI
             foreach (IDisposable s in _subscriptions)
                 s?.Dispose();
             _subscriptions = Array.Empty<IDisposable>();
+            if (fire != null)
+                fire.Scored -= OnFireScored;
         }
 
         private IEnumerator Start()
@@ -110,6 +152,7 @@ namespace TwoDude.FactoryTwin.UI
             _robotSteps = 0;
             _lockoutStep = -1;
             _ppeWorn = 0;
+            _lastCoach = null;
             // The robot drill's intro comes with its level (OnRobotLevel), once the hub has settled which one.
             if (mode != TrainingMode.RobotZone)
                 Say(TrainerLines.Intro(mode, level), Weight.Normal);
@@ -124,6 +167,7 @@ namespace TwoDude.FactoryTwin.UI
             if (_robotIntro != null)
                 StopCoroutine(_robotIntro);
             _robotIntro = level > 0 ? StartCoroutine(RobotIntro(level)) : null;
+            _lastCoach = null;
         }
 
         private IEnumerator RobotIntro(int level)
@@ -131,13 +175,23 @@ namespace TwoDude.FactoryTwin.UI
             yield return new WaitForSeconds(robotIntroDelay);
             _robotIntro = null;
             Say(TrainerLines.RobotIntro(level), Weight.Normal);
+            CoachRobot();
+        }
+
+        private void CoachRobot()
+        {
+            if (robot != null)
+                Coach(DrillCoach.Robot(robot.RunningLevel, robot.NextStep), Weight.Normal);
         }
 
         private void OnRobotStep(SignalMessage m)
         {
             int steps = (int)m.Value.AsNumber;
             if (steps > _robotSteps)
+            {
                 Praise();
+                CoachRobot();
+            }
             _robotSteps = steps;
         }
 
@@ -147,6 +201,8 @@ namespace TwoDude.FactoryTwin.UI
             if (_lockoutStep >= 0 && step > _lockoutStep)
                 Praise();
             _lockoutStep = step;
+            // training/step is the next step's number (1 = the first), 0 when no run is going.
+            Coach(DrillCoach.Lockout(step - 1), Weight.Normal);
         }
 
         private void OnPpeWorn(SignalMessage m)
@@ -173,6 +229,51 @@ namespace TwoDude.FactoryTwin.UI
             else if (stage == (int)FireStage.BeyondIncipient && _fireStage != stage)
                 Say(TrainerLines.FireLeave, Weight.Urgent);
             _fireStage = stage;
+        }
+
+        private void OnFireScored(ScoreEvent e) => CoachFire();
+
+        private void CoachFire()
+        {
+            FireDrillScore score = fire != null ? fire.Score : null;
+            if (score == null || !score.Running)
+                return;
+            Coach(DrillCoach.Fire(score.AlarmDone, score.PinDone, score.HoseDone, score.DischargeDone, score.KnockedDownDone, score.FleeOnly), Weight.Normal);
+        }
+
+        private void OnExtinguished(SignalMessage m)
+        {
+            if (m.Value.AsNumber > 0d && _fireStage > (int)FireStage.None)
+                Coach("coach_fire_out", Weight.Normal);
+        }
+
+        // Step-by-step coaching: the prompt for what comes next, once, after whatever is being said (praise, an intro).
+        // An urgent prompt (a live control circuit) cuts in at once.
+        private void Coach(string cue, Weight weight)
+        {
+            if (cue == null || cue == _lastCoach)
+                return;
+            _lastCoach = cue;
+            if (_coach != null)
+                StopCoroutine(_coach);
+            _coach = weight == Weight.Urgent ? null : StartCoroutine(CoachAfter(cue));
+            if (weight == Weight.Urgent)
+                Say(cue, Weight.Urgent);
+        }
+
+        private IEnumerator CoachAfter(string cue)
+        {
+            yield return new WaitForSeconds(coachPause);
+            float waited = 0f;
+            while (source != null && (source.isPlaying || AudioListener.pause) && waited < 12f)
+            {
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            yield return new WaitForSeconds(coachPause);
+            _coach = null;
+            if (cue == _lastCoach)
+                Say(cue, Weight.Normal);
         }
 
         private void OnRun(RunResult result)

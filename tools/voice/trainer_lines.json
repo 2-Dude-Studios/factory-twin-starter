@@ -1,31 +1,226 @@
 {
   "_about": "The in-app AI trainer's lines (M29): cue id -> variants. Generated with ElevenLabs (the Tech Narrator voice) into Assets/_Project/Audio/Trainer/<cue>_<n>.mp3. A training demo: never 'certified' or 'compliant'.",
-  "greet_first": ["Welcome to Factory VR Safety Training. I'm your trainer. Pick a drill on the board in front of you, and I'll talk you through it."],
-  "greet_back": ["Welcome back. Today's challenge is on the board: nail it for double XP.", "Good to see you again. Ready to earn some XP?"],
-  "hub_back": ["Back at the hub. Pick your next drill.", "Nice. What's next on the board?"],
-  "intro_robot_1": ["Robot cell, level one. Walk towards the cell. In the yellow zone the arm slows down, in the red zone it stops. Then reset it from outside the zone."],
-  "intro_robot_2": ["Level two. A part has jammed at the gate. Stop the line at the control station, go in and clear it, come out, reset, and restart."],
-  "intro_robot_3": ["Level three. Clear the jam again, and keep your eyes open. If a colleague walks into the cell, stop the line."],
-  "intro_robot_4": ["Level four, the assessment. This one counts. Show me everything you've learned."],
-  "intro_lockout": ["Lockout, tagout. The machining centre has a fault. Shut it down, isolate it, put your lock and tag on, then try to start it. If it can start, you're not safe yet."],
-  "intro_fire": ["Fire safety. When the fire starts, raise the alarm first. Then pick the right extinguisher and sweep at the base. If it grows past the incipient stage, get out."],
-  "intro_electrical": ["Electrical safety. Before you touch that cabinet, gear up. Put on every piece of arc flash PPE on the board, in order."],
-  "intro_free": ["Free roam. Take your time and explore the cell. Keep out of the robot's red zone."],
-  "step": ["Nice work.", "That's it.", "Good call.", "Spot on."],
-  "mistake": ["Careful. That one costs you points.", "Not quite. Think about the order.", "Watch it. Safety first."],
-  "refused": ["Not yet. Check what's still missing."],
-  "fire_start": ["Fire! Raise the alarm first."],
-  "fire_leave": ["It's past the incipient stage. Leave it, and get out by your exit route."],
-  "ppe_done": ["You're suited up. Now, over to the cabinet."],
-  "result_3": ["Three stars! Flawless. That's how a pro does it."],
-  "result_2": ["Two stars. A solid run, with one small slip to tidy up."],
-  "result_1": ["One star. You passed. Check the card for what to look at again."],
-  "result_fail": ["Not this time. Read the card, then give it another go."],
-  "result_critical": ["That run had a critical mistake. In a real plant, that could hurt someone. Read what went wrong, then try again."],
-  "result_scored": ["Drill complete. Check your points on the card."],
-  "new_best": ["New personal best!"],
-  "new_badge": ["And you've earned a badge."],
-  "rank_up": ["Rank up! You've been promoted."],
-  "daily_done": ["Daily challenge complete. Double XP is yours."],
-  "streak": ["Your training streak is still going. Come back tomorrow to keep it alive."]
+  "greet_first": [
+    "Welcome to Factory VR Safety Training. I'm your trainer. Pick a drill on the board in front of you, and I'll talk you through it."
+  ],
+  "greet_back": [
+    "Welcome back. Today's challenge is on the board: nail it for double XP.",
+    "Good to see you again. Ready to earn some XP?"
+  ],
+  "hub_back": [
+    "Back at the hub. Pick your next drill.",
+    "Nice. What's next on the board?"
+  ],
+  "intro_robot_1": [
+    "Robot cell, level one. Walk towards the cell. In the yellow zone the arm slows down, in the red zone it stops. Then reset it from outside the zone."
+  ],
+  "intro_robot_2": [
+    "Level two: servicing the cell. Stop the line at the control station, go into the cell, come back out, reset from outside, and restart the line."
+  ],
+  "intro_robot_3": [
+    "Level three. A part has jammed at the gate. Stop the line, go in and clear it, then come out, reset and restart. And watch out: if a colleague walks into the cell, stop the line."
+  ],
+  "intro_robot_4": [
+    "Level four, the assessment. This one counts. Show me everything you've learned."
+  ],
+  "intro_lockout": [
+    "Lockout, tagout. The machining centre has a fault. Shut it down, isolate it, put your lock and tag on, then try to start it. If it can start, you're not safe yet."
+  ],
+  "intro_fire": [
+    "Fire safety. When the fire starts, raise the alarm first. Then pick the right extinguisher and sweep at the base. If it grows past the incipient stage, get out."
+  ],
+  "intro_electrical": [
+    "Electrical safety. Before you touch that cabinet, gear up. Put on every piece of arc flash PPE on the board, in order."
+  ],
+  "intro_free": [
+    "Free roam. Take your time and explore the cell. Keep out of the robot's red zone."
+  ],
+  "step": [
+    "Nice work.",
+    "That's it.",
+    "Good call.",
+    "Spot on."
+  ],
+  "mistake": [
+    "Careful. That one costs you points.",
+    "Not quite. Think about the order.",
+    "Watch it. Safety first."
+  ],
+  "refused": [
+    "Not yet. Check what's still missing."
+  ],
+  "fire_start": [
+    "Fire! Raise the alarm first."
+  ],
+  "fire_leave": [
+    "It's past the incipient stage. Leave it, and get out by your exit route."
+  ],
+  "ppe_done": [
+    "You're suited up. Now, over to the cabinet."
+  ],
+  "result_3": [
+    "Three stars! Flawless. That's how a pro does it."
+  ],
+  "result_2": [
+    "Two stars. A solid run, with one small slip to tidy up."
+  ],
+  "result_1": [
+    "One star. You passed. Check the card for what to look at again."
+  ],
+  "result_fail": [
+    "Not this time. Read the card, then give it another go."
+  ],
+  "result_critical": [
+    "That run had a critical mistake. In a real plant, that could hurt someone. Read what went wrong, then try again."
+  ],
+  "result_scored": [
+    "Drill complete. Check your points on the card."
+  ],
+  "new_best": [
+    "New personal best!"
+  ],
+  "new_badge": [
+    "And you've earned a badge."
+  ],
+  "rank_up": [
+    "Rank up! You've been promoted."
+  ],
+  "daily_done": [
+    "Daily challenge complete. Double XP is yours."
+  ],
+  "streak": [
+    "Your training streak is still going. Come back tomorrow to keep it alive."
+  ],
+  "coach_robot_warn_in": [
+    "Walk towards the arm until you're in the yellow zone."
+  ],
+  "coach_robot_warn_out": [
+    "See it slow down? Now step back out."
+  ],
+  "coach_robot_stop_in": [
+    "Now step into the red zone, and watch the arm stop."
+  ],
+  "coach_robot_stop_out": [
+    "Step back out. Notice it doesn't restart by itself."
+  ],
+  "coach_robot_reset": [
+    "Press the reset at the control station, from outside the zone."
+  ],
+  "coach_robot_line_stop": [
+    "First, stop the line at the control station."
+  ],
+  "coach_robot_enter": [
+    "The line's stopped. Now you can go into the cell."
+  ],
+  "coach_robot_clear": [
+    "Stand at the gate for three seconds to clear the part."
+  ],
+  "coach_robot_exit": [
+    "Done in there. Come back out of the cell."
+  ],
+  "coach_robot_restart": [
+    "All clear. Restart the line."
+  ],
+  "coach_robot_colleague": [
+    "Keep watching. If anyone walks into the cell, stop the line."
+  ],
+  "coach_robot_recover": [
+    "Your colleague is clear. Reset if you need to, then restart the line."
+  ],
+  "coach_lockout_0": [
+    "First, read the machine's energy control procedure on the board."
+  ],
+  "coach_lockout_1": [
+    "Tell the affected employees you're about to lock it out."
+  ],
+  "coach_lockout_2": [
+    "Now stop the line."
+  ],
+  "coach_lockout_3": [
+    "Isolate the machining centre at its main isolator."
+  ],
+  "coach_lockout_4": [
+    "Apply your lock and your tag to the isolator."
+  ],
+  "coach_lockout_5": [
+    "Release the stored energy: let the spindle stop, and dump the air."
+  ],
+  "coach_lockout_6": [
+    "Now verify it. Try to start the machine. Nothing should move."
+  ],
+  "coach_lockout_7": [
+    "It's safe. Change the tool."
+  ],
+  "coach_lockout_8": [
+    "Inspect your work: tools out, guards back on."
+  ],
+  "coach_lockout_9": [
+    "Check the area. Make sure everyone's clear."
+  ],
+  "coach_lockout_10": [
+    "Now remove your lock and tag."
+  ],
+  "coach_lockout_11": [
+    "Let everyone know the lock and tag are off."
+  ],
+  "coach_lockout_12": [
+    "Restore energy at the isolator."
+  ],
+  "coach_lockout_13": [
+    "Last step. Restart the line."
+  ],
+  "coach_fire_pin": [
+    "Good. Now grab the right extinguisher for this class of fire, and pull the pin."
+  ],
+  "coach_fire_aim": [
+    "Aim the hose low, at the base of the fire."
+  ],
+  "coach_fire_squeeze": [
+    "Squeeze the handle, and sweep side to side."
+  ],
+  "coach_fire_keep": [
+    "It's down, but keep sweeping until it's fully out."
+  ],
+  "coach_fire_out": [
+    "Fire's out. Well done. Stay alert for a reflash."
+  ],
+  "coach_ppe_1": [
+    "First, the arc-rated balaclava. Hold it to your head."
+  ],
+  "coach_ppe_2": [
+    "Next, your safety glasses."
+  ],
+  "coach_ppe_3": [
+    "Now the hearing protection."
+  ],
+  "coach_ppe_4": [
+    "The hard hat with the arc-rated face shield."
+  ],
+  "coach_ppe_5": [
+    "The arc-rated jacket. Hold it against your chest."
+  ],
+  "coach_ppe_6": [
+    "Last, the rubber insulating gloves with their leather protectors."
+  ],
+  "coach_elec_q1": [
+    "Switch the disconnect, Q one, to off."
+  ],
+  "coach_elec_lock": [
+    "Now hang your padlock and tag on Q one."
+  ],
+  "coach_elec_sources": [
+    "Before you trust that zero, ask yourself: is anything else feeding this cabinet?"
+  ],
+  "coach_elec_backfeed": [
+    "Stop! The control circuit is still live, fed from the UPS. Open the UPS breaker, and lock it too."
+  ],
+  "coach_elec_door": [
+    "You're locked out. Now open the cabinet door."
+  ],
+  "coach_elec_dc": [
+    "Wait. The drive's DC bus still holds a charge. Give it time to discharge."
+  ],
+  "coach_elec_safe": [
+    "Everything reads dead, and it's locked. That's a safe cabinet."
+  ]
 }

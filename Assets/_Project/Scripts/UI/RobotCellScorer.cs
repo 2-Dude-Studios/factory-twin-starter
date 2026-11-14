@@ -44,6 +44,22 @@ namespace TwoDude.FactoryTwin.UI
         /// <summary>The running level's points so far (the step popups, M28).</summary>
         public int Points => points;
 
+        /// <summary>The running level (1–4), or 0 when none runs.</summary>
+        public int RunningLevel => _drill.Score != null && _drill.Score.Result == DrillResult.InProgress ? _drill.Level : 0;
+
+        /// <summary>The running level's next required step not done yet (its id), or null (M29, the trainer's coaching).</summary>
+        public string NextStep
+        {
+            get
+            {
+                DrillScore score = _drill.Score;
+                if (score == null || score.Result != DrillResult.InProgress)
+                    return null;
+                List<DrillStep> missing = score.Missing();
+                return missing.Count > 0 ? missing[0].Id : null;
+            }
+        }
+
         /// <summary>The trainee from here on (the Meta account's name on the headset, M28); the records and the badge
         /// book go under it.</summary>
         public void SetTrainee(string name)
