@@ -119,6 +119,7 @@ namespace TwoDude.FactoryTwin.UI
                 if (env != null)
                     LightMaterials(env, log);
                 Distance(scene, log);
+                NoReflections(scene, log);
                 StandaloneSetup.Standalone(scene, log);
                 StandaloneSetup.Controls(scene, log);
                 Wire(scene, env, questPipeline, log);
@@ -422,6 +423,29 @@ namespace TwoDude.FactoryTwin.UI
             RenderSettings.fog = false;
             EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
             Debug.Log($"[QuestVariant] Fog off in {SceneManager.GetActiveScene().name}; save the scene to keep it.");
+        }
+
+        /// <summary>
+        /// No reflections on the headset (you, 2026-11-14: remove reflection for performance): the reflection probes are
+        /// left out and the sky's environment reflection is off, so lit surfaces sample no cubemap. The hall is Baked Lit
+        /// already (no reflections); this takes them off the machines, props and drills too.
+        /// </summary>
+        private static void NoReflections(Scene scene, StringBuilder log)
+        {
+            int probes = 0;
+            foreach (ReflectionProbe probe in scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<ReflectionProbe>(true)).ToArray())
+            {
+                Object.DestroyImmediate(probe);
+                probes++;
+            }
+            Scene before = SceneManager.GetActiveScene();
+            SceneManager.SetActiveScene(scene);
+            RenderSettings.defaultReflectionMode = DefaultReflectionMode.Custom;
+            RenderSettings.customReflectionTexture = null;
+            RenderSettings.reflectionIntensity = 0f;
+            RenderSettings.reflectionBounces = 1;
+            SceneManager.SetActiveScene(before);
+            log.Append($"No reflections: {probes} reflection probes left out, environment reflection off. ");
         }
 
         private static void Distance(Scene scene, StringBuilder log)
