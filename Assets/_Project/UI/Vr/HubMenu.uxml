@@ -42,7 +42,7 @@
             <ui:VisualElement name="hub-guide-how" class="hub__guide-body">
                 <ui:Label text="Press: point at a button and pull the trigger, or touch it with your finger." class="hub__guide-line" />
                 <ui:Label text="Pick up: grip to hold the extinguisher, a padlock or a piece of PPE." class="hub__guide-line" />
-                <ui:Label text="Move: push a thumbstick forward, aim at the floor, let go to teleport." class="hub__guide-line" />
+                <ui:Label text="Move: walk with the left thumbstick, or push the right one forward, aim at the floor and let go to teleport." class="hub__guide-line" />
                 <ui:Label text="Turn: right thumbstick left or right." class="hub__guide-line" />
                 <ui:Label text="Tablet: press Y on the left controller for the drill's steps and the way back here." class="hub__guide-line" />
                 <ui:Label text="Hands work too: pinch to press and to pick things up." class="hub__guide-line" />

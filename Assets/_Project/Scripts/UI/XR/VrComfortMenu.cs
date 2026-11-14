@@ -81,7 +81,7 @@ namespace TwoDude.FactoryTwin.UI
         {
             if (_root == null || comfort == null)
                 return;
-            SetText("tablet-comfort-move", comfort.SmoothMove ? "Movement: smooth + teleport" : "Movement: teleport only");
+            SetText("tablet-comfort-move", comfort.SmoothMove ? "Movement: walk + teleport" : "Movement: teleport only");
             SetText("tablet-comfort-turn", comfort.SmoothTurn ? "Turning: smooth" : "Turning: snap 45°");
             SetText("tablet-comfort-vignette", comfort.Vignette ? "Vignette: on" : "Vignette: off");
             SetText("tablet-comfort-voice", ComfortSettings.VoiceOn ? "Trainer voice: on" : "Trainer voice: off");

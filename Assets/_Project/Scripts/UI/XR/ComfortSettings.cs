@@ -5,9 +5,9 @@ using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 namespace TwoDude.FactoryTwin.UI
 {
     /// <summary>
-    /// The headset hub (M29): comfort options, kept on the headset between sessions. Movement is teleport only by
-    /// default (the starter rig's left stick moves smoothly otherwise, which the store would rate Moderate, not
-    /// Comfortable); turning snaps by default; a comfort vignette darkens the edges during smooth movement and turning;
+    /// The headset hub (M29): comfort options, kept on the headset between sessions. Movement is free by default (the
+    /// left stick walks, the right stick teleports and turns; you, 2026-11-14: move like free roam), with teleport only
+    /// as the comfortable option; turning snaps by default; a comfort vignette darkens the edges during smooth movement;
     /// and the trainer's voice can be switched off. Applied to the rig's two ControllerInputActionManagers and the
     /// vignette; the hub menu's comfort page changes them.
     /// </summary>
@@ -24,7 +24,7 @@ namespace TwoDude.FactoryTwin.UI
         /// <summary>Raised when any option changes.</summary>
         public event Action Changed;
 
-        public bool SmoothMove => PlayerPrefs.GetInt(SmoothMoveKey, 0) == 1;
+        public bool SmoothMove => PlayerPrefs.GetInt(SmoothMoveKey, 1) == 1;
         public bool SmoothTurn => PlayerPrefs.GetInt(SmoothTurnKey, 0) == 1;
         public bool Vignette => PlayerPrefs.GetInt(VignetteKey, 1) == 1;
 
@@ -48,7 +48,8 @@ namespace TwoDude.FactoryTwin.UI
 
         private void Apply()
         {
-            // Smooth movement on the left stick; with it off, the left stick teleports like the right one.
+            // Smooth movement on the left stick (its teleport ray is off then); with it off, the left stick teleports
+            // like the right one.
             if (leftController != null)
             {
                 leftController.smoothMotionEnabled = SmoothMove;
