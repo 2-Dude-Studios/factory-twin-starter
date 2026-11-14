@@ -228,7 +228,7 @@ namespace TwoDude.FactoryTwin.UI
         {
             if (_root == null || comfort == null)
                 return;
-            SetButton("hub-comfort-move", comfort.SmoothMove ? "Movement: smooth and teleport  (tap to change)" : "Movement: teleport only, most comfortable  (tap to change)");
+            SetButton("hub-comfort-move", comfort.SmoothMove ? "Movement: walk with the left stick, teleport with the right  (tap to change)" : "Movement: teleport only, most comfortable  (tap to change)");
             SetButton("hub-comfort-turn", comfort.SmoothTurn ? "Turning: smooth  (tap to change)" : "Turning: snap 45°, most comfortable  (tap to change)");
             SetButton("hub-comfort-vignette", comfort.Vignette ? "Comfort vignette: on while moving smoothly  (tap to change)" : "Comfort vignette: off  (tap to change)");
             SetButton("hub-comfort-voice", ComfortSettings.VoiceOn ? "Trainer voice: on  (tap to change)" : "Trainer voice: off  (tap to change)");

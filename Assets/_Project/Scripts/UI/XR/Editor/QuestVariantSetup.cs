@@ -47,6 +47,9 @@ namespace TwoDude.FactoryTwin.UI
         /// </summary>
         public const string QuestMaterialsFolder = "Assets/_Project/Generated/QuestMaterials";
         private const string BakedLit = "Universal Render Pipeline/Baked Lit";
+        // For hall pieces with no lightmap (the CNC and other machines): Baked Lit would draw them flat, from the light
+        // probes alone; Simple Lit shades them with the sun, still far cheaper than the hall's own shader graph.
+        private const string SimpleLit = "Universal Render Pipeline/Simple Lit";
 
         /// <summary>Textures on Android drop this many mip levels: 1 is half the width and height.</summary>
         private const int AndroidTextureMipLimit = 1;
@@ -327,16 +330,21 @@ namespace TwoDude.FactoryTwin.UI
                 AssetDatabase.DeleteAsset(QuestMaterialsFolder);
             AssetDatabase.CreateFolder("Assets/_Project/Generated", "QuestMaterials");
             Shader bakedLit = Shader.Find(BakedLit);
-            if (bakedLit == null)
+            Shader simpleLit = Shader.Find(SimpleLit);
+            if (bakedLit == null || simpleLit == null)
             {
                 log.Append("Baked Lit shader not found; hall materials left as they are. ");
                 return;
             }
 
             var copies = new Dictionary<Material, Material>();
-            int slots = 0;
+            var litCopies = new Dictionary<Material, Material>();
+            int slots = 0, unmapped = 0;
             foreach (Renderer r in env.GetComponentsInChildren<Renderer>(true))
             {
+                // A renderer without a lightmap gets Simple Lit copies (shaded by the sun), the rest Baked Lit.
+                bool mapped = r.lightmapIndex >= 0 && r.lightmapIndex < 0xFFFE;
+                Dictionary<Material, Material> table = mapped ? copies : litCopies;
                 Material[] materials = r.sharedMaterials;
                 bool changed = false;
                 for (int i = 0; i < materials.Length; i++)
@@ -344,12 +352,16 @@ namespace TwoDude.FactoryTwin.UI
                     Material m = materials[i];
                     if (m == null || !Lightable(m))
                         continue;
-                    if (!copies.TryGetValue(m, out Material copy))
+                    if (!table.TryGetValue(m, out Material copy))
                     {
-                        copy = BakedLitCopy(m, bakedLit);
-                        AssetDatabase.CreateAsset(copy, $"{QuestMaterialsFolder}/{copies.Count:D4} {Safe(m.name)}.mat");
-                        copies[m] = copy;
+                        copy = BakedLitCopy(m, mapped ? bakedLit : simpleLit);
+                        if (!mapped)
+                            copy.name = m.name + " (Quest lit)";
+                        AssetDatabase.CreateAsset(copy, $"{QuestMaterialsFolder}/{(mapped ? "" : "lit ")}{table.Count:D4} {Safe(m.name)}.mat");
+                        table[m] = copy;
                     }
+                    if (!mapped)
+                        unmapped++;
                     materials[i] = copy;
                     changed = true;
                     slots++;
@@ -357,7 +369,7 @@ namespace TwoDude.FactoryTwin.UI
                 if (changed)
                     r.sharedMaterials = materials;
             }
-            log.Append($"Hall on Baked Lit: {copies.Count} materials copied, {slots} slots. ");
+            log.Append($"Hall on Baked Lit: {copies.Count} materials copied, {slots} slots ({unmapped} slots with no lightmap on Simple Lit, {litCopies.Count} materials). ");
         }
 
         /// <summary>Opaque hall materials: the hall's basic shader graph and URP Lit. Decals, glass and the rest keep theirs.</summary>
@@ -426,9 +438,9 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         /// <summary>
-        /// No reflections on the headset (you, 2026-11-14: remove reflection for performance): the reflection probes are
-        /// left out and the sky's environment reflection is off, so lit surfaces sample no cubemap. The hall is Baked Lit
-        /// already (no reflections); this takes them off the machines, props and drills too.
+        /// Fewer reflections on the headset (you, 2026-11-14: remove reflection for performance): the nine reflection
+        /// probes are left out; the sky's environment reflection (128 px, baked with the scene) stays, as the robot arm and other metal went
+        /// dark grey with none at all. The hall is Baked Lit (no reflections).
         /// </summary>
         private static void NoReflections(Scene scene, StringBuilder log)
         {
@@ -440,12 +452,12 @@ namespace TwoDude.FactoryTwin.UI
             }
             Scene before = SceneManager.GetActiveScene();
             SceneManager.SetActiveScene(scene);
-            RenderSettings.defaultReflectionMode = DefaultReflectionMode.Custom;
-            RenderSettings.customReflectionTexture = null;
-            RenderSettings.reflectionIntensity = 0f;
-            RenderSettings.reflectionBounces = 1;
+            // The sky's environment reflection stays (one small cubemap): metal parts such as the robot arm take their
+            // colour from reflections and went dark grey without any (seen 2026-11-14).
+            RenderSettings.defaultReflectionMode = DefaultReflectionMode.Skybox;
+            RenderSettings.reflectionIntensity = 1f;
             SceneManager.SetActiveScene(before);
-            log.Append($"No reflections: {probes} reflection probes left out, environment reflection off. ");
+            log.Append($"Reflections: {probes} reflection probes left out, the sky's reflection kept (baked with the scene, 128 px). ");
         }
 
         private static void Distance(Scene scene, StringBuilder log)
