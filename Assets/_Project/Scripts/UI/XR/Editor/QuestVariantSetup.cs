@@ -57,8 +57,11 @@ namespace TwoDude.FactoryTwin.UI
         /// </summary>
         private const int QuestMsaaSamples = 1;
 
-        /// <summary>The headset camera's reach: the whole trimmed hall (no fog since 2026-11-14).</summary>
-        private const float FarClipMetres = 60f;
+        /// <summary>
+        /// The headset camera's reach, no fog (2026-11-14). Measured without fog: 60 m held 58–69 fps at the hub, robot cell
+        /// and electrical bay, 40 m 64–72, 30 m 72 in every area; beyond 30 m the light-grey clear colour reads as the far wall.
+        /// </summary>
+        private const float FarClipMetres = 30f;
         private static readonly Color HallFog = new Color(0.72f, 0.74f, 0.76f);
 
         /// <summary>The hall's shell: never trimmed by distance, so no area looks out through a hole.</summary>
@@ -409,8 +412,8 @@ namespace TwoDude.FactoryTwin.UI
         }
 
         /// <summary>
-        /// The headset camera draws to FarClipMetres, far enough for the whole trimmed hall (the areas plus 8 m), with no
-        /// fog: an industrial hall reads clear (you, 2026-11-14). It had 30 m with fog from 18 m to hide the cut-off.
+        /// The headset camera draws to FarClipMetres with no fog: an industrial hall reads clear (you, 2026-11-14). It had
+        /// linear fog from 18 m to 30 m in the hall's grey; the clear colour is that grey, so the edge still reads as hall.
         /// </summary>
         /// <summary>Fog off in the open scene too (Cell.unity for the PC and Link; you, 2026-11-14). Save the scene to keep it.</summary>
         [MenuItem("Tools/Factory Twin/Fog Off in Open Scene")]
