@@ -125,6 +125,7 @@ namespace TwoDude.FactoryTwin.UI
                 NoReflections(scene, log);
                 StandaloneSetup.Standalone(scene, log);
                 StandaloneSetup.Controls(scene, log);
+                CellMaterials(scene, env, log);
                 Wire(scene, env, questPipeline, log);
                 EditorSceneManager.SaveScene(scene);
                 QuestSceneCost.Report(scene, ReportPath);
@@ -383,6 +384,90 @@ namespace TwoDude.FactoryTwin.UI
             if (m.renderQueue >= (int)RenderQueue.AlphaTest)
                 return false;
             return shader == "Shader Graphs/shdr_basic_01" || shader == "Universal Render Pipeline/Lit" || shader == "Universal Render Pipeline/Simple Lit";
+        }
+
+        /// <summary>
+        /// Everything outside the hall on the headset (you, 2026-11-14: cheaper shaders, but in the build, not on the shared
+        /// materials): URP Lit, and Baked Lit on anything outside the baked lighting, becomes a Simple Lit copy (the
+        /// colour map and tint, the normal map, a specular in place of metal); the VR panels' plain backs become Unlit.
+        /// The cell, conveyors, parts, robot, props, drills and workers; the PC and Link keep the originals.
+        /// Transparent, particle and text materials keep theirs.
+        /// </summary>
+        private static void CellMaterials(Scene scene, GameObject env, StringBuilder log)
+        {
+            Shader simpleLit = Shader.Find(SimpleLit), unlit = Shader.Find("Universal Render Pipeline/Unlit");
+            if (simpleLit == null || unlit == null)
+            {
+                log.Append("Simple Lit or Unlit not found; cell materials left as they are. ");
+                return;
+            }
+            if (!AssetDatabase.IsValidFolder(QuestMaterialsFolder))
+                AssetDatabase.CreateFolder("Assets/_Project/Generated", "QuestMaterials");
+            var copies = new Dictionary<Material, Material>();
+            int slots = 0, panels = 0;
+            Transform hall = env != null ? env.transform : null;
+            foreach (Renderer r in scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<Renderer>(true)))
+            {
+                if (r is ParticleSystemRenderer || (hall != null && r.transform.IsChildOf(hall)))
+                    continue;
+                bool baked = GameObjectUtility.GetStaticEditorFlags(r.gameObject).HasFlag(StaticEditorFlags.ContributeGI);
+                Material[] materials = r.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    Material m = materials[i];
+                    if (m == null || m.renderQueue >= (int)RenderQueue.AlphaTest)
+                        continue;
+                    string shader = m.shader.name;
+                    bool panelBack = m.name == "PanelBacking";
+                    bool toLit = shader == "Universal Render Pipeline/Lit" || (shader == BakedLit && !baked);
+                    if (!panelBack && !toLit)
+                        continue;
+                    if (!copies.TryGetValue(m, out Material copy))
+                    {
+                        copy = panelBack ? UnlitCopy(m, unlit) : SimpleLitCopy(m, simpleLit);
+                        AssetDatabase.CreateAsset(copy, $"{QuestMaterialsFolder}/cell {copies.Count:D4} {Safe(m.name)}.mat");
+                        copies[m] = copy;
+                    }
+                    materials[i] = copy;
+                    changed = true;
+                    if (panelBack)
+                        panels++;
+                    else
+                        slots++;
+                }
+                if (changed)
+                    r.sharedMaterials = materials;
+            }
+            log.Append($"Cell materials: {slots} slots on Simple Lit, {panels} panel backs on Unlit ({copies.Count} materials). ");
+        }
+
+        private static Material SimpleLitCopy(Material source, Shader simpleLit)
+        {
+            Material copy = BakedLitCopy(source, simpleLit);
+            copy.name = source.name + " (Quest lit)";
+            if (source.HasProperty("_BumpMap") && source.GetTexture("_BumpMap") != null)
+            {
+                copy.SetTexture("_BumpMap", source.GetTexture("_BumpMap"));
+                copy.SetTextureScale("_BumpMap", source.GetTextureScale("_BaseMap"));
+                copy.EnableKeyword("_NORMALMAP");
+            }
+            // Simple Lit has no metallic: a brighter specular for metal, a soft one for the rest.
+            float metal = source.HasProperty("_Metallic") ? source.GetFloat("_Metallic") : 0f;
+            float smooth = source.HasProperty("_Smoothness") ? source.GetFloat("_Smoothness") : 0.5f;
+            copy.SetColor("_SpecColor", Color.Lerp(new Color(0.2f, 0.2f, 0.2f), new Color(0.6f, 0.6f, 0.6f), metal));
+            copy.SetFloat("_Smoothness", smooth);
+            copy.SetFloat("_SpecularHighlights", 1f);
+            copy.EnableKeyword("_SPECULAR_COLOR");
+            return copy;
+        }
+
+        private static Material UnlitCopy(Material source, Shader unlit)
+        {
+            var copy = new Material(unlit) { name = source.name + " (Quest unlit)", enableInstancing = true };
+            Color colour = source.HasProperty("_BaseColor") ? source.GetColor("_BaseColor") : Color.white;
+            copy.SetColor("_BaseColor", colour);
+            return copy;
         }
 
         private static Material BakedLitCopy(Material source, Shader bakedLit)
